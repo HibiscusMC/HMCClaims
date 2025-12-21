@@ -1,0 +1,11 @@
+name: HMCClaims
+version: '${project.version}'
+main: com.hibiscusmc.hmcclaims.HMCClaims
+api-version: '${serverVersion}'
+authors: [ iKztu ]
+description: "A little Christmas Gift from iKztu & Lucian929 to caerisma. We ❤ you, bestie!"
+
+libraries:
+  - com.zaxxer:HikariCP:7.0.2
+  - org.spongepowered:configurate-yaml:4.2.0
+  - org.mariadb.jdbc:mariadb-java-client:3.5.7
