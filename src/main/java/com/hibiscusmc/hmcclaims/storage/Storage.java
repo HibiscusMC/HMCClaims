@@ -3,7 +3,6 @@ package com.hibiscusmc.hmcclaims.storage;
 import com.hibiscusmc.hmcclaims.config.Settings;
 
 public interface Storage {
-
     String name();
 
     void initialize(Settings.Storage storage);
@@ -11,5 +10,4 @@ public interface Storage {
     void close();
 
     void logTables();
-
 }

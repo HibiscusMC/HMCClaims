@@ -35,5 +35,4 @@ public class ConfigModule extends AbstractModule {
         bind(new TypeReference<ConfigHolder<Messages>>() {
         }).toInstance(ConfigFactory.getHolder(Messages.class));
     }
-
 }

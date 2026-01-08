@@ -52,5 +52,4 @@ public class ConfigFactory {
     public static <T> ConfigHolder<T> getHolder(Class<T> clazz) {
         return (ConfigHolder<T>) CONFIG_FILES.get(clazz);
     }
-
 }

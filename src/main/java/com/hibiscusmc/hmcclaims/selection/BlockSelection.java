@@ -26,5 +26,4 @@ public class BlockSelection {
     public String toString() {
         return x + ";" + z;
     }
-
 }

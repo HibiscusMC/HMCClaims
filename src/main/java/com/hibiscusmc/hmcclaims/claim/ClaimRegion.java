@@ -102,5 +102,4 @@ public class ClaimRegion {
 
         return blocks;
     }
-
 }

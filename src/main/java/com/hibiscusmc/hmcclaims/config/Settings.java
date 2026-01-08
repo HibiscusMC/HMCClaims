@@ -57,7 +57,6 @@ public class Settings {
                 return name;
             }
         }
-
     }
 
     private Claiming claiming = new Claiming();
@@ -71,5 +70,4 @@ public class Settings {
         private Material claimTool = Material.GOLDEN_HOE;
 
     }
-
 }

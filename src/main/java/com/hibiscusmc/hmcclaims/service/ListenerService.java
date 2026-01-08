@@ -1,6 +1,8 @@
 package com.hibiscusmc.hmcclaims.service;
 
-import com.hibiscusmc.hmcclaims.listener.AbstractListener;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 import team.unnamed.inject.Inject;
 
 import java.util.Set;
@@ -8,12 +10,17 @@ import java.util.Set;
 public class ListenerService implements Service {
 
     @Inject
-    private Set<AbstractListener> listeners;
+    private Set<Listener> listeners;
+
+    @Inject
+    private Plugin plugin;
 
     @Override
     public void start() {
-        for (AbstractListener listener : listeners) {
-            listener.register();
+        PluginManager manager = plugin.getServer().getPluginManager();
+
+        for (Listener listener : listeners) {
+            manager.registerEvents(listener, plugin);
         }
     }
 
@@ -24,5 +31,4 @@ public class ListenerService implements Service {
     @Override
     public void stop() {
     }
-
 }

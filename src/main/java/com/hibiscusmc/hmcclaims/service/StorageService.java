@@ -57,5 +57,4 @@ public class StorageService implements Service {
 
         holder.close();
     }
-
 }

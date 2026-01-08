@@ -114,5 +114,4 @@ public class SelectionManager {
 
         return InvalidSelectionReason.NONE;
     }
-
 }

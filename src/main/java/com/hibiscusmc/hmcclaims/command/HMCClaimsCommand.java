@@ -48,5 +48,4 @@ public class HMCClaimsCommand implements CommandClass {
             e.printStackTrace();
         }
     }
-
 }

@@ -7,7 +7,6 @@ import com.hibiscusmc.hmcclaims.service.StorageService;
 import team.unnamed.inject.AbstractModule;
 
 public class ServiceModule extends AbstractModule {
-
     @Override
     protected void configure() {
         multibind(Service.class)
@@ -16,5 +15,4 @@ public class ServiceModule extends AbstractModule {
                 .to(ListenerService.class)
                 .to(StorageService.class);
     }
-
 }

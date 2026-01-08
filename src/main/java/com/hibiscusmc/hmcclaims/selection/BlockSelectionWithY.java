@@ -38,5 +38,4 @@ public class BlockSelectionWithY extends BlockSelection {
     public int hashCode() {
         return super.hashCode();
     }
-
 }

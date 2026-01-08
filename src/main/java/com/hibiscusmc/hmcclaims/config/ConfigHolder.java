@@ -22,5 +22,4 @@ public class ConfigHolder<T> {
     public T get() {
         return instance;
     }
-
 }

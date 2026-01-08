@@ -119,5 +119,4 @@ public class ClaimManager {
         return a.minX() <= b.maxX() && a.maxX() >= b.minX() &&
                 a.minZ() <= b.maxZ() && a.maxZ() >= b.minZ();
     }
-
 }

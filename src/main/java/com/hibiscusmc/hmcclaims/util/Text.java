@@ -67,5 +67,4 @@ public class Text {
     public String prefix(String string) {
         return messages.get().prefix() + string;
     }
-
 }

@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public abstract class SQLStorage implements Storage {
-
     public abstract Connection getConnection() throws SQLException;
 
     @Override
@@ -25,5 +24,4 @@ public abstract class SQLStorage implements Storage {
             ex.printStackTrace();
         }
     }
-
 }

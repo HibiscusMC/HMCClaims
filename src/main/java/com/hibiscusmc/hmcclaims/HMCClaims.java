@@ -66,5 +66,4 @@ public final class HMCClaims extends JavaPlugin implements Module {
 
         binder.bind(Text.class).to(Text.class);
     }
-
 }

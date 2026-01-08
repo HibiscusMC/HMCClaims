@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.claim;
 import lombok.Data;
 import org.bukkit.entity.Player;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -11,31 +12,29 @@ import java.util.UUID;
 public class Claim {
 
     private final UUID claimId;
-
-    private final UUID owner;
+    private final ClaimMember owner;
 
     private final ClaimRegion region;
+    private final Set<ClaimMember> members;
+    private final Set<Claim> children;
 
     private String name;
+    private Claim parent;
 
-    private Set<ClaimMember> members;
-
-    private Set<ChildClaim> childrens;
-
+    private boolean inheritPermissions;
     private boolean locked;
 
-    private long claimedTimestamp;
+    private Instant claimedTimestamp;
 
     public Claim(UUID claimId, Player owner, ClaimRegion region) {
         this.claimId = claimId;
-        this.owner = owner.getUniqueId();
+        this.owner = new ClaimMember(owner.getUniqueId(), this, ClaimMemberRole.OWNER);
         this.region = region;
 
         this.name = owner.getName() + "'s Claim";
         this.members = new HashSet<>();
-        this.childrens = new HashSet<>();
+        this.children = new HashSet<>();
         this.locked = false;
-        this.claimedTimestamp = System.currentTimeMillis();
+        this.claimedTimestamp = Instant.now();
     }
-
 }

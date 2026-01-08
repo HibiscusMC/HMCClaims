@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.storage.impl.remote;
 
 public class MariaDBStorage extends HikariStorage {
-
     @Override
     public String name() {
         return "MariaDB";
@@ -15,5 +14,4 @@ public class MariaDBStorage extends HikariStorage {
     @Override
     public void setup() {
     }
-
 }

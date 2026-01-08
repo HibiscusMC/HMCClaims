@@ -16,6 +16,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -29,7 +30,7 @@ import team.unnamed.inject.Inject;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class PlayerSelectionListener extends AbstractListener {
+public class PlayerSelectionListener implements Listener {
 
     @Inject
     private Plugin plugin;
@@ -82,7 +83,7 @@ public class PlayerSelectionListener extends AbstractListener {
                 return;
             }
 
-            Player owner = Bukkit.getPlayer(claim.owner());
+            Player owner = Bukkit.getPlayer(claim.owner().uuid());
             text.send(owner, messages.claims().ownedBy(), Map.of(
                     "name", claim.name(),
                     "owner", owner.getName()
@@ -150,5 +151,4 @@ public class PlayerSelectionListener extends AbstractListener {
         selectionManager.destroySelection(player);
         text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
     }
-
 }
