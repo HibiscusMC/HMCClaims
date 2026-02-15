@@ -1,6 +1,8 @@
 package com.hibiscusmc.hmcclaims.storage;
 
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
+import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 
 public interface Storage {
     String name();
@@ -9,5 +11,7 @@ public interface Storage {
 
     void close();
 
-    void logTables();
+    UserRepository users();
+
+    ClaimRepository claims();
 }

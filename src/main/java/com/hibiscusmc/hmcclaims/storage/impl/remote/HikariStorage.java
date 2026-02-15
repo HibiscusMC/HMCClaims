@@ -1,27 +1,47 @@
 package com.hibiscusmc.hmcclaims.storage.impl.remote;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.storage.SQLStorage;
+import com.hibiscusmc.hmcclaims.storage.Storage;
+import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
+import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
+import com.hibiscusmc.hmcclaims.storage.repository.sql.SQLClaimRepository;
+import com.hibiscusmc.hmcclaims.storage.repository.sql.SQLUserRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.Setter;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public abstract class HikariStorage extends SQLStorage {
+public abstract class HikariStorage implements Storage {
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(10,
+            new ThreadFactoryBuilder()
+                    .setNameFormat("hmcclaims-hikari-%d")
+                    .setDaemon(true)
+                    .build()
+    );
 
     private HikariDataSource dataSource;
 
+    @Setter
+    private UserRepository users;
+    @Setter
+    private ClaimRepository claims;
+
     protected abstract String dataSourceClassName();
 
-    protected abstract void setup();
+    protected abstract void setup(Settings.Storage storage);
 
     protected void setProperties(Properties properties) {
     }
 
-    @Override
     public Connection getConnection() throws SQLException {
         if (dataSource == null) {
             throw new SQLException("DataSource not initialized.");
@@ -62,7 +82,10 @@ public abstract class HikariStorage extends SQLStorage {
 
         this.dataSource = new HikariDataSource(config);
 
-        this.setup();
+        this.setup(storage);
+
+        users = new SQLUserRepository(storage, this, executor);
+        claims = new SQLClaimRepository(storage, this, executor);
     }
 
     @Override
@@ -72,5 +95,19 @@ public abstract class HikariStorage extends SQLStorage {
         }
 
         dataSource.close();
+    }
+
+    @Override
+    public UserRepository users() {
+        return users;
+    }
+
+    @Override
+    public ClaimRepository claims() {
+        return claims;
+    }
+
+    protected InputStream getSchemaResource(String database) {
+        return getClass().getClassLoader().getResourceAsStream("schemas/" + database + ".sql");
     }
 }

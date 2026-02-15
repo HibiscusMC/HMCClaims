@@ -1,10 +1,14 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import lombok.Data;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,6 +21,7 @@ public class Claim {
     private final ClaimRegion region;
     private final Set<ClaimMember> members;
     private final Set<Claim> children;
+    private final ClaimRoleRegistry roleRegistry;
 
     private String name;
     private Claim parent;
@@ -26,9 +31,11 @@ public class Claim {
 
     private Instant claimedTimestamp;
 
-    public Claim(UUID claimId, Player owner, ClaimRegion region) {
+    public Claim(UUID claimId, Player owner, ClaimRegion region, List<ClaimRole> roles) {
+        this.roleRegistry = new ClaimRoleRegistry(roles);
+
         this.claimId = claimId;
-        this.owner = new ClaimMember(owner.getUniqueId(), this, ClaimMemberRole.OWNER);
+        this.owner = new ClaimMember(owner.getUniqueId(), this, roleRegistry.ownerRole(), EnumSet.allOf(ClaimPermission.class));
         this.region = region;
 
         this.name = owner.getName() + "'s Claim";

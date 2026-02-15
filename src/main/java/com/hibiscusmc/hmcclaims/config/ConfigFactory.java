@@ -1,6 +1,10 @@
 package com.hibiscusmc.hmcclaims.config;
 
 import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.objectmapping.ObjectMapper;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
+import org.spongepowered.configurate.objectmapping.meta.NodeResolver;
+import org.spongepowered.configurate.objectmapping.meta.Processor;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import org.spongepowered.configurate.yaml.internal.snakeyaml.DumperOptions;
@@ -25,10 +29,16 @@ public class ConfigFactory {
     }
 
     public static <T> void load(Path path, Class<T> clazz) throws Exception {
+        ObjectMapper.Factory factory = ObjectMapper.factoryBuilder()
+                .addNodeResolver(NodeResolver.nodeFromParent())
+                .addProcessor(Comment.class, Processor.comments())
+                .build();
+
         YamlConfigurationLoader.Builder builder = YamlConfigurationLoader.builder()
                 .path(path)
                 .defaultOptions(opts -> opts
                         .shouldCopyDefaults(true)
+                        .serializers(build -> build.registerAnnotatedObjects(factory))
                 )
                 .nodeStyle(NodeStyle.BLOCK);
 
@@ -42,6 +52,7 @@ public class ConfigFactory {
 
         CommentedConfigurationNode node = loader.load();
         T instance = node.get(clazz);
+
         loader.save(node);
 
         ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.computeIfAbsent(clazz, k -> new ConfigHolder<>());

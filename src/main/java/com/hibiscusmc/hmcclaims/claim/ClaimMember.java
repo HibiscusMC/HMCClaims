@@ -1,33 +1,54 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Represents a player's membership within a {@link Claim}.
+ *
+ * <p>A claim member has a role, optional individual permission overrides,
+ * a join timestamp, and a ban state.</p>
+ *
+ * <p>This class models the relationship between a player and a claim,
+ * not the player entity itself.</p>
+ */
 @Data
+@EqualsAndHashCode(of = {"uuid", "claim"})
 public class ClaimMember {
 
     private final UUID uuid;
     private final Claim claim;
 
-    private final ClaimMemberRole role;
-    private final Set<ClaimMemberPermission> permissions;
+    private final ClaimRole role;
 
+    /**
+     * Explicit permission overrides for this member.
+     *
+     * <p>Resolution order:</p>
+     * <ol>
+     *     <li>If an explicit override exists, its value is used.</li>
+     *     <li>Otherwise, the member's role permissions are used.</li>
+     * </ol>
+     *
+     * <p>A value of {@code true} explicitly grants the permission,
+     * while {@code false} explicitly denies it.</p>
+     */
+    private final Set<ClaimPermission> permissions;
+
+    /**
+     * Whether this member is currently banned from the claim.
+     * A banned member cannot interact with the claim.
+     */
     private boolean banned;
 
     private Instant joinedTimestamp;
 
-    public ClaimMember(UUID uuid, Claim claim) {
-        this(uuid, claim, ClaimMemberRole.MEMBER);
-    }
-
-    public ClaimMember(UUID uuid, Claim claim, ClaimMemberRole role) {
-        this(uuid, claim, role, Set.of());
-    }
-
-    public ClaimMember(UUID uuid, Claim claim, ClaimMemberRole role, Set<ClaimMemberPermission> permissions) {
+    public ClaimMember(UUID uuid, Claim claim, ClaimRole role, Set<ClaimPermission> permissions) {
         this.uuid = uuid;
         this.claim = claim;
 

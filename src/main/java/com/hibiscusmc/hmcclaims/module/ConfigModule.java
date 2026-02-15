@@ -12,7 +12,7 @@ import java.nio.file.Path;
 
 public class ConfigModule extends AbstractModule {
 
-    private Plugin plugin;
+    private final Plugin plugin;
 
     public ConfigModule(Plugin plugin) {
         this.plugin = plugin;

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.hibiscusmc"
-version = version("0.1.0")
+version = "0.1.0"
 
 val serverVersion = "1.21.10"
 val serverSnapshot = "R0.1-SNAPSHOT"
@@ -59,7 +59,7 @@ java {
 
 tasks {
     shadowJar {
-        dependsOn(jar)
+        archiveClassifier.set(fetchCommit())
 
         val main = "${rootProject.group}.libs"
 
@@ -95,10 +95,6 @@ tasks {
     }
 }
 
-fun version(ver: String): String {
-    return ver + "-" + fetchCommit()
-}
-
 fun fetchCommit(): String {
     return try {
         val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
@@ -111,6 +107,6 @@ fun fetchCommit(): String {
         if (hash.startsWith("fatal:")) throw Exception()
         else hash
     } catch (_: Exception) {
-        "no-commit"
+        ""
     }
 }

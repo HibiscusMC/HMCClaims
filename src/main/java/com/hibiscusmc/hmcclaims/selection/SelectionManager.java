@@ -1,12 +1,11 @@
-package com.hibiscusmc.hmcclaims.manager;
+package com.hibiscusmc.hmcclaims.selection;
 
+import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
-import com.hibiscusmc.hmcclaims.selection.BlockSelection;
-import com.hibiscusmc.hmcclaims.selection.BlockSelectionWithY;
-import com.hibiscusmc.hmcclaims.selection.InvalidSelectionReason;
-import com.hibiscusmc.hmcclaims.selection.Selection;
+import com.hibiscusmc.hmcclaims.user.User;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.Text;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -14,9 +13,7 @@ import org.bukkit.entity.Player;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Singleton
 public class SelectionManager {
@@ -26,18 +23,17 @@ public class SelectionManager {
 
     @Inject
     private ClaimManager claimManager;
+    @Inject
+    private UserManager userManager;
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
-
     @Inject
     private Text text;
 
-    private final Map<UUID, Selection> selections = new HashMap<>();
-
     public void handleSelection(Player player, Block block) {
-        UUID uuid = player.getUniqueId();
-        Selection selection = selections.get(uuid);
+        User user = userManager.getUser(player.getUniqueId())
+                .orElseThrow(() -> new IllegalStateException("User not loaded!"));
 
         Messages messages = messagesHolder.get();
 
@@ -47,16 +43,18 @@ public class SelectionManager {
                 "location", blockSelection.x() + ", " + blockSelection.z()
         );
 
-        if (selection == null) {
+        Selection selection = user.currentSelection();
+
+        if (!user.hasActiveSelection()) {
             selection = new Selection(player, blockMarker);
-            selections.put(uuid, selection);
+            user.currentSelection(selection);
         }
 
         if (selection.hasBlock(blockSelection)) {
             boolean isEmpty = selection.removeBlock(blockSelection);
 
             if (isEmpty) {
-                selections.remove(uuid);
+                user.currentSelection(null);
                 text.send(player, messages.claims().selecting().selectionRemoved());
             } else {
                 text.send(player, messages.claims().selecting().cornerUnselected(), locationPlaceholder);
@@ -84,23 +82,18 @@ public class SelectionManager {
         }
     }
 
-    public Selection fetchSelection(Player player) {
-        return selections.get(player.getUniqueId());
-    }
-
     public void destroySelection(Player player) {
-        UUID uuid = player.getUniqueId();
-        Selection selection = selections.get(uuid);
+        User user = userManager.getUser(player.getUniqueId())
+                .orElseThrow(() -> new IllegalStateException("User not loaded!"));
 
-        if (selection == null) {
+        if (!user.hasActiveSelection()) {
             return;
         }
 
+        Selection selection = user.currentSelection();
         selection.clearPoints();
 
-        selections.remove(uuid);
-
-
+        user.currentSelection(null);
     }
 
     private InvalidSelectionReason validateSelection(Selection selection, BlockSelection blockSelection, Location location) {

@@ -1,14 +1,15 @@
 package com.hibiscusmc.hmcclaims;
 
-import com.hibiscusmc.hmcclaims.manager.ClaimManager;
+import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.module.CommandModule;
 import com.hibiscusmc.hmcclaims.module.ConfigModule;
 import com.hibiscusmc.hmcclaims.module.ListenerModule;
 import com.hibiscusmc.hmcclaims.module.ServiceModule;
-import com.hibiscusmc.hmcclaims.manager.SelectionManager;
+import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.Text;
 import lombok.extern.java.Log;
 import org.bukkit.plugin.Plugin;
@@ -63,6 +64,7 @@ public final class HMCClaims extends JavaPlugin implements Module {
 
         binder.bind(SelectionManager.class).to(SelectionManager.class);
         binder.bind(ClaimManager.class).to(ClaimManager.class);
+        binder.bind(UserManager.class).to(UserManager.class);
 
         binder.bind(Text.class).to(Text.class);
     }

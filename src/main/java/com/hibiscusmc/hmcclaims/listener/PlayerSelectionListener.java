@@ -5,11 +5,13 @@ import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.config.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.manager.ClaimManager;
+import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.marker.MarkType;
 import com.hibiscusmc.hmcclaims.selection.Selection;
-import com.hibiscusmc.hmcclaims.manager.SelectionManager;
+import com.hibiscusmc.hmcclaims.selection.SelectionManager;
+import com.hibiscusmc.hmcclaims.user.User;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -24,7 +26,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import team.unnamed.inject.Inject;
 
 import java.util.Map;
@@ -33,15 +34,14 @@ import java.util.concurrent.TimeUnit;
 public class PlayerSelectionListener implements Listener {
 
     @Inject
-    private Plugin plugin;
-
-    @Inject
     private BlockMarker marker;
 
     @Inject
     private SelectionManager selectionManager;
     @Inject
     private ClaimManager claimManager;
+    @Inject
+    private UserManager userManager;
 
     @Inject
     private ConfigHolder<Settings> settingsHolder;
@@ -84,9 +84,9 @@ public class PlayerSelectionListener implements Listener {
             }
 
             Player owner = Bukkit.getPlayer(claim.owner().uuid());
-            text.send(owner, messages.claims().ownedBy(), Map.of(
+            text.send(player, messages.claims().ownedBy(), Map.of(
                     "name", claim.name(),
-                    "owner", owner.getName()
+                    "owner", owner == null ? "unknown" : owner.getName()
             ));
 
             marker.mark(player, claim.region().getLCornerBlocks(), MarkType.INSPECT, TimeUnit.SECONDS.toMillis(5));
@@ -102,11 +102,15 @@ public class PlayerSelectionListener implements Listener {
         if (action.isRightClick()) {
             selectionManager.handleSelection(player, block);
         } else {
-            Selection selection = selectionManager.fetchSelection(player);
-            if (selection == null) {
+            User user = userManager.getUser(player.getUniqueId())
+                    .orElseThrow(() -> new IllegalStateException("User not loaded!"));
+
+            if (!user.hasActiveSelection()) {
                 text.send(player, messages.claims().selecting().mustSelectRegion());
                 return;
             }
+
+            Selection selection = user.currentSelection();
 
             if (selection.points().size() < 2) {
                 text.send(player, messages.claims().selecting().mustSelectPoints());
@@ -123,6 +127,16 @@ public class PlayerSelectionListener implements Listener {
             selectionManager.destroySelection(player);
 
             long surfaceArea = claim.region().getSurfaceArea();
+            long currentBlocks = userManager.getRemainingBlocks(user);
+            if (surfaceArea > currentBlocks) {
+                text.send(player, messages.claims().selecting().notEnoughClaimBlocks(), Map.of(
+                        "required_blocks", surfaceArea + "",
+                        "current_blocks", currentBlocks + ""
+                ));
+
+                return;
+            }
+
             text.send(player, messages.claims().created(), Map.of(
                     "name", claim.name(),
                     "price", surfaceArea + ""

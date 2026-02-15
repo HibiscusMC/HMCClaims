@@ -25,7 +25,6 @@ public class Messages {
         @Setting("owned-by")
         private String ownedBy = "<gray>Claim <#d24c9f><name> <gray>is owned by <#d24c9f><owner>";
 
-        @Setting("created")
         private String created = "<gray>The claim <#d24c9f><name> <gray>has been created! Price: <#d24c9f><price>";
 
         private Selecting selecting = new Selecting();
@@ -59,6 +58,40 @@ public class Messages {
             @Setting("selection-too-small")
             private String selectionTooSmall = "<red>The selected region is too small! <gray>(Should be at least 5x5)";
 
+            @Setting("not-enough-claimblocks")
+            private String notEnoughClaimBlocks = "<red>You don't have enough claim blocks! <gray>Required: <white><required_blocks></white>, <gray>Current: <white><current_blocks>";
         }
+    }
+
+    private Commands commands = new Commands();
+
+    @Getter
+    @ToString
+    @ConfigSerializable
+    public static class Commands {
+
+        @Setting("missing-player")
+        private String missingPlayer = "<red>You need to specify a player!";
+
+        @Setting("claim-blocks")
+        private ClaimBlocks claimBlocks = new ClaimBlocks();
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class ClaimBlocks {
+
+            private String summary = """
+                    <gray><white><player_name></white>'s claim blocks breakdown:
+                    
+                    <dark_gray><b>»</b> <gray>Starting blocks: <white><starting_blocks>
+                    <dark_gray><b>»</b> <gray>Accrued blocks: <white><accrued_blocks>
+                    <dark_gray><b>»</b> <gray>Total blocks: <white><total_blocks>
+                    <dark_gray><b>»</b> <gray>Claimed blocks: <white><claimed_blocks>
+                    
+                    <dark_gray><b>»</b> <gray>Remaining blocks: <white><remaining_blocks>""";
+
+        }
+
     }
 }

@@ -18,24 +18,6 @@ public class Settings {
     @ConfigSerializable
     public static class Storage {
 
-        private String database = "hmcclaims";
-        private String prefix = "hmcclaims_";
-
-        private Remote remote = new Remote();
-
-        @Getter
-        @ToString
-        @ConfigSerializable
-        public static class Remote {
-
-            private String uri = "";
-            private String address = "localhost";
-            private int port = 3306;
-            private String username = "root";
-            private String password = "youshallnotpass";
-
-        }
-
         private StorageMethod method = StorageMethod.H2;
 
         public enum StorageMethod {
@@ -57,6 +39,37 @@ public class Settings {
                 return name;
             }
         }
+
+        private String database = "hmcclaims";
+        private String prefix = "hmcclaims_";
+        private Remote remote = new Remote();
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Remote {
+
+            private String uri = "";
+            private String address = "localhost";
+            private int port = 3306;
+            private String username = "root";
+            private String password = "youshallnotpass";
+
+        }
+    }
+
+    @Setting("claim-blocks")
+    private ClaimBlocks claimBlocks = new ClaimBlocks();
+
+    @Getter
+    @ToString
+    @ConfigSerializable
+    public static class ClaimBlocks {
+
+        @Setting("starting-amount")
+        private int startingAmount = 100;
+        private int price = 1;
+
     }
 
     private Claiming claiming = new Claiming();
