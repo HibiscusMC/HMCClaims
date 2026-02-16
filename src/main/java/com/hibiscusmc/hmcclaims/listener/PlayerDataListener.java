@@ -39,7 +39,7 @@ public class PlayerDataListener implements Listener {
 
                     manager.cacheUser(user);
                 })
-                .exceptionally((ex) -> {
+                .exceptionally(ex -> {
                     User user = new User(
                             player.getUniqueId(),
                             player.getName()

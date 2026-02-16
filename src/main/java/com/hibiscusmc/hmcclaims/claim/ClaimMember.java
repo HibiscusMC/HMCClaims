@@ -1,6 +1,8 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.permission.PermissionHolder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -38,7 +40,7 @@ public class ClaimMember {
      * <p>A value of {@code true} explicitly grants the permission,
      * while {@code false} explicitly denies it.</p>
      */
-    private final Set<ClaimPermission> permissions;
+    private final Set<PermissionHolder> permissions;
 
     /**
      * Whether this member is currently banned from the claim.
@@ -48,7 +50,7 @@ public class ClaimMember {
 
     private Instant joinedTimestamp;
 
-    public ClaimMember(UUID uuid, Claim claim, ClaimRole role, Set<ClaimPermission> permissions) {
+    public ClaimMember(UUID uuid, Claim claim, ClaimRole role, Set<PermissionHolder> permissions) {
         this.uuid = uuid;
         this.claim = claim;
 

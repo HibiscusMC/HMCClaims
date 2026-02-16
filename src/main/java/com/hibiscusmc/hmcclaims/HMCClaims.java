@@ -6,6 +6,7 @@ import com.hibiscusmc.hmcclaims.module.CommandModule;
 import com.hibiscusmc.hmcclaims.module.ConfigModule;
 import com.hibiscusmc.hmcclaims.module.ListenerModule;
 import com.hibiscusmc.hmcclaims.module.ServiceModule;
+import com.hibiscusmc.hmcclaims.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -58,6 +59,8 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.install(new CommandModule());
         binder.install(new ListenerModule());
         binder.install(new ConfigModule(this));
+
+        binder.bind(PermissionRegistry.class).to(PermissionRegistry.class);
 
         binder.bind(StorageHolder.class).to(StorageHolder.class);
         binder.bind(BlockMarker.class).to(BlockMarker.class);

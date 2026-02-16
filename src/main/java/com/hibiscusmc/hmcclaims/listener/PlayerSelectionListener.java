@@ -22,12 +22,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import team.unnamed.inject.Inject;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -77,19 +79,27 @@ public class PlayerSelectionListener implements Listener {
                 return;
             }
 
-            Claim claim = claimManager.getClaimAt(block.getLocation())
-                    .orElse(null);
-            if (claim == null) {
+            List<Claim> claims = claimManager.getClaimsAt(block.getLocation());
+            if (claims.isEmpty()) {
                 return;
             }
 
-            Player owner = Bukkit.getPlayer(claim.owner().uuid());
-            text.send(player, messages.claims().ownedBy(), Map.of(
-                    "name", claim.name(),
-                    "owner", owner == null ? "unknown" : owner.getName()
-            ));
+            for (Claim claim : claims) {
+                if (claims.size() == 1 || claim.parent() != null) {
+                    Player owner = Bukkit.getPlayer(claim.owner().uuid());
+                    text.send(player, messages.claims().ownedBy(), Map.of(
+                            "name", claim.name(),
+                            "owner", owner == null ? "unknown" : owner.getName()
+                    ));
+                }
 
-            marker.mark(player, claim.region().getLCornerBlocks(), MarkType.INSPECT, TimeUnit.SECONDS.toMillis(5));
+                if (claim.owner().uuid().equals(player.getUniqueId())) {
+                    marker.mark(player, claim.region().getLCornerBlocks(), claim.parent() != null ? MarkType.INSPECT_CHILD : MarkType.INSPECT, TimeUnit.SECONDS.toMillis(5));
+                } else {
+                    marker.mark(player, claim.region().getLCornerBlocks(), claim.parent() != null ? MarkType.INSPECT_CHILD_OTHER : MarkType.INSPECT_OTHER, TimeUnit.SECONDS.toMillis(5));
+                }
+            }
+
             return;
         }
 
@@ -118,31 +128,56 @@ public class PlayerSelectionListener implements Listener {
             }
 
             ClaimRegion region = selection.region();
+
             if (claimManager.isOverlapping(region)) {
                 text.send(player, messages.claims().selecting().claimOverlaps());
                 return;
             }
 
-            Claim claim = claimManager.createClaim(player, selection.region());
-            selectionManager.destroySelection(player);
+            if (selection.parent() == null) {
+                long surfaceArea = region.getSurfaceArea();
+                long currentBlocks = userManager.getRemainingBlocks(user);
 
-            long surfaceArea = claim.region().getSurfaceArea();
-            long currentBlocks = userManager.getRemainingBlocks(user);
-            if (surfaceArea > currentBlocks) {
-                text.send(player, messages.claims().selecting().notEnoughClaimBlocks(), Map.of(
-                        "required_blocks", surfaceArea + "",
-                        "current_blocks", currentBlocks + ""
+                if (surfaceArea > currentBlocks) {
+                    text.send(player, messages.claims().selecting().notEnoughClaimBlocks(), Map.of(
+                            "required_blocks", surfaceArea + "",
+                            "current_blocks", currentBlocks + ""
+                    ));
+
+                    return;
+                }
+
+                Claim claim = claimManager.createClaim(player, region, selection.parent());
+                selectionManager.destroySelection(player);
+
+                text.send(player, messages.claims().created(), Map.of(
+                        "name", claim.name(),
+                        "price", surfaceArea + ""
                 ));
 
-                return;
+                marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
+            } else {
+                Claim claim = claimManager.createClaim(player, region, selection.parent());
+                selectionManager.destroySelection(player);
+
+                text.send(player, messages.claims().childCreated(), Map.of(
+                        "name", claim.name()
+                ));
+
+                marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE_CHILD, TimeUnit.SECONDS.toMillis(10));
             }
+        }
+    }
 
-            text.send(player, messages.claims().created(), Map.of(
-                    "name", claim.name(),
-                    "price", surfaceArea + ""
-            ));
+    @EventHandler
+    public void onPlayerItemHeld(PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = player.getInventory().getItem(event.getNewSlot());
 
-            marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
+        Settings holder = settingsHolder.get();
+
+        if (item == null || item.getType() != holder.claiming().claimTool()) {
+            removeSelection(player);
         }
     }
 

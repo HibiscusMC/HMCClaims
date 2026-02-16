@@ -27,6 +27,10 @@ public class ClaimRegion {
     public ClaimRegion(String worldName, List<BlockSelection> corners) {
         this.worldName = worldName;
         this.corners = corners;
+
+        if (this.corners.size() == 2) {
+            calculateCorners();
+        }
     }
 
     public World bukkitWorld() {
@@ -37,17 +41,17 @@ public class ClaimRegion {
         this.corners.add(selection);
 
         if (this.corners.size() == 2) {
-            BlockSelection firstCorner = this.corners.getFirst();
-
-            this.minX = Math.min(firstCorner.x(), selection.x());
-            this.maxX = Math.max(firstCorner.x(), selection.x());
-            this.minZ = Math.min(firstCorner.z(), selection.z());
-            this.maxZ = Math.max(firstCorner.z(), selection.z());
+            calculateCorners();
         }
     }
 
     public void removeCorner(BlockSelection selection) {
         this.corners.remove(selection);
+    }
+
+    public boolean isCorner(BlockSelection selection) {
+        return (selection.x() == minX || selection.x() == maxX) &&
+                (selection.z() == minZ || selection.z() == maxZ);
     }
 
     public boolean contains(Location loc) {
@@ -101,5 +105,15 @@ public class ClaimRegion {
         }
 
         return blocks;
+    }
+
+    private void calculateCorners() {
+        BlockSelection firstCorner = this.corners.getFirst();
+        BlockSelection secondCorner = this.corners.getLast();
+
+        this.minX = Math.min(firstCorner.x(), secondCorner.x());
+        this.maxX = Math.max(firstCorner.x(), secondCorner.x());
+        this.minZ = Math.min(firstCorner.z(), secondCorner.z());
+        this.maxZ = Math.max(firstCorner.z(), secondCorner.z());
     }
 }

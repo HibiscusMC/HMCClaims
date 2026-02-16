@@ -69,7 +69,7 @@ public class HMCClaimsCommand implements CommandClass {
         }
 
         repo.saveUser(user)
-                .thenAccept((v) -> sender.sendMessage("User saved to the database"))
+                .thenAccept(v -> sender.sendMessage("User saved to the database"))
                 .exceptionally(ex -> {
                     ex.printStackTrace();
                     sender.sendMessage("Failed to save user");

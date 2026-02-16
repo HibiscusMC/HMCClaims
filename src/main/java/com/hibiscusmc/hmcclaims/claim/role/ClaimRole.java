@@ -1,11 +1,10 @@
 package com.hibiscusmc.hmcclaims.claim.role;
 
-import com.hibiscusmc.hmcclaims.claim.ClaimPermission;
+import com.hibiscusmc.hmcclaims.permission.Permission;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -25,9 +24,9 @@ public class ClaimRole {
 
     private final String name;
 
-    private final UUID id;
+    private final String id;
 
-    private final Set<ClaimPermission> permissions;
+    private final Set<Permission> permissions;
 
     /**
      * Creates a new immutable claim role.
@@ -37,13 +36,15 @@ public class ClaimRole {
      * @param permissions the permissions granted to this role
      * @throws NullPointerException if any argument is null
      */
-    public ClaimRole(String name, UUID id, Set<ClaimPermission> permissions) {
+    public ClaimRole(String name, String id, Set<Permission> permissions) {
         this.name = Objects.requireNonNull(name, "name cannot be null");
         this.id = Objects.requireNonNull(id, "id cannot be null");
 
-        this.permissions = Collections.unmodifiableSet(
-                EnumSet.copyOf(permissions)
-        );
+        this.permissions = permissions;
+    }
+
+    public void addPermission(Permission permission) {
+        permissions.add(permission);
     }
 
     /**
@@ -52,7 +53,11 @@ public class ClaimRole {
      * @param permission the permission to check
      * @return <code>true</code> if the role has the permission, <code>false</code> otherwise
      */
-    public boolean hasPermission(ClaimPermission permission) {
+    public boolean hasPermission(Permission permission) {
         return permissions.contains(permission);
+    }
+
+    public void removePermission(Permission permission) {
+        permissions.remove(permission);
     }
 }

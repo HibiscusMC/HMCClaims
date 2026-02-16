@@ -1,14 +1,15 @@
 package com.hibiscusmc.hmcclaims.selection;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.marker.MarkType;
+import lombok.Getter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
-import java.util.Set;
 
 public class Selection {
 
@@ -16,21 +17,22 @@ public class Selection {
     private final Player player;
 
     private final Deque<BlockSelection> points = new ArrayDeque<>(2);
-    private final ClaimRegion region;
 
-    public Selection(Player player, BlockMarker marker) {
+    @Getter
+    private final ClaimRegion region;
+    @Getter
+    private final Claim parent;
+
+    public Selection(Player player, BlockMarker marker, Claim parent) {
         this.marker = marker;
         this.player = player;
+        this.parent = parent;
 
         this.region = new ClaimRegion(player.getWorld().getName());
     }
 
-    public ClaimRegion region() {
-        return region;
-    }
-
-    public Set<BlockSelection> points() {
-        return Set.copyOf(points);
+    public List<BlockSelection> points() {
+        return points.stream().toList();
     }
 
     public void addBlock(BlockSelection block) {
@@ -79,9 +81,9 @@ public class Selection {
         marker.clearAllMarks(player.getUniqueId());
 
         if (points.size() == 2) {
-            marker.mark(player, region.getLCornerBlocks(), MarkType.SELECT, 0);
+            marker.mark(player, region.getLCornerBlocks(), parent == null ? MarkType.SELECT : MarkType.SELECT_CHILD, 0);
         } else if (!points.isEmpty()) {
-            marker.mark(player, List.of(points.peekFirst()), MarkType.SELECT, 0);
+            marker.mark(player, List.of(points.peekFirst()), parent == null ? MarkType.SELECT : MarkType.SELECT_CHILD, 0);
         }
     }
 

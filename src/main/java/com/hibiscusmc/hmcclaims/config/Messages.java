@@ -27,6 +27,9 @@ public class Messages {
 
         private String created = "<gray>The claim <#d24c9f><name> <gray>has been created! Price: <#d24c9f><price>";
 
+        @Setting("child-created")
+        private String childCreated = "<gray>The child claim <#d24c9f><name> <gray>has been created!";
+
         private Selecting selecting = new Selecting();
 
         @Getter
@@ -60,6 +63,15 @@ public class Messages {
 
             @Setting("not-enough-claimblocks")
             private String notEnoughClaimBlocks = "<red>You don't have enough claim blocks! <gray>Required: <white><required_blocks></white>, <gray>Current: <white><current_blocks>";
+
+            @Setting("land-already-claimed")
+            private String landAlreadyClaimed = "<red>Someone already claimed this land!";
+
+            @Setting("claim-within-child")
+            private String claimWithinChild = "<red>Can't create a claim within a child claim";
+
+            @Setting("child-outside-boundaries")
+            private String childOutsideBoundaries = "<red>Child claim can't be outside of parent claim boundaries";
         }
     }
 

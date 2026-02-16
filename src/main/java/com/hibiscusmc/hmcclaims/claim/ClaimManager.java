@@ -1,7 +1,9 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -23,8 +26,15 @@ public class ClaimManager {
     private final Map<UUID, List<Claim>> playerClaims
             = new ConcurrentHashMap<>();
 
-    public Claim createClaim(Player player, ClaimRegion region) {
-        Claim newClaim = new Claim(UUID.randomUUID(), player, region, List.of());
+    public Claim createClaim(Player player, ClaimRegion region, @Nullable Claim parent) {
+        Claim newClaim = new Claim(UUID.randomUUID(), parent, player, region, List.of(
+                new ClaimRole("test", "test", Set.of()),
+                new ClaimRole("test2", "test2", Set.of())
+        ));
+
+        if (parent != null) {
+            parent.addChild(newClaim);
+        }
 
         addClaimToCache(newClaim);
 
@@ -77,7 +87,7 @@ public class ClaimManager {
         }
 
         return claims.stream()
-                .min(Comparator.comparingInt(this::getClaimDepth));
+                .max(Comparator.comparingInt(this::getClaimDepth));
     }
 
     private int getClaimDepth(Claim claim) {
@@ -121,6 +131,10 @@ public class ClaimManager {
     }
 
     public boolean isOverlapping(ClaimRegion newRegion) {
+        return isOverlapping(newRegion, null, false);
+    }
+
+    public boolean isOverlapping(ClaimRegion newRegion, UUID playerId, boolean checkForChild) {
         int minX = newRegion.minX() >> 4;
         int maxX = newRegion.maxX() >> 4;
         int minZ = newRegion.minZ() >> 4;
@@ -141,6 +155,10 @@ public class ClaimManager {
                 }
 
                 for (Claim existingClaim : claimsInChunk) {
+                    if (checkForChild && existingClaim.owner().uuid().equals(playerId) && existingClaim.parent() == null) {
+                        continue;
+                    }
+
                     if (regionsOverlap(newRegion, existingClaim.region())) {
                         return true;
                     }

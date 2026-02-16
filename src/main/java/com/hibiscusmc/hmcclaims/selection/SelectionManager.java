@@ -1,6 +1,8 @@
 package com.hibiscusmc.hmcclaims.selection;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.config.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
@@ -13,7 +15,9 @@ import org.bukkit.entity.Player;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Singleton
 public class SelectionManager {
@@ -43,11 +47,35 @@ public class SelectionManager {
                 "location", blockSelection.x() + ", " + blockSelection.z()
         );
 
-        Selection selection = user.currentSelection();
+        List<Claim> claims = claimManager.getClaimsAt(location);
+        boolean isParent = claims.size() == 1;
+
+        Claim claim = isParent ? claims.getFirst() : null;
+
+        if (claim != null && !claim.owner().uuid().equals(player.getUniqueId())) {
+            text.send(player, messages.claims().selecting().landAlreadyClaimed());
+            return;
+        }
+
+        boolean hasChild = claims.size() > 1;
+
+        if (hasChild) {
+            text.send(player, messages.claims().selecting().claimWithinChild());
+            return;
+        }
+
+        Selection selection;
 
         if (!user.hasActiveSelection()) {
-            selection = new Selection(player, blockMarker);
+            selection = new Selection(player, blockMarker, claim);
             user.currentSelection(selection);
+        } else {
+            selection = user.currentSelection();
+        }
+
+        if (selection.parent() != null && !selection.parent().equals(claim)) {
+            text.send(player, messages.claims().selecting().childOutsideBoundaries());
+            return;
         }
 
         if (selection.hasBlock(blockSelection)) {
@@ -59,26 +87,28 @@ public class SelectionManager {
             } else {
                 text.send(player, messages.claims().selecting().cornerUnselected(), locationPlaceholder);
             }
+
+            return;
+        }
+
+        InvalidSelectionReason reason = validateSelection(player.getUniqueId(), selection, blockSelection, location);
+
+        switch (reason) {
+            case TOO_SMALL -> {
+                text.send(player, messages.claims().selecting().selectionTooSmall());
+                return;
+            }
+            case OVERLAPPING -> {
+                text.send(player, messages.claims().selecting().claimOverlaps());
+                return;
+            }
+            case NONE -> selection.addBlock(blockSelection);
+        }
+
+        if (selection.points().size() == 1) {
+            text.send(player, messages.claims().selecting().firstSelection(), locationPlaceholder);
         } else {
-            InvalidSelectionReason reason = validateSelection(selection, blockSelection, location);
-
-            switch (reason) {
-                case TOO_SMALL -> {
-                    text.send(player, messages.claims().selecting().selectionTooSmall());
-                    return;
-                }
-                case OVERLAPPING -> {
-                    text.send(player, messages.claims().selecting().claimOverlaps());
-                    return;
-                }
-                case NONE -> selection.addBlock(blockSelection);
-            }
-
-            if (selection.points().size() < 2) {
-                text.send(player, messages.claims().selecting().firstSelection(), locationPlaceholder);
-            } else {
-                text.send(player, messages.claims().selecting().secondSelection(), locationPlaceholder);
-            }
+            text.send(player, messages.claims().selecting().secondSelection(), locationPlaceholder);
         }
     }
 
@@ -96,12 +126,22 @@ public class SelectionManager {
         user.currentSelection(null);
     }
 
-    private InvalidSelectionReason validateSelection(Selection selection, BlockSelection blockSelection, Location location) {
+    private InvalidSelectionReason validateSelection(UUID playerId, Selection selection, BlockSelection blockSelection, Location location) {
         if (selection.isTooSmall(blockSelection)) {
             return InvalidSelectionReason.TOO_SMALL;
         }
 
-        if (claimManager.getClaimAt(location).isPresent()) {
+        ClaimRegion region = null;
+        if (selection.points().size() == 2) {
+            region = selection.region();
+        } else if (selection.points().size() == 1) {
+            region = new ClaimRegion(location.getWorld().getName(), List.of(
+                    selection.points().getFirst(),
+                    blockSelection
+            ));
+        }
+
+        if (region != null && claimManager.isOverlapping(region, playerId, selection.parent() != null)) {
             return InvalidSelectionReason.OVERLAPPING;
         }
 
