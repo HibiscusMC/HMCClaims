@@ -31,14 +31,14 @@ public class ClaimRole {
     /**
      * Creates a new immutable claim role.
      *
-     * @param name        the display name of the role
      * @param id          the unique identifier of the role
+     * @param name        the display name of the role
      * @param permissions the permissions granted to this role
      * @throws NullPointerException if any argument is null
      */
-    public ClaimRole(String name, String id, Set<Permission> permissions) {
-        this.name = Objects.requireNonNull(name, "name cannot be null");
+    public ClaimRole(String id, String name, Set<Permission> permissions) {
         this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.name = Objects.requireNonNull(name, "name cannot be null");
 
         this.permissions = permissions;
     }

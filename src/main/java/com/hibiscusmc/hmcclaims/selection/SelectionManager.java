@@ -3,7 +3,7 @@ package com.hibiscusmc.hmcclaims.selection;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
-import com.hibiscusmc.hmcclaims.config.ConfigHolder;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.user.User;
@@ -110,6 +110,13 @@ public class SelectionManager {
         } else {
             text.send(player, messages.claims().selecting().secondSelection(), locationPlaceholder);
         }
+    }
+
+    public boolean hasSelection(Player player) {
+        User user = userManager.getUser(player.getUniqueId())
+                .orElseThrow(() -> new IllegalStateException("User not loaded!"));
+
+        return user.hasActiveSelection();
     }
 
     public void destroySelection(Player player) {

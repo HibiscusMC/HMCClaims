@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.service;
 
+import com.hibiscusmc.hmcclaims.command.argument.CommandArgumentImpl;
 import team.unnamed.commandflow.CommandManager;
 import team.unnamed.commandflow.annotated.AnnotatedCommandTreeBuilder;
 import team.unnamed.commandflow.annotated.CommandClass;
@@ -21,6 +22,7 @@ public class CommandService implements Service {
         PartInjector injector = PartInjector.create();
         injector.install(new DefaultsModule());
         injector.install(new BukkitModule());
+        injector.install(new CommandArgumentImpl());
 
         CommandManager manager = new BukkitMapCommandManager("hmcclaims");
         AnnotatedCommandTreeBuilder treeBuilder = AnnotatedCommandTreeBuilder.create(injector);

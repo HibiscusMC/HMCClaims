@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.module.CommandModule;
 import com.hibiscusmc.hmcclaims.module.ConfigModule;
@@ -11,6 +12,7 @@ import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import com.hibiscusmc.hmcclaims.util.Scheduler;
 import com.hibiscusmc.hmcclaims.util.Text;
 import lombok.extern.java.Log;
 import org.bukkit.plugin.Plugin;
@@ -55,12 +57,16 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(JavaPlugin.class).to(HMCClaims.class);
         binder.bind(Plugin.class).to(HMCClaims.class);
 
+        binder.bind(Text.class).to(Text.class);
+        binder.bind(Scheduler.class).to(Scheduler.class);
+
         binder.install(new ServiceModule());
         binder.install(new CommandModule());
         binder.install(new ListenerModule());
         binder.install(new ConfigModule(this));
 
         binder.bind(PermissionRegistry.class).to(PermissionRegistry.class);
+        binder.bind(GuiRegistry.class).to(GuiRegistry.class);
 
         binder.bind(StorageHolder.class).to(StorageHolder.class);
         binder.bind(BlockMarker.class).to(BlockMarker.class);
@@ -68,7 +74,5 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(SelectionManager.class).to(SelectionManager.class);
         binder.bind(ClaimManager.class).to(ClaimManager.class);
         binder.bind(UserManager.class).to(UserManager.class);
-
-        binder.bind(Text.class).to(Text.class);
     }
 }

@@ -1,5 +1,11 @@
-package com.hibiscusmc.hmcclaims.config;
+package com.hibiscusmc.hmcclaims.config.internal;
 
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.ClaimRoleSerializer;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.CustomItemSerializer;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.PermissionSerializer;
+import com.hibiscusmc.hmcclaims.permission.Permission;
+import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
@@ -24,6 +30,7 @@ public class ConfigFactory {
             throw new NullPointerException("No registered config file found for class " + clazz);
         }
 
+        // noinspection unchecked
         ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.get(clazz);
         load(holder.path(), clazz);
     }
@@ -38,8 +45,14 @@ public class ConfigFactory {
                 .path(path)
                 .defaultOptions(opts -> opts
                         .shouldCopyDefaults(true)
-                        .serializers(build -> build.registerAnnotatedObjects(factory))
+                        .serializers(build -> build
+                                .registerAnnotatedObjects(factory)
+                                .register(ItemStack.class, CustomItemSerializer.INSTANCE)
+                                .register(Permission.class, PermissionSerializer.INSTANCE)
+                                .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
+                        )
                 )
+                .indent(2)
                 .nodeStyle(NodeStyle.BLOCK);
 
         Field optsField = builder.getClass().getDeclaredField("options");
@@ -55,12 +68,14 @@ public class ConfigFactory {
 
         loader.save(node);
 
+        // noinspection unchecked
         ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.computeIfAbsent(clazz, k -> new ConfigHolder<>());
         holder.update(instance);
         holder.path(path);
     }
 
     public static <T> ConfigHolder<T> getHolder(Class<T> clazz) {
+        // noinspection unchecked
         return (ConfigHolder<T>) CONFIG_FILES.get(clazz);
     }
 }

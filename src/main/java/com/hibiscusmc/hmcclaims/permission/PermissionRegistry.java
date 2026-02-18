@@ -2,19 +2,20 @@ package com.hibiscusmc.hmcclaims.permission;
 
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import net.kyori.adventure.key.Key;
-import team.unnamed.inject.Singleton;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Singleton
 public class PermissionRegistry {
 
     private final static Map<String, Permission> PERMISSIONS = new HashMap<>();
 
-    public void load() {
+    private PermissionRegistry() {
+    }
+
+    static {
         register(Permission.PLACE_BLOCK);
         register(Permission.BREAK_BLOCK);
         register(Permission.INTERACT_BLOCK);
@@ -26,7 +27,7 @@ public class PermissionRegistry {
         register(Permission.DROP_ITEM);
     }
 
-    public void register(Permission permission) {
+    public static void register(Permission permission) {
         String key = permission.key().asString();
 
         if (PERMISSIONS.containsKey(key)) {
@@ -36,11 +37,11 @@ public class PermissionRegistry {
         PERMISSIONS.put(key, permission);
     }
 
-    public Permission getPermission(String key) {
+    public static Permission getPermission(String key) {
         return getPermission(RegistryUtil.withKey(key));
     }
 
-    public Permission getPermission(Key key) {
+    public static Permission getPermission(Key key) {
         return PERMISSIONS.get(key.asString());
     }
 

@@ -4,6 +4,8 @@ main: com.hibiscusmc.hmcclaims.HMCClaims
 api-version: '${serverVersion}'
 authors: [ iKztu ]
 description: "A little Christmas Gift from iKztu & Lucian929 to caerisma. We ❤ you, bestie!"
+depend:
+  - HibiscusCommons
 
 libraries:
   - com.zaxxer:HikariCP:7.0.2

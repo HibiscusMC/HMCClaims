@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.marker;
 
 import com.hibiscusmc.hmcclaims.selection.BlockSelection;
+import com.hibiscusmc.hmcclaims.util.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -29,10 +30,10 @@ public class BlockMarker {
     private final Plugin plugin;
 
     @Inject
-    public BlockMarker(Plugin plugin) {
+    public BlockMarker(Plugin plugin, Scheduler scheduler) {
         this.plugin = plugin;
 
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        scheduler.scheduleTimer(() -> {
             long now = System.currentTimeMillis();
 
             expiryMap.forEach((key, expiry) -> {
@@ -41,7 +42,7 @@ public class BlockMarker {
                     expiryMap.remove(key);
                 }
             });
-        }, 0L, 100L);
+        }, 100L);
     }
 
     public void mark(Player player, Collection<BlockSelection> selections, MarkType type, long durationMs) {

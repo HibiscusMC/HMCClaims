@@ -2,7 +2,7 @@ package com.hibiscusmc.hmcclaims.listener;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
-import com.hibiscusmc.hmcclaims.config.ConfigHolder;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
@@ -103,7 +103,7 @@ public class PlayerSelectionListener implements Listener {
             return;
         }
 
-        if (itemInHand.getType() != settings.claiming().claimTool()) {
+        if (!itemInHand.isSimilar(settings.claiming().claimTool())) {
             return;
         }
 
@@ -129,7 +129,7 @@ public class PlayerSelectionListener implements Listener {
 
             ClaimRegion region = selection.region();
 
-            if (claimManager.isOverlapping(region)) {
+            if (claimManager.isOverlapping(region, player.getUniqueId(), selection.parent() != null)) {
                 text.send(player, messages.claims().selecting().claimOverlaps());
                 return;
             }
@@ -172,11 +172,15 @@ public class PlayerSelectionListener implements Listener {
     @EventHandler
     public void onPlayerItemHeld(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItem(event.getNewSlot());
+
+        ItemStack oldItem = player.getInventory().getItem(event.getPreviousSlot());
+        ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
 
         Settings holder = settingsHolder.get();
+        ItemStack claimTool = holder.claiming().claimTool();
 
-        if (item == null || item.getType() != holder.claiming().claimTool()) {
+        if ((newItem == null || !newItem.isSimilar(claimTool)) &&
+                (oldItem != null && oldItem.isSimilar(claimTool))) {
             removeSelection(player);
         }
     }
@@ -197,7 +201,9 @@ public class PlayerSelectionListener implements Listener {
     }
 
     private void removeSelection(Player player) {
-        selectionManager.destroySelection(player);
-        text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
+        if (selectionManager.hasSelection(player)) {
+            selectionManager.destroySelection(player);
+            text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.hibiscusmc.hmcclaims.config;
+package com.hibiscusmc.hmcclaims.config.internal;
 
 import java.nio.file.Path;
 

@@ -1,7 +1,9 @@
 package com.hibiscusmc.hmcclaims.module;
 
-import com.hibiscusmc.hmcclaims.config.ConfigFactory;
-import com.hibiscusmc.hmcclaims.config.ConfigHolder;
+import com.hibiscusmc.hmcclaims.config.DefaultRoles;
+import com.hibiscusmc.hmcclaims.config.Guis;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import org.bukkit.plugin.Plugin;
@@ -25,6 +27,10 @@ public class ConfigModule extends AbstractModule {
         try {
             ConfigFactory.load(pluginPath.resolve("config.yml"), Settings.class);
             ConfigFactory.load(pluginPath.resolve("messages.yml"), Messages.class);
+            ConfigFactory.load(pluginPath.resolve("default-groups.yml"), DefaultRoles.class);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), Guis.ClaimList.class);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-info.yml")), Guis.ClaimInfo.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -34,5 +40,14 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<Messages>>() {
         }).toInstance(ConfigFactory.getHolder(Messages.class));
+
+        bind(new TypeReference<ConfigHolder<DefaultRoles>>() {
+        }).toInstance(ConfigFactory.getHolder(DefaultRoles.class));
+
+        bind(new TypeReference<ConfigHolder<Guis.ClaimList>>() {
+        }).toInstance(ConfigFactory.getHolder(Guis.ClaimList.class));
+
+        bind(new TypeReference<ConfigHolder<Guis.ClaimInfo>>() {
+        }).toInstance(ConfigFactory.getHolder(Guis.ClaimInfo.class));
     }
 }

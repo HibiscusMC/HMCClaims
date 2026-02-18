@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.user;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
-import com.hibiscusmc.hmcclaims.config.ConfigHolder;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
@@ -40,6 +40,7 @@ public class UserManager {
         }
 
         long usedBlocks = claimManager.getPlayerClaims(user.uuid()).stream()
+                .filter(claim -> claim.parent() == null)
                 .mapToLong(claim -> claim.region().getSurfaceArea())
                 .sum();
 

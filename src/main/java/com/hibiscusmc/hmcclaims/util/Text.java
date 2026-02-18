@@ -1,9 +1,11 @@
 package com.hibiscusmc.hmcclaims.util;
 
-import com.hibiscusmc.hmcclaims.config.ConfigHolder;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -33,7 +35,7 @@ public class Text {
     }
 
     public Component parse(String string) {
-        return parse(string, true);
+        return parse(string, false);
     }
 
     public Component parse(String string, Map<String, String> data) {
@@ -45,6 +47,10 @@ public class Text {
     }
 
     public Component parse(String string, boolean withPrefix, Map<String, String> data) {
+        if (string.isEmpty()) {
+            return Component.empty();
+        }
+
         if (withPrefix) {
             string = prefix(string);
         }
@@ -53,7 +59,40 @@ public class Text {
             return MINI_MESSAGE.deserialize(string);
         }
 
+        TagResolver resolver = resolvePlaceholders(data);
+        return MINI_MESSAGE.deserialize(string, TagResolver.resolver(resolver));
+    }
+
+    public Component parseItem(String string) {
+        return parseItem(string, Map.of());
+    }
+
+    public Component parseItem(String string, Map<String, String> data) {
+        if (string.isEmpty()) {
+            return Component.empty();
+        }
+
+        if (data.isEmpty()) {
+            return MINI_MESSAGE.deserialize(string)
+                    .colorIfAbsent(NamedTextColor.WHITE)
+                    .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+        }
+
+        TagResolver resolver = resolvePlaceholders(data);
+
+        return MINI_MESSAGE
+                .deserialize(string, resolver)
+                .colorIfAbsent(NamedTextColor.WHITE)
+                .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
+
+    private String prefix(String string) {
+        return messages.get().prefix() + string;
+    }
+
+    private TagResolver resolvePlaceholders(Map<String, String> data) {
         List<TagResolver.Single> resolvers = new ArrayList<>();
+
         for (Map.Entry<String, String> entry : data.entrySet()) {
             @Subst("placeholder")
             String key = entry.getKey();
@@ -61,10 +100,6 @@ public class Text {
             resolvers.add(Placeholder.parsed(key, entry.getValue()));
         }
 
-        return MINI_MESSAGE.deserialize(string, TagResolver.resolver(resolvers));
-    }
-
-    public String prefix(String string) {
-        return messages.get().prefix() + string;
+        return TagResolver.resolver(resolvers);
     }
 }

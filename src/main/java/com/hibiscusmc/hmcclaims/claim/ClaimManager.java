@@ -1,9 +1,11 @@
 package com.hibiscusmc.hmcclaims.claim;
 
-import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.config.DefaultRoles;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
@@ -12,7 +14,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,11 +27,11 @@ public class ClaimManager {
     private final Map<UUID, List<Claim>> playerClaims
             = new ConcurrentHashMap<>();
 
+    @Inject
+    private ConfigHolder<DefaultRoles> rolesHolder;
+
     public Claim createClaim(Player player, ClaimRegion region, @Nullable Claim parent) {
-        Claim newClaim = new Claim(UUID.randomUUID(), parent, player, region, List.of(
-                new ClaimRole("test", "test", Set.of()),
-                new ClaimRole("test2", "test2", Set.of())
-        ));
+        Claim newClaim = new Claim(UUID.randomUUID(), parent, player, region, rolesHolder.get().defaultRoles());
 
         if (parent != null) {
             parent.addChild(newClaim);
@@ -128,10 +129,6 @@ public class ClaimManager {
 
     public List<Claim> getPlayerClaims(UUID uuid) {
         return playerClaims.getOrDefault(uuid, Collections.emptyList());
-    }
-
-    public boolean isOverlapping(ClaimRegion newRegion) {
-        return isOverlapping(newRegion, null, false);
     }
 
     public boolean isOverlapping(ClaimRegion newRegion, UUID playerId, boolean checkForChild) {

@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.config;
 import lombok.Getter;
 import lombok.ToString;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
@@ -68,6 +69,7 @@ public class Settings {
 
         @Setting("starting-amount")
         private int startingAmount = 100;
+
         private int price = 1;
 
     }
@@ -80,7 +82,7 @@ public class Settings {
     public static class Claiming {
 
         @Setting("claim-tool")
-        private Material claimTool = Material.GOLDEN_HOE;
+        private ItemStack claimTool = ItemStack.of(Material.GOLDEN_SHOVEL);
 
     }
 }

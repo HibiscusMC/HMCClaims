@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,13 +77,14 @@ public class Claim {
         this.owner = new ClaimMember(
                 uuid,
                 this,
+                owner.getName(),
                 roleRegistry.ownerRole(),
                 PermissionRegistry.getAllPermissions()
                         .stream()
                         .map(permission -> new PermissionHolder(permission, true))
                         .collect(Collectors.toUnmodifiableSet())
         );
-        members.put(uuid, this.owner);
+        addMember(this.owner);
 
         this.name = owner.getName() + "'s" + (parent != null ? " Child" : "") + " Claim";
 

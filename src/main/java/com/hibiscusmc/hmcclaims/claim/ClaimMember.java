@@ -1,8 +1,8 @@
 package com.hibiscusmc.hmcclaims.claim;
 
-import com.hibiscusmc.hmcclaims.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.permission.PermissionHolder;
+import com.hibiscusmc.hmcclaims.user.User;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -25,8 +25,10 @@ public class ClaimMember {
 
     private final UUID uuid;
     private final Claim claim;
+    private final String lastKnownName;
 
     private final ClaimRole role;
+
 
     /**
      * Explicit permission overrides for this member.
@@ -50,9 +52,10 @@ public class ClaimMember {
 
     private Instant joinedTimestamp;
 
-    public ClaimMember(UUID uuid, Claim claim, ClaimRole role, Set<PermissionHolder> permissions) {
+    public ClaimMember(UUID uuid, Claim claim, String lastKnownName, ClaimRole role, Set<PermissionHolder> permissions) {
         this.uuid = uuid;
         this.claim = claim;
+        this.lastKnownName = lastKnownName;
 
         this.role = role;
         this.permissions = permissions;
