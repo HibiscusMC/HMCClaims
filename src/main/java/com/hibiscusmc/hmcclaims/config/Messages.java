@@ -96,12 +96,12 @@ public class Messages {
             private String summary = """
                     <gray><white><player_name></white>'s claim blocks breakdown:
                     
-                    <dark_gray><b>»</b> <gray>Starting blocks: <white><starting_blocks>
-                    <dark_gray><b>»</b> <gray>Accrued blocks: <white><accrued_blocks>
-                    <dark_gray><b>»</b> <gray>Total blocks: <white><total_blocks>
-                    <dark_gray><b>»</b> <gray>Claimed blocks: <white><claimed_blocks>
+                    <dark_gray><b>»</b> <gray>Starting Blocks: <white><starting_blocks>
+                    <dark_gray><b>»</b> <gray>Obtained Blocks: <white><obtained_blocks>
+                    <dark_gray><b>»</b> <gray>Total Blocks: <white><total_blocks>
                     
-                    <dark_gray><b>»</b> <gray>Remaining blocks: <white><remaining_blocks>""";
+                    <dark_gray><b>»</b> <gray>Used Blocks: <white><used_blocks>
+                    <dark_gray><b>»</b> <gray>Available Blocks: <white><available_blocks>""";
 
         }
 

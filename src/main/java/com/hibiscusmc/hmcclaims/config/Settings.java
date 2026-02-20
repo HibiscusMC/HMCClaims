@@ -7,6 +7,8 @@ import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
+import java.util.Map;
+
 @Getter
 @ToString
 @ConfigSerializable
@@ -85,4 +87,11 @@ public class Settings {
         private ItemStack claimTool = ItemStack.of(Material.GOLDEN_SHOVEL);
 
     }
+
+    @Setting("world-aliases")
+    private Map<String, String> worldAliases = Map.of(
+            "world", "Overworld",
+            "world_nether", "Nether",
+            "world_the_end", "The End"
+    );
 }

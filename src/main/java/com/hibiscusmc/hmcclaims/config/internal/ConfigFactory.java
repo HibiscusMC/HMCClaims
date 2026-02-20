@@ -1,9 +1,11 @@
 package com.hibiscusmc.hmcclaims.config.internal;
 
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.ActionSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.ClaimRoleSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.CustomItemSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.PermissionSerializer;
+import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.permission.Permission;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -50,6 +52,7 @@ public class ConfigFactory {
                                 .register(ItemStack.class, CustomItemSerializer.INSTANCE)
                                 .register(Permission.class, PermissionSerializer.INSTANCE)
                                 .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
+                                .register(Action.class, ActionSerializer.INSTANCE)
                         )
                 )
                 .indent(2)

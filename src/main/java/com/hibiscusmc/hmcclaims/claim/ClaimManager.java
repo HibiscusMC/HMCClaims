@@ -31,7 +31,19 @@ public class ClaimManager {
     private ConfigHolder<DefaultRoles> rolesHolder;
 
     public Claim createClaim(Player player, ClaimRegion region, @Nullable Claim parent) {
-        Claim newClaim = new Claim(UUID.randomUUID(), parent, player, region, rolesHolder.get().defaultRoles());
+        long totalMainClaims = playerClaims.getOrDefault(player.getUniqueId(), List.of())
+                .stream()
+                .filter(claim -> claim.parent() == null)
+                .count();
+
+        Claim newClaim = new Claim(
+                UUID.randomUUID(),
+                parent,
+                player,
+                region,
+                rolesHolder.get().defaultRoles(),
+                (int) totalMainClaims + 1
+        );
 
         if (parent != null) {
             parent.addChild(newClaim);

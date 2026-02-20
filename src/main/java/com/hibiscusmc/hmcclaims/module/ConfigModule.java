@@ -27,7 +27,7 @@ public class ConfigModule extends AbstractModule {
         try {
             ConfigFactory.load(pluginPath.resolve("config.yml"), Settings.class);
             ConfigFactory.load(pluginPath.resolve("messages.yml"), Messages.class);
-            ConfigFactory.load(pluginPath.resolve("default-groups.yml"), DefaultRoles.class);
+            ConfigFactory.load(pluginPath.resolve("default-roles.yml"), DefaultRoles.class);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), Guis.ClaimList.class);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-info.yml")), Guis.ClaimInfo.class);

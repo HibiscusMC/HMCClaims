@@ -15,6 +15,7 @@ repositories {
     mavenCentral()
 
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.hibiscusmc.com/releases/")
 }
 
@@ -37,13 +38,15 @@ dependencies {
 
     // HibiscusCommons
     compileOnly("me.lojosho:HibiscusCommons:0.8.2-f3f79539")
-    // Configurate
-    compileOnly("org.spongepowered:configurate-yaml:4.2.0")
+    // PlaceholderAPI
+    compileOnly("me.clip:placeholderapi:2.12.2")
 
     // Lombok
     annotationProcessor("org.projectlombok:lombok:1.18.42")
     compileOnly("org.projectlombok:lombok:1.18.42")
 
+    // Configurate
+    compileOnly("org.spongepowered:configurate-yaml:4.2.0")
     // HikariCP
     compileOnly("com.zaxxer:HikariCP:7.0.2")
 }
@@ -76,6 +79,7 @@ tasks {
 
     runServer {
         downloadPlugins {
+            modrinth("placeholderapi", "2.12.2")
             url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.8.2-f3f79539/HibiscusCommons-0.8.2-f3f79539.jar")
         }
 

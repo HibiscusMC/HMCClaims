@@ -45,17 +45,17 @@ public class ClaimBlocksCommand implements CommandClass {
 
         User user = userManager.getUser(player.getUniqueId()).orElse(null);
         long startingBlocks = settings.claimBlocks().startingAmount();
-        long accruedBlocks = user != null ? user.claimBlocks() : 0;
-        long totalBlocks = startingBlocks + accruedBlocks;
-        long remainingBlocks = userManager.getRemainingBlocks(user);
-        long claimedBlocks = totalBlocks - remainingBlocks;
+        long obtainedBlocks = user != null ? user.claimBlocks() : 0;
+        long totalBlocks = startingBlocks + obtainedBlocks;
+        long availableBlocks = userManager.getRemainingBlocks(user);
+        long usedBlocks = totalBlocks - availableBlocks;
 
         text.send(sender, messages.commands().claimBlocks().summary(), Map.of(
                 "starting_blocks", startingBlocks + "",
-                "accrued_blocks", accruedBlocks + "",
+                "obtained_blocks", obtainedBlocks + "",
                 "total_blocks", totalBlocks + "",
-                "claimed_blocks", claimedBlocks + "",
-                "remaining_blocks", remainingBlocks + "",
+                "used_blocks", usedBlocks + "",
+                "available_blocks", availableBlocks + "",
                 "player_name", player.getName()
         ));
     }

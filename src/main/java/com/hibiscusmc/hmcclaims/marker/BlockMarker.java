@@ -28,10 +28,12 @@ public class BlockMarker {
     }
 
     private final Plugin plugin;
+    private final Scheduler scheduler;
 
     @Inject
     public BlockMarker(Plugin plugin, Scheduler scheduler) {
         this.plugin = plugin;
+        this.scheduler = scheduler;
 
         scheduler.scheduleTimer(() -> {
             long now = System.currentTimeMillis();
@@ -46,21 +48,23 @@ public class BlockMarker {
     }
 
     public void mark(Player player, Collection<BlockSelection> selections, MarkType type, long durationMs) {
-        UUID uuid = player.getUniqueId();
-        Set<MarkedBlock> activeMarks = playerMarks.computeIfAbsent(uuid, k -> new CopyOnWriteArraySet<>());
+        scheduler.schedule(() -> {
+            UUID uuid = player.getUniqueId();
+            Set<MarkedBlock> activeMarks = playerMarks.computeIfAbsent(uuid, k -> new CopyOnWriteArraySet<>());
 
-        for (BlockSelection selection : selections) {
-            String cacheKey = generateKey(player.getWorld(), selection, type);
-            MarkedBlock markedBlock = blockCache.computeIfAbsent(cacheKey,
-                    key -> MarkedBlock.from(player.getWorld(), selection, type, plugin));
+            for (BlockSelection selection : selections) {
+                String cacheKey = generateKey(player.getWorld(), selection, type);
+                MarkedBlock markedBlock = blockCache.computeIfAbsent(cacheKey,
+                        key -> MarkedBlock.from(player.getWorld(), selection, type, plugin));
 
-            markedBlock.mark(player);
-            activeMarks.add(markedBlock);
+                markedBlock.mark(player);
+                activeMarks.add(markedBlock);
 
-            if (durationMs > 0) {
-                expiryMap.put(new MarkKey(uuid, markedBlock), System.currentTimeMillis() + durationMs);
+                if (durationMs > 0) {
+                    expiryMap.put(new MarkKey(uuid, markedBlock), System.currentTimeMillis() + durationMs);
+                }
             }
-        }
+        });
     }
 
     public void removeMarkedBlock(UUID uuid, MarkedBlock markedBlock) {
@@ -78,15 +82,17 @@ public class BlockMarker {
     }
 
     public void clearAllMarks(UUID uuid) {
-        Set<MarkedBlock> marks = playerMarks.remove(uuid);
-        if (marks != null) {
-            Player player = Bukkit.getPlayer(uuid);
-            marks.forEach(m -> {
-                if (player != null) m.hide(player);
-                expiryMap.remove(new MarkKey(uuid, m));
-            });
-            marks.clear();
-        }
+        scheduler.schedule(() -> {
+            Set<MarkedBlock> marks = playerMarks.remove(uuid);
+            if (marks != null) {
+                Player player = Bukkit.getPlayer(uuid);
+                marks.forEach(m -> {
+                    if (player != null) m.hide(player);
+                    expiryMap.remove(new MarkKey(uuid, m));
+                });
+                marks.clear();
+            }
+        });
     }
 
     private String generateKey(World world, BlockSelection sel, MarkType type) {

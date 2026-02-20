@@ -12,6 +12,7 @@ import com.hibiscusmc.hmcclaims.selection.Selection;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import com.hibiscusmc.hmcclaims.util.Scheduler;
 import com.hibiscusmc.hmcclaims.util.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -51,6 +52,8 @@ public class PlayerSelectionListener implements Listener {
     private ConfigHolder<Messages> messagesHolder;
 
     @Inject
+    private Scheduler scheduler;
+    @Inject
     private Text text;
 
     @EventHandler
@@ -79,26 +82,28 @@ public class PlayerSelectionListener implements Listener {
                 return;
             }
 
-            List<Claim> claims = claimManager.getClaimsAt(block.getLocation());
-            if (claims.isEmpty()) {
-                return;
-            }
-
-            for (Claim claim : claims) {
-                if (claims.size() == 1 || claim.parent() != null) {
-                    Player owner = Bukkit.getPlayer(claim.owner().uuid());
-                    text.send(player, messages.claims().ownedBy(), Map.of(
-                            "name", claim.name(),
-                            "owner", owner == null ? "unknown" : owner.getName()
-                    ));
+            scheduler.scheduleAsync(() -> {
+                List<Claim> claims = claimManager.getClaimsAt(block.getLocation());
+                if (claims.isEmpty()) {
+                    return;
                 }
 
-                if (claim.owner().uuid().equals(player.getUniqueId())) {
-                    marker.mark(player, claim.region().getLCornerBlocks(), claim.parent() != null ? MarkType.INSPECT_CHILD : MarkType.INSPECT, TimeUnit.SECONDS.toMillis(5));
-                } else {
-                    marker.mark(player, claim.region().getLCornerBlocks(), claim.parent() != null ? MarkType.INSPECT_CHILD_OTHER : MarkType.INSPECT_OTHER, TimeUnit.SECONDS.toMillis(5));
+                for (Claim claim : claims) {
+                    if (claims.size() == 1 || claim.parent() != null) {
+                        Player owner = Bukkit.getPlayer(claim.owner().uuid());
+                        text.send(player, messages.claims().ownedBy(), Map.of(
+                                "name", claim.name(),
+                                "owner", owner == null ? "unknown" : owner.getName()
+                        ));
+                    }
+
+                    if (claim.owner().uuid().equals(player.getUniqueId())) {
+                        marker.mark(player, claim.region().getLCornerBlocks(), claim.parent() != null ? MarkType.INSPECT_CHILD : MarkType.INSPECT, TimeUnit.SECONDS.toMillis(5));
+                    } else {
+                        marker.mark(player, claim.region().getLCornerBlocks(), claim.parent() != null ? MarkType.INSPECT_CHILD_OTHER : MarkType.INSPECT_OTHER, TimeUnit.SECONDS.toMillis(5));
+                    }
                 }
-            }
+            });
 
             return;
         }
@@ -109,64 +114,67 @@ public class PlayerSelectionListener implements Listener {
 
         event.setCancelled(true);
 
-        if (action.isRightClick()) {
-            selectionManager.handleSelection(player, block);
-        } else {
-            User user = userManager.getUser(player.getUniqueId())
-                    .orElseThrow(() -> new IllegalStateException("User not loaded!"));
+        boolean isRightClick = action.isRightClick();
+        scheduler.scheduleAsync(() -> {
+            if (isRightClick) {
+                selectionManager.handleSelection(player, block);
+            } else {
+                User user = userManager.getUser(player.getUniqueId())
+                        .orElseThrow(() -> new IllegalStateException("User not loaded!"));
 
-            if (!user.hasActiveSelection()) {
-                text.send(player, messages.claims().selecting().mustSelectRegion());
-                return;
-            }
-
-            Selection selection = user.currentSelection();
-
-            if (selection.points().size() < 2) {
-                text.send(player, messages.claims().selecting().mustSelectPoints());
-                return;
-            }
-
-            ClaimRegion region = selection.region();
-
-            if (claimManager.isOverlapping(region, player.getUniqueId(), selection.parent() != null)) {
-                text.send(player, messages.claims().selecting().claimOverlaps());
-                return;
-            }
-
-            if (selection.parent() == null) {
-                long surfaceArea = region.getSurfaceArea();
-                long currentBlocks = userManager.getRemainingBlocks(user);
-
-                if (surfaceArea > currentBlocks) {
-                    text.send(player, messages.claims().selecting().notEnoughClaimBlocks(), Map.of(
-                            "required_blocks", surfaceArea + "",
-                            "current_blocks", currentBlocks + ""
-                    ));
-
+                if (!user.hasActiveSelection()) {
+                    text.send(player, messages.claims().selecting().mustSelectRegion());
                     return;
                 }
 
-                Claim claim = claimManager.createClaim(player, region, selection.parent());
-                selectionManager.destroySelection(player);
+                Selection selection = user.currentSelection();
 
-                text.send(player, messages.claims().created(), Map.of(
-                        "name", claim.name(),
-                        "price", surfaceArea + ""
-                ));
+                if (selection.points().size() < 2) {
+                    text.send(player, messages.claims().selecting().mustSelectPoints());
+                    return;
+                }
 
-                marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
-            } else {
-                Claim claim = claimManager.createClaim(player, region, selection.parent());
-                selectionManager.destroySelection(player);
+                ClaimRegion region = selection.region();
 
-                text.send(player, messages.claims().childCreated(), Map.of(
-                        "name", claim.name()
-                ));
+                if (claimManager.isOverlapping(region, player.getUniqueId(), selection.parent() != null)) {
+                    text.send(player, messages.claims().selecting().claimOverlaps());
+                    return;
+                }
 
-                marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE_CHILD, TimeUnit.SECONDS.toMillis(10));
+                if (selection.parent() == null) {
+                    long surfaceArea = region.getSurfaceArea();
+                    long currentBlocks = userManager.getRemainingBlocks(user);
+
+                    if (surfaceArea > currentBlocks) {
+                        text.send(player, messages.claims().selecting().notEnoughClaimBlocks(), Map.of(
+                                "required_blocks", surfaceArea + "",
+                                "current_blocks", currentBlocks + ""
+                        ));
+
+                        return;
+                    }
+
+                    Claim claim = claimManager.createClaim(player, region, selection.parent());
+                    selectionManager.destroySelection(player);
+
+                    text.send(player, messages.claims().created(), Map.of(
+                            "name", claim.name(),
+                            "price", surfaceArea + ""
+                    ));
+
+                    marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
+                } else {
+                    Claim claim = claimManager.createClaim(player, region, selection.parent());
+                    selectionManager.destroySelection(player);
+
+                    text.send(player, messages.claims().childCreated(), Map.of(
+                            "name", claim.name()
+                    ));
+
+                    marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE_CHILD, TimeUnit.SECONDS.toMillis(10));
+                }
             }
-        }
+        });
     }
 
     @EventHandler

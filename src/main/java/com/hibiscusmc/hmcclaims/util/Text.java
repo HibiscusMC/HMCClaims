@@ -10,6 +10,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.intellij.lang.annotations.Subst;
+import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -30,8 +31,8 @@ public class Text {
         send(audience, string, Map.of());
     }
 
-    public void send(Audience audience, String string, Map<String, String> data) {
-        audience.sendMessage(parse(string, true, data));
+    public void send(@NotNull Audience audience, String string, Map<String, String> data) {
+        audience.sendMessage(parse(string, data));
     }
 
     public Component parse(String string) {
@@ -46,7 +47,7 @@ public class Text {
         return parse(string, withPrefix, Map.of());
     }
 
-    public Component parse(String string, boolean withPrefix, Map<String, String> data) {
+    public Component parse(@NotNull String string, boolean withPrefix, Map<String, String> data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
@@ -63,11 +64,11 @@ public class Text {
         return MINI_MESSAGE.deserialize(string, TagResolver.resolver(resolver));
     }
 
-    public Component parseItem(String string) {
+    public static Component parseItem(String string) {
         return parseItem(string, Map.of());
     }
 
-    public Component parseItem(String string, Map<String, String> data) {
+    public static Component parseItem(@NotNull String string, Map<String, String> data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
@@ -86,11 +87,24 @@ public class Text {
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
+    @NotNull
+    public static String unparse(Component component) {
+        String serialized = MINI_MESSAGE.serialize(component);
+
+        if (serialized.startsWith("<!italic>")) {
+            serialized = serialized.substring(9);
+        }
+
+        return serialized;
+    }
+
+    @NotNull
     private String prefix(String string) {
         return messages.get().prefix() + string;
     }
 
-    private TagResolver resolvePlaceholders(Map<String, String> data) {
+    @NotNull
+    private static TagResolver resolvePlaceholders(@NotNull Map<String, String> data) {
         List<TagResolver.Single> resolvers = new ArrayList<>();
 
         for (Map.Entry<String, String> entry : data.entrySet()) {

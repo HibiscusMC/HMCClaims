@@ -58,6 +58,12 @@ public class Claim {
     @Setter
     private boolean locked;
 
+    public Claim(UUID claimId, @Nullable Claim parent, Player owner, ClaimRegion region, List<ClaimRole> roles, int totalClaims) {
+        this(claimId,
+                parent == null ? owner.getName() + "'s Claim " + totalClaims : "Child of " + parent.name(),
+                parent, owner, region, roles);
+    }
+
     /**
      * Creates a new Claim and initializes the owner with full permissions.
      *
@@ -67,11 +73,13 @@ public class Claim {
      * @param region  The physical boundaries of the claim.
      * @param roles   The initial role hierarchy (passed to {@link ClaimRoleRegistry}).
      */
-    public Claim(UUID claimId, @Nullable Claim parent, Player owner, ClaimRegion region, List<ClaimRole> roles) {
+    public Claim(UUID claimId, String name, @Nullable Claim parent, Player owner, ClaimRegion region, List<ClaimRole> roles) {
         this.claimId = claimId;
         this.region = region;
         this.parent = parent;
         this.roleRegistry = new ClaimRoleRegistry(roles);
+
+        this.name = name;
 
         UUID uuid = owner.getUniqueId();
         this.owner = new ClaimMember(
@@ -85,8 +93,6 @@ public class Claim {
                         .collect(Collectors.toUnmodifiableSet())
         );
         addMember(this.owner);
-
-        this.name = owner.getName() + "'s" + (parent != null ? " Child" : "") + " Claim";
 
         this.locked = false;
         this.inheritPermissions = true;
