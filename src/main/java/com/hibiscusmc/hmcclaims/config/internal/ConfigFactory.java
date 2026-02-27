@@ -8,6 +8,7 @@ import com.hibiscusmc.hmcclaims.config.internal.serializer.PermissionSerializer;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.permission.Permission;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
@@ -22,12 +23,24 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A central factory for loading, saving, and managing configuration files.
+ */
 public class ConfigFactory {
 
+    /**
+     * Registry of all managed configuration classes and their respective holders.
+     */
     private final static Map<Class<?>, ConfigHolder<?>> CONFIG_FILES
             = new HashMap<>();
 
-    public static <T> void reload(Class<T> clazz) throws Exception {
+    /**
+     * Reloads an existing configuration file from its stored path.
+     *
+     * @param clazz The configuration class to reload.
+     * @throws Exception If the file is missing or the YAML is malformed.
+     */
+    public static <T> void reload(@NotNull Class<T> clazz) throws Exception {
         if (!CONFIG_FILES.containsKey(clazz)) {
             throw new NullPointerException("No registered config file found for class " + clazz);
         }
@@ -37,7 +50,35 @@ public class ConfigFactory {
         load(holder.path(), clazz);
     }
 
+
+    /**
+     * Loads a configuration file into memory, forcefully performing the initial I/O.
+     *
+     * @param path  The physical location of the .yml file.
+     * @param clazz The class to map the YAML data into.
+     * @throws Exception If serialization fails.
+     */
     public static <T> void load(Path path, Class<T> clazz) throws Exception {
+        load(path, clazz, false);
+    }
+
+    /**
+     * Loads a configuration file into memory.
+     *
+     * @param path      The physical location of the .yml file.
+     * @param clazz     The class to map the YAML data into.
+     * @param loadLater If true, stores the path without performing the initial I/O.
+     * @throws Exception If serialization fails.
+     */
+    public static <T> void load(Path path, Class<T> clazz, boolean loadLater) throws Exception {
+        if (loadLater) {
+            // noinspection unchecked
+            ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.computeIfAbsent(clazz, k -> new ConfigHolder<>());
+            holder.path(path);
+
+            return;
+        }
+
         ObjectMapper.Factory factory = ObjectMapper.factoryBuilder()
                 .addNodeResolver(NodeResolver.nodeFromParent())
                 .addProcessor(Comment.class, Processor.comments())
@@ -77,6 +118,11 @@ public class ConfigFactory {
         holder.path(path);
     }
 
+    /**
+     * Retrieves the holder for a specific config class.
+     *
+     * @return The {@link ConfigHolder}, or {@code null} if not yet loaded.
+     */
     public static <T> ConfigHolder<T> getHolder(Class<T> clazz) {
         // noinspection unchecked
         return (ConfigHolder<T>) CONFIG_FILES.get(clazz);

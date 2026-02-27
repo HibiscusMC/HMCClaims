@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.storage.impl.remote.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.util.SQLUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,6 +17,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * A SQL-based implementation of the {@link UserRepository} using JDBC.
+ * <p>
+ * This class utilizes {@code ON DUPLICATE KEY UPDATE} (MariaDB/MySQL syntax)
+ * for upserts and leverages the {@link SQLUtil} for binary UUID conversion.
+ */
 public class SQLUserRepository implements UserRepository {
 
     private final HikariStorage storage;
@@ -25,6 +32,13 @@ public class SQLUserRepository implements UserRepository {
     private final String getUserByNameQuery;
     private final String saveUserQuery;
 
+    /**
+     * Constructs the repository and prepares the SQL query strings.
+     *
+     * @param settings The storage settings used to retrieve the table prefix.
+     * @param storage  The HikariStorage provider for database connections.
+     * @param executor The executor service for off-thread processing.
+     */
     public SQLUserRepository(Settings.Storage settings, HikariStorage storage, ExecutorService executor) {
         this.storage = storage;
         this.executor = executor;
@@ -42,7 +56,7 @@ public class SQLUserRepository implements UserRepository {
     }
 
     @Override
-    public CompletableFuture<User> getUser(UUID uuid) {
+    public @NotNull CompletableFuture<User> getUser(@NotNull UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.getUserQuery)) {
@@ -50,10 +64,7 @@ public class SQLUserRepository implements UserRepository {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        User user = new User(uuid, rs.getString("last_known_name"));
-                        user.claimBlocks(rs.getLong("claim_blocks"));
-
-                        return user;
+                        return buildUser(rs);
                     }
                 }
             } catch (SQLException e) {
@@ -65,7 +76,7 @@ public class SQLUserRepository implements UserRepository {
     }
 
     @Override
-    public CompletableFuture<User> getUserByName(String name) {
+    public @NotNull CompletableFuture<User> getUserByName(@NotNull String name) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.getUserByNameQuery)) {
@@ -73,12 +84,7 @@ public class SQLUserRepository implements UserRepository {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        UUID uuid = SQLUtil.bytesToUUID(rs.getBytes("uuid"));
-                        User user = new User(uuid, rs.getString("last_known_name"));
-                        user.claimBlocks(rs.getLong("claim_blocks"));
-                        user.lastOnline(rs.getTimestamp("last_online").toInstant());
-
-                        return user;
+                        return buildUser(rs);
                     }
                 }
 
@@ -90,8 +96,8 @@ public class SQLUserRepository implements UserRepository {
     }
 
     @Override
-    public CompletableFuture<Void> saveUser(User user) {
-        return CompletableFuture.supplyAsync(() -> {
+    public @NotNull CompletableFuture<Void> saveUser(@NotNull User user) {
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveUserQuery)) {
                 ps.setBytes(1, SQLUtil.UUIDtoBytes(user.uuid()));
@@ -103,13 +109,11 @@ public class SQLUserRepository implements UserRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save user " + user.uuid(), e);
             }
-
-            return null;
         }, executor);
     }
 
     @Override
-    public CompletableFuture<Void> saveUsers(List<User> users) {
+    public @NotNull CompletableFuture<Void> saveUsers(@NotNull List<User> users) {
         return CompletableFuture.runAsync(() -> {
             if (users.isEmpty()) return;
 
@@ -134,5 +138,25 @@ public class SQLUserRepository implements UserRepository {
                 throw new RuntimeException("Failed to batch save users", e);
             }
         }, executor);
+    }
+
+    /**
+     * Maps a single row from a {@link ResultSet} into a {@link User} object.
+     *
+     * @param rs The result set positioned at the desired row.
+     * @return A fully populated User instance.
+     * @throws SQLException If a required column is missing or data conversion fails.
+     */
+    private User buildUser(ResultSet rs) throws SQLException {
+        UUID uuid = SQLUtil.bytesToUUID(rs.getBytes("uuid"));
+        User user = new User(
+                uuid,
+                rs.getString("last_known_name"),
+                rs.getLong("claim_blocks")
+        );
+
+        user.lastOnline(rs.getTimestamp("last_online").toInstant());
+
+        return user;
     }
 }

@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.storage.impl.remote;
 
 import com.hibiscusmc.hmcclaims.config.Settings;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -8,8 +9,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class MariaDBStorage extends HikariStorage {
+
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "MariaDB";
     }
 
@@ -19,7 +21,7 @@ public class MariaDBStorage extends HikariStorage {
     }
 
     @Override
-    public void setup(Settings.Storage storage) {
+    public void setup(@NotNull Settings.Storage storage) {
         String databaseName = name();
 
         try (Connection connection = getConnection()) {

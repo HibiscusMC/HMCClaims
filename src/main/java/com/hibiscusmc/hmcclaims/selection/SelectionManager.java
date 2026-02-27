@@ -3,15 +3,16 @@ package com.hibiscusmc.hmcclaims.selection;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
-import com.hibiscusmc.hmcclaims.util.Text;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -19,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Orchestrates the selection process for creating or resizing claims.
+ */
 @Singleton
 public class SelectionManager {
 
@@ -33,12 +37,18 @@ public class SelectionManager {
     @Inject
     private ConfigHolder<Messages> messagesHolder;
     @Inject
-    private Text text;
+    private TextUtil text;
 
-    public void handleSelection(Player player, Block block) {
+    /**
+     * Processes a block interaction to update or initiate a claim selection.
+     *
+     * @param player The player performing the selection.
+     * @param block  The block being targeted.
+     * @throws IllegalStateException if the user data is missing from the cache.
+     */
+    public void handleSelection(@NotNull Player player, @NotNull Block block) {
         User user = userManager.getUser(player.getUniqueId())
                 .orElseThrow(() -> new IllegalStateException("User not loaded!"));
-
         Messages messages = messagesHolder.get();
 
         Location location = block.getLocation();
@@ -48,24 +58,21 @@ public class SelectionManager {
         );
 
         List<Claim> claims = claimManager.getClaimsAt(location);
-        boolean isParent = claims.size() == 1;
+        boolean isMain = claims.size() == 1;
 
-        Claim claim = isParent ? claims.getFirst() : null;
-
+        Claim claim = isMain ? claims.getFirst() : null;
         if (claim != null && !claim.owner().uuid().equals(player.getUniqueId())) {
             text.send(player, messages.claims().selecting().landAlreadyClaimed());
             return;
         }
 
-        boolean hasChild = claims.size() > 1;
-
-        if (hasChild) {
-            text.send(player, messages.claims().selecting().claimWithinChild());
+        boolean hasSubClaim = claims.size() > 1;
+        if (hasSubClaim) {
+            text.send(player, messages.claims().selecting().claimWithinSub());
             return;
         }
 
         Selection selection;
-
         if (!user.hasActiveSelection()) {
             selection = new Selection(player, blockMarker, claim);
             user.currentSelection(selection);
@@ -73,8 +80,8 @@ public class SelectionManager {
             selection = user.currentSelection();
         }
 
-        if (selection.parent() != null && !selection.parent().equals(claim)) {
-            text.send(player, messages.claims().selecting().childOutsideBoundaries());
+        if (selection.main() != null && !selection.main().equals(claim)) {
+            text.send(player, messages.claims().selecting().subOutsideBoundaries());
             return;
         }
 
@@ -92,7 +99,6 @@ public class SelectionManager {
         }
 
         InvalidSelectionReason reason = validateSelection(player.getUniqueId(), selection, blockSelection, location);
-
         switch (reason) {
             case TOO_SMALL -> {
                 text.send(player, messages.claims().selecting().selectionTooSmall());
@@ -112,6 +118,12 @@ public class SelectionManager {
         }
     }
 
+    /**
+     * Checks if a player currently has an active selection session.
+     *
+     * @param player The player to check.
+     * @return {@code true} if a selection is in progress.
+     */
     public boolean hasSelection(Player player) {
         User user = userManager.getUser(player.getUniqueId())
                 .orElseThrow(() -> new IllegalStateException("User not loaded!"));
@@ -119,6 +131,11 @@ public class SelectionManager {
         return user.hasActiveSelection();
     }
 
+    /**
+     * Terminate the player's selection session and clear all visual markers.
+     *
+     * @param player The player whose selection should be destroyed.
+     */
     public void destroySelection(Player player) {
         User user = userManager.getUser(player.getUniqueId())
                 .orElseThrow(() -> new IllegalStateException("User not loaded!"));
@@ -133,6 +150,11 @@ public class SelectionManager {
         user.currentSelection(null);
     }
 
+    /**
+     * Internal helper to validate selection bounds before they are committed.
+     *
+     * @return The {@link InvalidSelectionReason} describing the failure, or {@code NONE} if valid.
+     */
     private InvalidSelectionReason validateSelection(UUID playerId, Selection selection, BlockSelection blockSelection, Location location) {
         if (selection.isTooSmall(blockSelection)) {
             return InvalidSelectionReason.TOO_SMALL;
@@ -148,7 +170,7 @@ public class SelectionManager {
             ));
         }
 
-        if (region != null && claimManager.isOverlapping(region, playerId, selection.parent() != null)) {
+        if (region != null && claimManager.isOverlapping(region, playerId, selection.main() != null)) {
             return InvalidSelectionReason.OVERLAPPING;
         }
 

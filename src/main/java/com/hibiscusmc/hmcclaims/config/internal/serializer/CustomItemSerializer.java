@@ -1,6 +1,6 @@
 package com.hibiscusmc.hmcclaims.config.internal.serializer;
 
-import com.hibiscusmc.hmcclaims.util.Text;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import me.lojosho.hibiscuscommons.hooks.Hooks;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -53,12 +53,12 @@ public class CustomItemSerializer implements TypeSerializer<ItemStack> {
 
         String name = get(node.node(NAME), String.class);
         if (name != null) {
-            meta.customName(Text.parseItem(name));
+            meta.customName(TextUtil.parseItem(name));
         }
 
         List<String> lore = getList(node.node(LORE), String.class);
         if (lore != null) {
-            meta.lore(lore.stream().map(Text::parseItem).toList());
+            meta.lore(lore.stream().map(TextUtil::parseItem).toList());
         }
 
         stack.setItemMeta(meta);
@@ -88,13 +88,13 @@ public class CustomItemSerializer implements TypeSerializer<ItemStack> {
 
         String name = null;
         if (meta.hasCustomName()) {
-            name = Text.unparse(meta.customName());
+            name = TextUtil.unparse(meta.customName());
             setToRoot = false;
         }
 
         List<String> lore = null;
         if (meta.hasLore()) { // noinspection DataFlowIssue
-            lore = meta.lore().stream().map(Text::unparse).toList();
+            lore = meta.lore().stream().map(TextUtil::unparse).toList();
             setToRoot = false;
         }
 

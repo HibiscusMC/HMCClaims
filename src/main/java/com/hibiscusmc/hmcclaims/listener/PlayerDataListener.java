@@ -1,9 +1,10 @@
 package com.hibiscusmc.hmcclaims.listener;
 
+import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
-import com.hibiscusmc.hmcclaims.util.Text;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +15,9 @@ import team.unnamed.inject.Inject;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Manages the loading and saving of {@link User} data during player connection events.
+ */
 public class PlayerDataListener implements Listener {
 
     @Inject
@@ -22,44 +26,68 @@ public class PlayerDataListener implements Listener {
     @Inject
     private StorageHolder holder;
 
-    @Inject
-    private Text text;
-
+    /**
+     * Loads player data from storage before the player joins.
+     * <p>
+     * <b>Note:</b> This implementation uses {@code join()} to block the pre-login
+     * thread. This is intentional to ensure data is fully loaded before the player
+     * is allowed into the world, preventing race conditions in other managers.
+     *
+     * @param event The pre-login event.
+     */
     @EventHandler
     public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
         String playerName = event.getName();
         UUID uuid = event.getUniqueId();
 
-        holder.get().users().getUser(uuid)
-                .thenAccept(user -> {
-                    if (user == null) {
-                        user = new User(uuid, playerName);
-                    }
+        Storage storage = holder.get();
+        if (storage == null) {
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    TextUtil.parse("<red>The claims storage was not initialized properly."));
+            return;
+        }
 
-                    if (!user.lastKnownName().equals(playerName)) {
-                        user.lastKnownName(playerName);
-                    }
+        try {
+            storage.users().getUser(uuid).thenAccept(user -> {
+                if (user == null) {
+                    user = new User(uuid, playerName, 0L);
+                }
 
-                    user.lastOnline(Instant.now());
+                if (!user.lastKnownName().equals(playerName)) {
+                    user.lastKnownName(playerName);
+                }
 
-                    manager.cacheUser(user);
-                })
-                .exceptionally(ex -> {
-                    ex.printStackTrace();
+                user.lastOnline(Instant.now());
+                manager.cacheUser(user);
+            }).join();
+        } catch (Exception ex) {
+            ex.printStackTrace();
 
-                    return null;
-                });
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    TextUtil.parse("<red>Failed to load your player data. Please try again later."));
+        }
     }
 
+    /**
+     * Saves player data to storage and invalidates the cache upon disconnection.
+     *
+     * @param event The quit event.
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
+        Storage storage = holder.get();
+        if (storage == null) {
+            throw new IllegalStateException("Claims storage was not initialized properly.");
+        }
+
         manager.getUser(uuid).ifPresent(user ->
-                holder.get().users().saveUser(user).whenComplete((value, ex) -> {
+                storage.users().saveUser(user).whenComplete((value, ex) -> {
                     if (ex != null) {
                         ex.printStackTrace();
+
                         return;
                     }
 

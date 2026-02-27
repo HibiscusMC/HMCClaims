@@ -29,7 +29,6 @@ public class ClaimMember {
 
     private final ClaimRole role;
 
-
     /**
      * Explicit permission overrides for this member.
      *

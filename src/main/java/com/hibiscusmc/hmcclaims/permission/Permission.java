@@ -8,14 +8,11 @@ import net.kyori.adventure.key.Key;
 /**
  * Represents individual permissions that can be granted to either a
  * {@link ClaimMember} or a {@link ClaimRole} within a claim.
- *
- * <p>Permissions control what actions a member is allowed to perform
- * inside the claim boundaries.</p>
  */
 public record Permission(Key key, String displayName, String description) {
 
     public Permission(String id, String displayName, String description) {
-        this(RegistryUtil.withKey(id), displayName, description);
+        this(RegistryUtil.key(id), displayName, description);
     }
 
     public final static Permission PLACE_BLOCK =

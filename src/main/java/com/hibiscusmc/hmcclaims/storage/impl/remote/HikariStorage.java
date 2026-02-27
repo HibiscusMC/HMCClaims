@@ -10,6 +10,7 @@ import com.hibiscusmc.hmcclaims.storage.repository.sql.SQLUserRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.sql.Connection;
@@ -19,8 +20,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * An abstract SQL-based storage implementation using the HikariCP connection pool.
+ */
 public abstract class HikariStorage implements Storage {
 
+    /**
+     * Dedicated thread pool for executing database operations off the main server thread.
+     */
     private final ExecutorService executor = Executors.newFixedThreadPool(10,
             new ThreadFactoryBuilder()
                     .setNameFormat("hmcclaims-hikari-%d")
@@ -35,13 +42,37 @@ public abstract class HikariStorage implements Storage {
     @Setter
     private ClaimRepository claims;
 
+    /**
+     * Returns the driver-specific DataSource class name.
+     *
+     * @return The fully qualified class name (e.g., "org.mariadb.jdbc.MariaDbDataSource").
+     */
     protected abstract String dataSourceClassName();
 
-    protected abstract void setup(Settings.Storage storage);
+    /**
+     * Performs implementation-specific table setup and migrations.
+     * <p>
+     * This is called at the end of {@link #initialize(Settings.Storage)} after
+     * the data source has been established.
+     *
+     * @param storage The storage configuration.
+     */
+    protected abstract void setup(@NotNull Settings.Storage storage);
 
-    protected void setProperties(Properties properties) {
+    /**
+     * Allows subclasses to inject additional driver-specific properties into the pool.
+     *
+     * @param properties The property set to modify.
+     */
+    protected void setProperties(@NotNull Properties properties) {
     }
 
+    /**
+     * Borrows a connection from the Hikari connection pool.
+     *
+     * @return A valid {@link Connection}.
+     * @throws SQLException if the pool is uninitialized or no connections are available.
+     */
     public Connection getConnection() throws SQLException {
         if (dataSource == null) {
             throw new SQLException("DataSource not initialized.");
@@ -56,7 +87,7 @@ public abstract class HikariStorage implements Storage {
     }
 
     @Override
-    public void initialize(Settings.Storage storage) {
+    public void initialize(@NotNull Settings.Storage storage) {
         HikariConfig config = new HikariConfig();
         config.setPoolName("hmcclaims-storage");
 
@@ -84,8 +115,8 @@ public abstract class HikariStorage implements Storage {
 
         this.setup(storage);
 
-        users = new SQLUserRepository(storage, this, executor);
-        claims = new SQLClaimRepository(storage, this, executor);
+        this.users = new SQLUserRepository(storage, this, executor);
+        this.claims = new SQLClaimRepository(storage, this, executor);
     }
 
     @Override
@@ -97,16 +128,24 @@ public abstract class HikariStorage implements Storage {
         dataSource.close();
     }
 
+    @NotNull
     @Override
     public UserRepository users() {
         return users;
     }
 
+    @NotNull
     @Override
     public ClaimRepository claims() {
         return claims;
     }
 
+    /**
+     * Retrieves a SQL schema file from the plugin resources.
+     *
+     * @param database The name of the database file (without .sql extension).
+     * @return The input stream for the resource, or {@code null} if not found.
+     */
     protected InputStream getSchemaResource(String database) {
         return getClass().getClassLoader().getResourceAsStream("schemas/" + database + ".sql");
     }

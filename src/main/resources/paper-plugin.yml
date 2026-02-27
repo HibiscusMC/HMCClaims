@@ -1,0 +1,15 @@
+name: HMCClaims
+version: "${project.version}"
+api-version: "${serverVersion}"
+description: "A little Christmas Gift from iKztu & Lucian929 to caerisma. We ❤ you, bestie!"
+authors:
+  - iKztu
+
+main: com.hibiscusmc.hmcclaims.HMCClaims
+loader: com.hibiscusmc.hmcclaims.HMCClaimsLoader
+
+dependencies:
+  server:
+    HibiscusCommons:
+      required: true
+      join-classpath: true

@@ -6,12 +6,17 @@ import lombok.ToString;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@ToString
+/**
+ * Represents the physical 2D boundaries of a claim within a specific world.
+ */
 @Getter
+@ToString
 public class ClaimRegion {
 
     private final String worldName;
@@ -24,6 +29,9 @@ public class ClaimRegion {
         this.corners = new ArrayList<>();
     }
 
+    /**
+     * Constructs a region and immediately calculates bounds if two corners are present.
+     */
     public ClaimRegion(String worldName, List<BlockSelection> corners) {
         this.worldName = worldName;
         this.corners = corners;
@@ -33,10 +41,21 @@ public class ClaimRegion {
         }
     }
 
+    /**
+     * Resolves the world name to a Bukkit {@link World} instance.
+     *
+     * @return The world, or {@code null} if it is currently unloaded.
+     */
+    @Contract(pure = true)
     public World bukkitWorld() {
         return Bukkit.getWorld(worldName);
     }
 
+    /**
+     * Adds a defining corner to the region. Triggers bounds recalculation on the second corner.
+     *
+     * @param selection The block coordinate selection.
+     */
     public void addCorner(BlockSelection selection) {
         this.corners.add(selection);
 
@@ -45,16 +64,35 @@ public class ClaimRegion {
         }
     }
 
+    /**
+     * Removes a corner from the region
+     *
+     * @param selection The block coordinate selection.
+     */
     public void removeCorner(BlockSelection selection) {
         this.corners.remove(selection);
     }
 
-    public boolean isCorner(BlockSelection selection) {
+    /**
+     * Checks if the specified block location is a corner of the region
+     *
+     * @param selection the block location to check
+     * @return {@code true} if it's a corner of the region
+     */
+    @Contract(pure = true)
+    public boolean isCorner(@NotNull BlockSelection selection) {
         return (selection.x() == minX || selection.x() == maxX) &&
                 (selection.z() == minZ || selection.z() == maxZ);
     }
 
-    public boolean contains(Location loc) {
+    /**
+     * Checks if a specific location falls within the claim boundaries.
+     *
+     * @param loc The location to check.
+     * @return {@code true} if the location is within the X/Z bounds in the same world.
+     */
+    @Contract(pure = true)
+    public boolean contains(@NotNull Location loc) {
         if (!loc.getWorld().getName().equals(worldName)) {
             return false;
         }
@@ -65,12 +103,26 @@ public class ClaimRegion {
         return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
     }
 
+    /**
+     * Calculates the total 2D area (X * Z) of the region.
+     *
+     * @return Total surface blocks.
+     */
+    @Contract(pure = true)
     public long getSurfaceArea() {
         long length = (maxX - minX) + 1;
         long width = (maxZ - minZ) + 1;
+
         return length * width;
     }
 
+    /**
+     * Generates a list of coordinates forming L-shaped markers at each of the four corners.
+     *
+     * @return A list of block coordinates to be visually marked.
+     */
+    @NotNull
+    @Contract(pure = true)
     public List<BlockSelection> getLCornerBlocks() {
         if (corners.size() < 2) {
             return List.of();
@@ -107,6 +159,9 @@ public class ClaimRegion {
         return blocks;
     }
 
+    /**
+     * Normalizes the two input corners into min/max bounds for efficient lookup.
+     */
     private void calculateCorners() {
         BlockSelection firstCorner = this.corners.getFirst();
         BlockSelection secondCorner = this.corners.getLast();

@@ -8,7 +8,7 @@ plugins {
 group = "com.hibiscusmc"
 version = "0.1.0"
 
-val serverVersion = "1.21.10"
+val serverVersion = "1.21.11"
 val serverSnapshot = "R0.1-SNAPSHOT"
 
 repositories {
@@ -80,7 +80,7 @@ tasks {
     runServer {
         downloadPlugins {
             modrinth("placeholderapi", "2.12.2")
-            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.8.2-f3f79539/HibiscusCommons-0.8.2-f3f79539.jar")
+            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.0/HibiscusCommons-0.9.0.jar")
         }
 
         minecraftVersion(serverVersion)
@@ -90,7 +90,7 @@ tasks {
     processResources {
         filteringCharset = "UTF-8"
 
-        filesMatching("plugin.yml") {
+        filesMatching("paper-plugin.yml") {
             expand(
                 "project" to project,
                 "serverVersion" to serverVersion

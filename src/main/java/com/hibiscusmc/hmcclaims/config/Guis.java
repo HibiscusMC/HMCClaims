@@ -69,14 +69,14 @@ public class Guis {
         @Setting("claims-icon")
         private ClaimsIcon claimsIcon = new ClaimsIcon();
 
-        @Setting("child-claims-icon")
-        private ChildClaimsIcon childClaimsIcon = new ChildClaimsIcon();
+        @Setting("sub-claims-icon")
+        private SubClaimsIcon subClaimsIcon = new SubClaimsIcon();
 
         @Setting("filter-icon")
         private FilterIcon filterIcon = new FilterIcon();
 
-        @Setting("claim-blocks-icon")
-        private ClaimBlocksIcon claimBlocksIcon = new ClaimBlocksIcon();
+        @Setting("search-icon")
+        private SearchIcon searchIcon = new SearchIcon();
 
         @Setting("extra-icons")
         private Map<String, Icon> extraIcons = Map.of(
@@ -105,7 +105,7 @@ public class Guis {
                     "<gray>UID: <white><short_id>",
                     "",
                     "<gray>Private: <white><locked>",
-                    "<gray>Child Claims: <white><total_children>",
+                    "<gray>Sub Claims: <white><total_sub_claims>",
                     "",
                     "<gray>Location: <white><world>, X: <x>, Z: <z>",
                     "<gray>Area: <white><surface_area> <dark_gray>(<total_x>x<total_z>)",
@@ -115,7 +115,8 @@ public class Guis {
                     "",
                     "<gray>Creation date: <white><creation_date>",
                     "",
-                    "<white>Left-Click <gray>to modify claim info"
+                    "<white>Left-Click <gray>to modify claim info",
+                    "<white>Right-Click <gray>to quick-rename your claim"
             );
 
             private String owner = "<b><name></b> <sprite:blocks:item/nether_star>";
@@ -137,16 +138,16 @@ public class Guis {
         @Getter
         @ToString
         @ConfigSerializable
-        public static class ChildClaimsIcon extends ClaimsIcon {
+        public static class SubClaimsIcon extends ClaimsIcon {
 
-            public ChildClaimsIcon() {
+            public SubClaimsIcon() {
                 super(ItemStack.of(Material.DIRT),
                         "<gray>Name: <white><name>",
                         List.of(
                                 "<gray>UID: <white><short_id>",
                                 "",
                                 "<gray>Private: <white><locked>",
-                                "<gray>Parent Claim: <white><parent_claim>",
+                                "<gray>Main Claim: <white><main_claim>",
                                 "<gray>Inherits Permissions: <white><inherits_permissions>",
                                 "",
                                 "<gray>Location: <white><world>, X: <x>, Z: <z>",
@@ -157,7 +158,8 @@ public class Guis {
                                 "",
                                 "<gray>Creation date: <white><creation_date>",
                                 "",
-                                "<white>Left-Click <gray>to modify claim info"
+                                "<white>Left-Click <gray>to modify claim info",
+                                "<white>Right-Click <gray>to quick-rename your claim"
                         ),
                         "<b><name></b> <sprite:blocks:item/nether_star>",
                         "<name>");
@@ -167,22 +169,17 @@ public class Guis {
         @Getter
         @ToString
         @ConfigSerializable
-        public static class ClaimBlocksIcon {
+        public static class SearchIcon {
 
-            private ItemStack item = ItemStack.of(Material.GRASS_BLOCK);
+            private ItemStack item = ItemStack.of(Material.SPYGLASS);
 
             private int slot = 44;
 
-            private String name = "Your Claim Blocks";
+            private String name = "Search...";
 
             private List<String> lore = List.of(
                     "",
-                    "<gray>Starting Blocks: <white><starting_blocks>",
-                    "<gray>Obtained Blocks: <white><obtained_blocks>",
-                    "<gray>Total Blocks: <white><total_blocks>",
-                    "",
-                    "<gray>Used Blocks: <white><used_blocks>",
-                    "<gray>Available Blocks: <white><available_blocks>"
+                    "<white>Left-Click <gray>to search claims"
             );
         }
 
@@ -208,8 +205,8 @@ public class Guis {
             @Setting("filter-names")
             private Map<String, String> filterNames = Map.of(
                     "ALL", "All",
-                    "PARENT", "Parent Claims",
-                    "CHILDREN", "Child Claims"
+                    "MAIN", "Main Claims",
+                    "SUB_CLAIMS", "Sub Claims"
             );
 
             private String selected = "<white><u><name></u> <green><b>←</b></green>";

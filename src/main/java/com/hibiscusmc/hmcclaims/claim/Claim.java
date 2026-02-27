@@ -8,8 +8,9 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
@@ -24,59 +25,81 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Represents a protected region of the world with associated members and permissions.
+ * Represents a region in the world with a defined set of permissions.
  * <p>
- * A claim manages its own spatial boundaries (region), its hierarchy of roles,
- * and its relationship to parent or child claims.
- * </p>
+ * A claim can be either a standalone "Main" claim or a "Sub-claim" nested within
+ * a parent. It manages its own set of members, a local role hierarchy via
+ * {@link ClaimRoleRegistry}, and physical boundaries.
  */
 @Getter
 @EqualsAndHashCode(of = {"claimId"})
 public class Claim {
 
+    /**
+     * The unique persistent identifier for this claim instance.
+     */
     private final UUID claimId;
 
+    /**
+     * The primary authority and creator of this claim.
+     */
     private final ClaimMember owner;
+
+    /**
+     * The spatial bounds defining where this claim exists in the world.
+     */
     private final ClaimRegion region;
+
+    /**
+     * The local authority for managing roles and permissions within this claim.
+     */
+    private final ClaimRoleRegistry roleRegistry;
 
     @Getter(AccessLevel.NONE)
     private final Map<UUID, ClaimMember> members = new HashMap<>();
     @Getter(AccessLevel.NONE)
-    private final Set<Claim> children = new HashSet<>();
+    private final Set<Claim> subClaims = new HashSet<>();
 
-    private final ClaimRoleRegistry roleRegistry;
-
+    /**
+     * The parent claim if this is a sub-claim
+     * <p>
+     * If {@code null}, this is a top-level "main" claim.
+     */
     @Nullable
-    private final Claim parent;
+    private final Claim main;
 
     private final Instant claimedTimestamp;
 
     @Setter
     private String name;
+
+    /**
+     * Whether this claim should automatically inherit permissions from its
+     * parent ({@link #main}) claim.
+     */
     @Setter
     private boolean inheritPermissions;
+
+    /**
+     * If {@code true}, players without bypass permissions cannot interact
+     * regardless of their individual roles.
+     */
     @Setter
     private boolean locked;
-
-    public Claim(UUID claimId, @Nullable Claim parent, Player owner, ClaimRegion region, List<ClaimRole> roles, int totalClaims) {
-        this(claimId,
-                parent == null ? owner.getName() + "'s Claim " + totalClaims : "Child of " + parent.name(),
-                parent, owner, region, roles);
-    }
 
     /**
      * Creates a new Claim and initializes the owner with full permissions.
      *
      * @param claimId Unique identifier for this claim.
-     * @param parent  The parent this claim belongs to. {@code null} if none
+     * @param main    The main this claim belongs to. {@code null} if none
      * @param owner   The player who is creating and owns the claim.
      * @param region  The physical boundaries of the claim.
      * @param roles   The initial role hierarchy (passed to {@link ClaimRoleRegistry}).
      */
-    public Claim(UUID claimId, String name, @Nullable Claim parent, Player owner, ClaimRegion region, List<ClaimRole> roles) {
+    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull Player owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles) {
         this.claimId = claimId;
         this.region = region;
-        this.parent = parent;
+        this.main = main;
         this.roleRegistry = new ClaimRoleRegistry(roles);
 
         this.name = name;
@@ -100,35 +123,107 @@ public class Claim {
         this.claimedTimestamp = Instant.now();
     }
 
+    /**
+     * Convenience constructor that generates a default name based on ownership.
+     */
+    public Claim(@NotNull UUID claimId, @Nullable Claim main, @NotNull Player owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles, int totalClaims) {
+        this(claimId,
+                main == null ? owner.getName() + "'s Claim " + totalClaims : "Sub Claim of " + main.name(),
+                main, owner, region, roles);
+    }
+
+    /**
+     * Renames the claim
+     *
+     * @param newName the new claim name
+     * @throws IllegalArgumentException if the claim name is not valid (is empty, less than 2 or higher than 48 characters)
+     */
+    public void rename(@NotNull String newName) {
+        if (newName.isEmpty()) {
+            throw new IllegalArgumentException("claim name cannot be empty");
+        }
+
+        if (newName.length() < 2) {
+            throw new IllegalArgumentException("claim name cannot be less than 2 characters");
+        }
+
+        if (newName.length() > 48) {
+            throw new IllegalArgumentException("claim name cannot be longer than 48 characters");
+        }
+
+        if (newName.equals(this.name)) {
+            return;
+        }
+
+        this.name = newName;
+    }
+
+    /**
+     * @return An unmodifiable view of the current members.
+     */
+    @NotNull
     public Map<UUID, ClaimMember> members() {
         return Collections.unmodifiableMap(members);
     }
 
-    public void addMember(ClaimMember member) {
+    /**
+     * Adds a member to the claim.
+     *
+     * @param member the member to add
+     */
+    public void addMember(@NotNull ClaimMember member) {
         members.put(member.uuid(), member);
     }
 
-    public Optional<ClaimMember> getMember(UUID uuid) {
+    /**
+     * Gets a member from the claim.
+     *
+     * @param uuid the uuid of the member
+     */
+    @NotNull
+    @Contract(pure = true)
+    public Optional<ClaimMember> getMember(@NotNull UUID uuid) {
         return Optional.ofNullable(members.get(uuid));
     }
 
-    public void removeMember(ClaimMember member) {
+    /**
+     * Removes a member to the claim.
+     *
+     * @param member the member to remove
+     */
+    public void removeMember(@NotNull ClaimMember member) {
         members.remove(member.uuid());
     }
 
-    public Set<Claim> children() {
-        return Collections.unmodifiableSet(children);
+    /**
+     * @return An unmodifiable view of the nested sub-claims.
+     */
+    @NotNull
+    @Contract(pure = true)
+    public Set<Claim> subClaims() {
+        return Collections.unmodifiableSet(subClaims);
     }
 
-    public void addChild(Claim claim) {
+    /**
+     * Links a sub-claim to this claim.
+     *
+     * @param claim The sub-claim to add.
+     * @throws IllegalStateException If trying to add the claim to itself.
+     */
+    public void addSubClaim(@NotNull Claim claim) {
         if (claim.equals(this)) {
-            throw new IllegalStateException("This claim can't be a child of itself");
+            throw new IllegalStateException("This claim can't be a sub claim of itself");
         }
 
-        children.add(claim);
+        subClaims.add(claim);
     }
 
-    public void removeChild(Claim claim) {
-        children.remove(claim);
+    /**
+     * Removes a sub-claim to this claim.
+     *
+     * @param claim The sub-claim to remove.
+     */
+    public void removeSubClaim(@NotNull Claim claim) {
+        subClaims.remove(claim);
     }
 }

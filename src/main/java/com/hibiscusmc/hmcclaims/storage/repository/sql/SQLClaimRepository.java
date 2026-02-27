@@ -2,10 +2,12 @@ package com.hibiscusmc.hmcclaims.storage.repository.sql;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.impl.remote.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,32 +29,42 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @Override
-    public CompletableFuture<List<Claim>> getAllClaims() {
-        return null;
+    public @NotNull CompletableFuture<List<Claim>> getAllClaims() {
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Claim> getClaim(UUID claimUuid) {
-        return null;
+    public @NotNull CompletableFuture<Claim> getClaim(@NotNull UUID claimUuid) {
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Void> saveClaim(Claim claim) {
-        return null;
+    public @NotNull CompletableFuture<Void> saveClaim(@NotNull Claim claim) {
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Void> deleteClaim(UUID claimUuid) {
-        return null;
+    public @NotNull CompletableFuture<Void> deleteClaim(@NotNull UUID claimUuid) {
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Void> saveMembers(UUID claimUuid, Collection<ClaimMember> members) {
-        return null;
+    public @NotNull CompletableFuture<Void> saveMembers(@NotNull UUID claimUuid, @NotNull Collection<ClaimMember> members) {
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public CompletableFuture<Void> saveSettings(UUID claimUuid, Map<String, String> settings) {
-        return null;
+    public @NotNull CompletableFuture<Void> saveSettings(@NotNull UUID claimUuid, @NotNull Map<String, String> settings) {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> savePermissions(@NotNull UUID claimUuid, @NotNull UUID playerUuid, @NotNull Map<String, Boolean> permissions) {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveRoles(@NotNull UUID claimUuid, @NotNull Collection<ClaimRole> roles) {
+        return CompletableFuture.completedFuture(null);
     }
 }

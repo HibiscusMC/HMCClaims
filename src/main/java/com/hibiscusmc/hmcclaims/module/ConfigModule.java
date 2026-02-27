@@ -2,10 +2,10 @@ package com.hibiscusmc.hmcclaims.module;
 
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
 import com.hibiscusmc.hmcclaims.config.Guis;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import org.bukkit.plugin.Plugin;
 import team.unnamed.inject.AbstractModule;
 import team.unnamed.inject.key.TypeReference;
@@ -29,8 +29,8 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve("messages.yml"), Messages.class);
             ConfigFactory.load(pluginPath.resolve("default-roles.yml"), DefaultRoles.class);
 
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), Guis.ClaimList.class);
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-info.yml")), Guis.ClaimInfo.class);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), Guis.ClaimList.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-info.yml")), Guis.ClaimInfo.class, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

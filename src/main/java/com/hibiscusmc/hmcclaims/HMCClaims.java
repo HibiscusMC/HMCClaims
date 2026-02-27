@@ -12,8 +12,9 @@ import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.UserManager;
-import com.hibiscusmc.hmcclaims.util.Scheduler;
-import com.hibiscusmc.hmcclaims.util.Text;
+import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
+import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import lombok.extern.java.Log;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,8 +39,6 @@ public final class HMCClaims extends JavaPlugin implements Module {
         for (Service service : services) {
             service.start();
         }
-
-        log.info("HMCClaims enabled!");
     }
 
     @Override
@@ -47,8 +46,6 @@ public final class HMCClaims extends JavaPlugin implements Module {
         for (Service service : services) {
             service.stop();
         }
-
-        log.info("HMCClaims disabled!");
     }
 
     @Override
@@ -57,8 +54,9 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(JavaPlugin.class).to(HMCClaims.class);
         binder.bind(Plugin.class).to(HMCClaims.class);
 
-        binder.bind(Text.class).to(Text.class);
-        binder.bind(Scheduler.class).to(Scheduler.class);
+        binder.bind(PlaceholderUtil.class).to(PlaceholderUtil.class);
+        binder.bind(SchedulerUtil.class).to(SchedulerUtil.class);
+        binder.bind(TextUtil.class).to(TextUtil.class);
 
         binder.install(new ServiceModule());
         binder.install(new CommandModule());

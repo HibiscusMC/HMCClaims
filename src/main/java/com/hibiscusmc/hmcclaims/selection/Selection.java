@@ -6,36 +6,65 @@ import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.marker.MarkType;
 import lombok.Getter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
+/**
+ * Represents a player's active area selection process.
+ */
 public class Selection {
 
     private final BlockMarker marker;
     private final Player player;
 
+    /**
+     * A double-ended queue holding the current selection points.
+     * Limits the selection to exactly two points for rectangular area definition.
+     */
     private final Deque<BlockSelection> points = new ArrayDeque<>(2);
 
     @Getter
     private final ClaimRegion region;
     @Getter
-    private final Claim parent;
+    private final Claim main;
 
-    public Selection(Player player, BlockMarker marker, Claim parent) {
+    /**
+     * Constructs a new selection session for a player.
+     *
+     * @param player The player making the selection.
+     * @param marker The visual handler for showing block markers.
+     * @param main   The parent claim (if creating a sub-claim), or {@code null} for a primary claim.
+     */
+    public Selection(Player player, BlockMarker marker, Claim main) {
         this.marker = marker;
         this.player = player;
-        this.parent = parent;
+        this.main = main;
 
         this.region = new ClaimRegion(player.getWorld().getName());
     }
 
+    /**
+     * Retrieves the current selection points as a list.
+     *
+     * @return A list of 0, 1, or 2 {@link BlockSelection} points.
+     */
+    @NotNull
+    @Contract(pure = true)
     public List<BlockSelection> points() {
         return points.stream().toList();
     }
 
-    public void addBlock(BlockSelection block) {
+    /**
+     * Adds a point to the selection.
+     * If two points already exist, the oldest point is removed to make room.
+     *
+     * @param block The new coordinate to add.
+     */
+    public void addBlock(@NotNull BlockSelection block) {
         if (points.size() >= 2) {
             BlockSelection old = points.pollFirst();
             region.removeCorner(old);
@@ -47,7 +76,13 @@ public class Selection {
         refreshVisuals();
     }
 
-    public boolean removeBlock(BlockSelection block) {
+    /**
+     * Removes a specific point from the selection.
+     *
+     * @param block The coordinate to remove.
+     * @return {@code true} if the selection is now empty.
+     */
+    public boolean removeBlock(@NotNull BlockSelection block) {
         if (points.isEmpty()) {
             return true;
         }
@@ -59,11 +94,24 @@ public class Selection {
         return points.isEmpty();
     }
 
+    /**
+     * Checks if the current selection already contains the specified block
+     *
+     * @param block The coordinate to check for
+     * @return {@code true} if the selection contains the specified block
+     */
     public boolean hasBlock(BlockSelection block) {
         return points.contains(block);
     }
 
-
+    /**
+     * Validates if the selection meets minimum size requirements relative to a new point.
+     * <p>
+     * Current hardcoded threshold: 5x5 blocks.
+     *
+     * @param corner2 The second point to check against the existing point.
+     * @return {@code true} if either dimension is less than 5 blocks.
+     */
     public boolean isTooSmall(BlockSelection corner2) {
         if (points.isEmpty()) {
             return false;
@@ -77,16 +125,22 @@ public class Selection {
         return length < 5 || width < 5;
     }
 
+    /**
+     * Updates the visual block markers for the player based on current points.
+     */
     public void refreshVisuals() {
         marker.clearAllMarks(player.getUniqueId());
 
         if (points.size() == 2) {
-            marker.mark(player, region.getLCornerBlocks(), parent == null ? MarkType.SELECT : MarkType.SELECT_CHILD, 0);
+            marker.mark(player, region.getLCornerBlocks(), main == null ? MarkType.SELECT : MarkType.SELECT_SUB, 0);
         } else if (!points.isEmpty()) {
-            marker.mark(player, List.of(points.peekFirst()), parent == null ? MarkType.SELECT : MarkType.SELECT_CHILD, 0);
+            marker.mark(player, List.of(points.peekFirst()), main == null ? MarkType.SELECT : MarkType.SELECT_SUB, 0);
         }
     }
 
+    /**
+     * Resets the selection and clears all active visual markers.
+     */
     public void clearPoints() {
         points.clear();
         marker.clearAllMarks(player.getUniqueId());
