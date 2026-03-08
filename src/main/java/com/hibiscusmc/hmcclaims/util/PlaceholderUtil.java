@@ -1,5 +1,7 @@
 package com.hibiscusmc.hmcclaims.util;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.user.User;
@@ -10,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +26,9 @@ import java.util.Map;
  */
 @Singleton
 public class PlaceholderUtil {
+
+    private final static DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy").withZone(ZoneId.systemDefault());
+
 
     @Inject
     private UserManager userManager;
@@ -60,6 +67,37 @@ public class PlaceholderUtil {
         map.put("total_blocks", totalBlocks + "");
         map.put("used_blocks", usedBlocks + "");
         map.put("available_blocks", availableBlocks + "");
+
+        return map;
+    }
+
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public Map<String, String> claimInfo(@NotNull Claim claim) {
+        Map<String, String> map = new HashMap<>();
+        Settings settings = settingsHolder.get();
+
+        String shortId = claim.claimId().toString().split("-")[0];
+        int totalSubClaims = claim.subClaims().size();
+        int totalMembers = claim.members().size();
+
+        ClaimRegion region = claim.region();
+        String worldName = region.worldName();
+
+        map.put("name", claim.name());
+        map.put("short_id", shortId);
+        map.put("locked", claim.locked() ? "Yes" : "No");
+        map.put("total_sub_claims", totalSubClaims + "");
+        map.put("main_claim", claim.main() != null ? claim.main().name() : "");
+        map.put("inherits_permissions", claim.inheritPermissions() ? "Yes" : "No");
+        map.put("world", settings.worldAliases().getOrDefault(worldName, worldName));
+        map.put("x", region.maxX() + "");
+        map.put("z", region.maxZ() + "");
+        map.put("surface_area", region.getSurfaceArea() + "");
+        map.put("total_x", ((region.maxX() - region.minX()) + 1) + "");
+        map.put("total_z", ((region.maxZ() - region.minZ()) + 1) + "");
+        map.put("member_count", totalMembers + "");
+        map.put("creation_date", FORMATTER.format(claim.claimedTimestamp()));
 
         return map;
     }

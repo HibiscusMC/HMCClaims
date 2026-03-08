@@ -1,9 +1,10 @@
 package com.hibiscusmc.hmcclaims.module;
 
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
-import com.hibiscusmc.hmcclaims.config.Guis;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import org.bukkit.plugin.Plugin;
@@ -29,8 +30,8 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve("messages.yml"), Messages.class);
             ConfigFactory.load(pluginPath.resolve("default-roles.yml"), DefaultRoles.class);
 
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), Guis.ClaimList.class, true);
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-info.yml")), Guis.ClaimInfo.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), ClaimListConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "member-list.yml")), ClaimMemberListConfig.class, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -44,10 +45,10 @@ public class ConfigModule extends AbstractModule {
         bind(new TypeReference<ConfigHolder<DefaultRoles>>() {
         }).toInstance(ConfigFactory.getHolder(DefaultRoles.class));
 
-        bind(new TypeReference<ConfigHolder<Guis.ClaimList>>() {
-        }).toInstance(ConfigFactory.getHolder(Guis.ClaimList.class));
+        bind(new TypeReference<ConfigHolder<ClaimListConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimListConfig.class));
 
-        bind(new TypeReference<ConfigHolder<Guis.ClaimInfo>>() {
-        }).toInstance(ConfigFactory.getHolder(Guis.ClaimInfo.class));
+        bind(new TypeReference<ConfigHolder<ClaimMemberListConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimMemberListConfig.class));
     }
 }

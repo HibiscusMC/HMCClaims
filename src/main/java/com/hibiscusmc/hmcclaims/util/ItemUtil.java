@@ -1,19 +1,21 @@
 package com.hibiscusmc.hmcclaims.util;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Utility for streamlined {@link ItemStack} creation using the Adventure API.
- * <p>
- * This class serves as a bridge between raw configuration strings (MiniMessage)
- * and the modern Paper {@link net.kyori.adventure.text.Component} system.
  */
 public class ItemUtil {
 
@@ -55,5 +57,48 @@ public class ItemUtil {
         }
 
         return item;
+    }
+
+    /**
+     * Creates an {@link ItemStack} of a specific player's head.
+     *
+     * @param playerName The name of the player whose head is being created.
+     * @return A new {@link Material#PLAYER_HEAD} ItemStack.
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static ItemStack buildHeadWithName(@NotNull String playerName) {
+        ItemStack head = ItemStack.of(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+        if (meta != null) {
+            meta.setOwningPlayer(Bukkit.getOfflinePlayerIfCached(playerName));
+            head.setItemMeta(meta);
+        }
+
+        return head;
+    }
+
+    /**
+     * Creates a custom head using a Base64 texture string.
+     *
+     * @param base64 The Base64 encoded texture string (from sites like Minecraft-Heads).
+     * @return A new {@link Material#PLAYER_HEAD} ItemStack with the custom texture.
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static ItemStack buildHeadWithTextures(@NotNull String base64) {
+        ItemStack head = ItemStack.of(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+        if (meta != null) {
+            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID(), null);
+            profile.setProperty(new ProfileProperty("textures", base64));
+
+            meta.setPlayerProfile(profile);
+            head.setItemMeta(meta);
+        }
+
+        return head;
     }
 }

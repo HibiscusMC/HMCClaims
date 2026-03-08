@@ -3,15 +3,16 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
-import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
-import com.hibiscusmc.hmcclaims.config.Guis;
-import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
+import com.hibiscusmc.hmcclaims.config.gui.GuisTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
-import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.Action;
+import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
+import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -29,58 +30,54 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
+import team.unnamed.inject.Singleton;
 
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Singleton
 @SuppressWarnings({"UnstableApiUsage"})
 public class ClaimListGui implements BaseGui {
 
-    private final static DateTimeFormatter FORMATTER = DateTimeFormatter
-            .ofPattern("MM/dd/yyyy")
-            .withZone(ZoneId.systemDefault());
-
     @Inject
-    private ConfigHolder<Guis.ClaimList> configHolder;
-    @Inject
-    private ConfigHolder<Settings> settingsHolder;
+    private ConfigHolder<ClaimListConfig> configHolder;
 
     @Inject
     private GuiRegistry guis;
 
     @Inject
-    private SchedulerUtil scheduler;
+    private PlaceholderUtil placeholders;
     @Inject
-    private TextUtil text;
+    private SchedulerUtil scheduler;
 
     @Inject
     private ClaimManager claimManager;
 
     private Component title;
+    private int rows = 1;
+    private List<Integer> slots = new ArrayList<>();
 
-    private Guis.ClaimList.ClaimsIcon claimsIcon;
-    private Guis.ClaimList.SubClaimsIcon subClaimsIcon;
+    private ClaimListConfig.ClaimsIcon claimsIcon;
+    private ClaimListConfig.SubClaimsIcon subClaimsIcon;
 
-    private Guis.ClaimList.SearchIcon searchIcon;
-    private Guis.ClaimList.FilterIcon filterIcon;
+    private GuisTemplate.SimpleIcon searchIcon;
+    private ClaimListConfig.FilterIcon filterIcon;
 
-    private Guis.SimpleIcon previousPage;
-    private Guis.SimpleIcon nextPage;
+    private GuisTemplate.SimpleIcon previousPage;
+    private GuisTemplate.SimpleIcon nextPage;
 
-    private List<Guis.Icon> icons;
+    private List<GuisTemplate.Icon> icons;
 
     @Override
     public void loadConfig() {
-        Guis.ClaimList config = configHolder.get();
+        ClaimListConfig config = configHolder.get();
 
-        this.title = text.parseWithPrefix(config.title());
+        this.title = TextUtil.parse(config.title());
+        this.rows = config.rows();
 
         this.claimsIcon = config.claimsIcon();
         this.subClaimsIcon = config.subClaimsIcon();
@@ -92,13 +89,21 @@ public class ClaimListGui implements BaseGui {
         this.nextPage = config.pages().get("next-page");
 
         this.icons = config.extraIcons().values().stream().toList();
+
+        slots.clear();
+        for (RangeUtil range : config.validSlots()) {
+            for (int slot : range.all()) {
+                slots.add(slot);
+            }
+        }
     }
 
     @Override
     public void open(Player player) {
         PaginatedGui gui = Gui.paginated()
                 .title(title)
-                .rows(5)
+                .rows(rows)
+                .pageSize(slots.size())
                 .disableAllInteractions()
                 .create();
 
@@ -110,7 +115,15 @@ public class ClaimListGui implements BaseGui {
     }
 
     private void buildIcons(Player player, @NotNull PaginatedGui gui) {
-        gui.getFiller().fillBetweenPoints(5, 2, 5, 8, new GuiItem(ItemStack.of(Material.AIR)));
+        GuiItem air = new GuiItem(ItemStack.of(Material.AIR));
+
+        for (int i = 0; i < rows * 9; i++) {
+            if (!slots.contains(i)) {
+                gui.setItem(i, air);
+            }
+        }
+
+        gui.getFiller().fillBetweenPoints(5, 2, 5, 8, air);
 
         if (previousPage != null) {
             gui.setItem(previousPage.slot(), new GuiItem(previousPage.item(), action -> gui.previous()));
@@ -120,16 +133,10 @@ public class ClaimListGui implements BaseGui {
             gui.setItem(nextPage.slot(), new GuiItem(nextPage.item(), action -> gui.next()));
         }
 
-        for (Guis.Icon icon : icons) {
+        for (GuisTemplate.Icon icon : icons) {
             gui.setItem(icon.slot(), new GuiItem(icon.item(), action -> {
-                if (action.isLeftClick()) {
-                    for (Action iconAction : icon.leftClickActions()) {
-                        iconAction.execute(player);
-                    }
-                } else {
-                    for (Action iconAction : icon.rightClickActions()) {
-                        iconAction.execute(player);
-                    }
+                for (Action iconAction : action.isLeftClick() ? icon.leftClickActions() : icon.rightClickActions()) {
+                    iconAction.execute(player);
                 }
             }));
         }
@@ -140,7 +147,7 @@ public class ClaimListGui implements BaseGui {
         AtomicReference<Query> searchQuery = new AtomicReference<>(null);
         List<Claim> claims = claimManager.getPlayerClaims(playerId);
 
-        gui.setItem(searchIcon.slot(), new GuiItem(buildSearchIcon(), action -> new SearchDialog()
+        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog()
                 .create()
                 .onSubmit(view -> {
                     String query = view.getText("query");
@@ -261,6 +268,9 @@ public class ClaimListGui implements BaseGui {
                             .create(claim.name())
                             .onSubmit(view -> {
                                 String newName = view.getText("input");
+                                if (newName == null) {
+                                    return;
+                                }
 
                                 claim.rename(newName);
 
@@ -280,14 +290,6 @@ public class ClaimListGui implements BaseGui {
 
     @NotNull
     private ItemStack buildClaimIcon(@NotNull Claim claim) {
-        Settings settings = settingsHolder.get();
-
-        String shortId = claim.claimId().toString().split("-")[0];
-        int totalSubClaims = claim.subClaims().size();
-
-        ClaimRegion region = claim.region();
-        String worldName = region.worldName();
-
         int totalMembers = claim.members().size();
 
         List<ClaimMember> sortedList = claim.members().values()
@@ -296,27 +298,9 @@ public class ClaimListGui implements BaseGui {
                 .toList()
                 .subList(0, Math.min(4, totalMembers));
 
-        Map<String, String> placeholders = new HashMap<>();
-        placeholders.putAll(Map.of(
-                "name", claim.name(),
-                "short_id", shortId,
-                "locked", claim.locked() ? "Yes" : "No",
-                "total_sub_claims", totalSubClaims + "",
-                "main_claim", claim.main() != null ? claim.main().name() : "",
-                "inherits_permissions", claim.inheritPermissions() ? "Yes" : "No",
-                "world", settings.worldAliases().getOrDefault(worldName, worldName),
-                "x", region.maxX() + "",
-                "z", region.maxZ() + "",
-                "surface_area", region.getSurfaceArea() + ""
-        ));
-        placeholders.putAll(Map.of(
-                "total_x", ((region.maxX() - region.minX()) + 1) + "",
-                "total_z", ((region.maxZ() - region.minZ()) + 1) + "",
-                "member_count", totalMembers + "",
-                "creation_date", FORMATTER.format(claim.claimedTimestamp())
-        ));
+        Map<String, String> claimPlaceholders = placeholders.claimInfo(claim);
 
-        Guis.ClaimList.ClaimsIcon icon = claim.main() == null ? claimsIcon : subClaimsIcon;
+        ClaimListConfig.ClaimsIcon icon = claim.main() == null ? claimsIcon : subClaimsIcon;
         ItemStack stack = icon.item();
         ItemMeta meta = stack.getItemMeta();
 
@@ -338,10 +322,10 @@ public class ClaimListGui implements BaseGui {
                 continue;
             }
 
-            lore.add(TextUtil.parseItem(line, placeholders));
+            lore.add(TextUtil.parseItem(line, claimPlaceholders));
         }
 
-        meta.customName(TextUtil.parseItem(claimsIcon.name(), placeholders));
+        meta.customName(TextUtil.parseItem(claimsIcon.name(), claimPlaceholders));
         meta.lore(lore);
 
         stack.setItemMeta(meta);
@@ -350,19 +334,7 @@ public class ClaimListGui implements BaseGui {
     }
 
     @NotNull
-    private ItemStack buildSearchIcon() {
-        ItemStack stack = searchIcon.item();
-        ItemMeta meta = stack.getItemMeta();
-
-        meta.lore(searchIcon.lore().stream().map(TextUtil::parseItem).toList());
-        meta.customName(TextUtil.parseItem(searchIcon.name()));
-
-        stack.setItemMeta(meta);
-        return stack;
-    }
-
-    @NotNull
-    private String buildMemberRow(Guis.ClaimList.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
+    private String buildMemberRow(ClaimListConfig.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
         OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(member.lastKnownName());
 
         String name;
@@ -372,8 +344,8 @@ public class ClaimListGui implements BaseGui {
             name = icon.member();
         }
 
-        String playerName = player.getName();
-        if (playerName == null || playerName.isEmpty()) {
+        String playerName;
+        if (player == null || (playerName = player.getName()) == null || playerName.isEmpty()) {
             return buildHeadComponent(null) + " " + name.replace("<name>", "Unknown Player");
         }
 
@@ -394,26 +366,10 @@ public class ClaimListGui implements BaseGui {
     }
 
     enum QueryType {
-        CLAIM_NAME("name", "Claim Name"),
-        CLAIM_ID("id", "Claim Id"),
-        MAIN_CLAIM_NAME("main", "Main Claim Name"),
-        MEMBER_NAME("member", "Member Name");
-
-        private final String id;
-        private final String name;
-
-        QueryType(String id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-
-        public String queryId() {
-            return id;
-        }
-
-        public String queryName() {
-            return name;
-        }
+        CLAIM_NAME,
+        CLAIM_ID,
+        MAIN_CLAIM_NAME,
+        MEMBER_NAME;
 
         @Nullable
         public static QueryType fromId(@NotNull String id) {

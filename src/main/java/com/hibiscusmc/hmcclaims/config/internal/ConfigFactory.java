@@ -5,8 +5,10 @@ import com.hibiscusmc.hmcclaims.config.internal.serializer.ActionSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.ClaimRoleSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.CustomItemSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.PermissionSerializer;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.RangeSerializer;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.permission.Permission;
+import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
@@ -49,7 +51,6 @@ public class ConfigFactory {
         ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.get(clazz);
         load(holder.path(), clazz);
     }
-
 
     /**
      * Loads a configuration file into memory, forcefully performing the initial I/O.
@@ -94,6 +95,7 @@ public class ConfigFactory {
                                 .register(Permission.class, PermissionSerializer.INSTANCE)
                                 .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
                                 .register(Action.class, ActionSerializer.INSTANCE)
+                                .register(RangeUtil.class, RangeSerializer.INSTANCE)
                         )
                 )
                 .indent(2)
