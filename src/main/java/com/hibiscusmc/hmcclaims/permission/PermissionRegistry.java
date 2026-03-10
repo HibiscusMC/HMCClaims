@@ -28,6 +28,11 @@ public class PermissionRegistry {
     }
 
     static {
+        // Claim-related permissions
+        register(Permission.MANAGE_MEMBER_ROLES);
+        register(Permission.MANAGE_MEMBER_PERMISSIONS);
+
+        // Interactions within the claim permissions
         register(Permission.PLACE_BLOCK);
         register(Permission.BREAK_BLOCK);
         register(Permission.INTERACT_BLOCK);

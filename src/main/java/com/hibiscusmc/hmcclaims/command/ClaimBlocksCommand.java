@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.command;
 
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.MapUtil;
@@ -12,11 +12,10 @@ import org.bukkit.entity.Player;
 import team.unnamed.commandflow.annotated.CommandClass;
 import team.unnamed.commandflow.annotated.annotation.Command;
 import team.unnamed.commandflow.annotated.annotation.OptArg;
+import team.unnamed.commandflow.annotated.annotation.Usage;
 import team.unnamed.inject.Inject;
 
-import java.util.Map;
-
-@Command(names = {"claimblocks", "cbs"})
+@Command(names = {"claimblocks", "cbs"}, permission = "hmcclaims.commands.claimblocks")
 public class ClaimBlocksCommand implements CommandClass {
 
     @Inject
@@ -31,17 +30,18 @@ public class ClaimBlocksCommand implements CommandClass {
     private TextUtil text;
 
     @Command(names = {""})
-    public void base(CommandSender sender, @OptArg Player player) {
-        if (sender instanceof Player) {
-            player = (Player) sender;
-        }
-
+    @Usage("[player]")
+    public void base(CommandSender sender, @OptArg Player target) {
         Messages messages = messagesHolder.get();
 
-        if (player == null) {
+        if (target == null && !(sender instanceof Player)) {
             text.send(sender, messages.commands().missingPlayer());
             return;
         }
+
+        Player player = target != null && sender.hasPermission("hmcclaims.commands.claimblocks.other")
+                ? target
+                : (Player) sender;
 
         User user = userManager.getUser(player.getUniqueId()).orElse(null);
         if (user == null) {

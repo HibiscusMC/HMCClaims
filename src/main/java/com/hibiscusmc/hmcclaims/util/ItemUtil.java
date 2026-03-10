@@ -2,6 +2,9 @@ package com.hibiscusmc.hmcclaims.util;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -71,10 +74,13 @@ public class ItemUtil {
         ItemStack head = ItemStack.of(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-        if (meta != null) {
-            meta.setOwningPlayer(Bukkit.getOfflinePlayerIfCached(playerName));
-            head.setItemMeta(meta);
-        }
+        meta.setOwningPlayer(Bukkit.getOfflinePlayerIfCached(playerName));
+        head.setItemMeta(meta);
+
+        TooltipDisplay display = TooltipDisplay.tooltipDisplay()
+                .addHiddenComponents(DataComponentTypes.PROFILE)
+                .build();
+        head.setData(DataComponentTypes.TOOLTIP_DISPLAY, display);
 
         return head;
     }
@@ -100,5 +106,34 @@ public class ItemUtil {
         }
 
         return head;
+    }
+
+    /**
+     * Applies a custom display name to an existing {@link ItemStack}.
+     *
+     * @param item The item to modify.
+     * @param name The name to be parsed as a {@link Component}.
+     */
+    public static void applyDisplay(@NotNull ItemStack item, @NotNull Component name) {
+        applyDisplay(item, name, null);
+    }
+
+    /**
+     * Applies a custom display name and lore to an existing {@link ItemStack}.
+     *
+     * @param item The item to modify.
+     * @param name The name to be parsed as a {@link Component}.
+     * @param lore A list of raw strings to be parsed into lore, or {@code null}.
+     */
+    public static void applyDisplay(@NotNull ItemStack item, @NotNull Component name, @Nullable List<Component> lore) {
+        item.editMeta(meta -> {
+            meta.customName(name);
+
+            if (lore != null) {
+                meta.lore(lore);
+            }
+
+            item.setItemMeta(meta);
+        });
     }
 }

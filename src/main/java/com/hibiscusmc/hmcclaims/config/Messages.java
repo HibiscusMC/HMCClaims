@@ -5,6 +5,8 @@ import lombok.ToString;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
+import java.util.Map;
+
 @Getter
 @ToString
 @ConfigSerializable
@@ -16,6 +18,12 @@ public class Messages {
     private String pluginReload = "<gray>Plugin reloaded!";
 
     private Claims claims = new Claims();
+
+    private Commands commands = new Commands();
+
+    private Dialogs dialogs = new Dialogs();
+
+    private Inputs inputs = new Inputs();
 
     @Getter
     @ToString
@@ -75,18 +83,43 @@ public class Messages {
         }
     }
 
-    private Commands commands = new Commands();
-
     @Getter
     @ToString
     @ConfigSerializable
     public static class Commands {
 
+        @Setting("no-permission")
+        private String noPermission = "<red>No permissions.";
+
+        private String usage = "<gray>Command usage: <white>/<command> <usage>";
+
+        @Setting("invalid-argument")
+        private String invalidArgument = "<red>Invalid argument provided!";
+
         @Setting("missing-player")
         private String missingPlayer = "<red>You need to specify a player!";
 
+        @Setting("player-not-found")
+        private String playerNotFound = "<red>Player not found";
+
+        @Setting("not-in-claim")
+        private String notInClaim = "<red>You're not standing in a claim!";
+
         @Setting("claim-blocks")
         private ClaimBlocks claimBlocks = new ClaimBlocks();
+
+        private Claim claim = new Claim();
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Claim {
+
+            private String add = "<green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
+
+            @Setting("already-added")
+            private String alreadyAdded = "<red>This player is already in the claim!";
+        }
 
         @Getter
         @ToString
@@ -102,8 +135,119 @@ public class Messages {
                     
                     <dark_gray><b>»</b> <gray>Used Blocks: <white><used_blocks>
                     <dark_gray><b>»</b> <gray>Available Blocks: <white><available_blocks>""";
+        }
+    }
 
+    @Getter
+    @ToString
+    @ConfigSerializable
+    public static class Dialogs {
+
+        private Search search = new Search();
+
+        private Rename rename = new Rename();
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Search {
+
+            private String title = "Search";
+
+            private String query = "Query";
+
+            @Setting("option-title")
+            private String optionTitle = "Search by";
+
+            private Map<String, String> options = Map.of(
+                    "name", "Claim Name",
+                    "id", "Claim Id",
+                    "main", "Main Claim Name",
+                    "member", "Member Name"
+            );
+
+            private Map<String, Button> buttons = Map.of(
+                    "submit", new Button(
+                            "Search", "Click to search"
+                    ),
+                    "cancel", new Button(
+                            "Cancel", "Click to cancel"
+                    )
+            );
         }
 
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Rename {
+
+            private String title = "Rename Your Claim";
+
+            private String input = "Input the new name";
+
+            private Map<String, Button> buttons = Map.of(
+                    "submit", new Button(
+                            "Confirm", "Click to rename your claim"
+                    ),
+                    "cancel", new Button(
+                            "Cancel", "Click to cancel"
+                    )
+            );
+        }
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Button {
+
+            private String label = "Button Label";
+
+            private String tooltip = "Button Tooltip";
+
+            public Button() {
+
+            }
+
+            public Button(String label, String tooltip) {
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+
+        }
+    }
+
+    @Getter
+    @ToString
+    @ConfigSerializable
+    public static class Inputs {
+
+        private String cancelled = "<red>Input cancelled.";
+
+        private Title title = new Title();
+
+        @Setting("action-bar")
+        private ActionBar actionBar = new ActionBar();
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Title {
+
+            private boolean enabled = true;
+
+            private String title = "<yellow>Enter Input";
+
+            private String subtitle = "<green>Type in chat <gray>• <#ff0000>Sneak <red>to cancel";
+        }
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class ActionBar {
+
+            private boolean enabled = true;
+
+            private String text = "<green>Type in chat <gray>• <#ff0000>Sneak <red>to cancel";
+        }
     }
 }

@@ -15,7 +15,9 @@ import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Utility for parsing and sending messages using the MiniMessage format.
@@ -51,7 +53,7 @@ public class TextUtil {
     }
 
     /**
-     * Parses a string into a Component, including the configured prefix.
+     * Parses a string into a {@link Component}, including the configured prefix.
      */
     @NotNull
     public Component parseWithPrefix(String string) {
@@ -59,7 +61,7 @@ public class TextUtil {
     }
 
     /**
-     * Parses a string with placeholders into a Component, including the configured prefix.
+     * Parses a string with placeholders into a {@link Component}, including the configured prefix.
      */
     @NotNull
     public Component parseWithPrefix(String string, Map<String, String> data) {
@@ -67,7 +69,7 @@ public class TextUtil {
     }
 
     /**
-     * Parses a string into a Component, optionally including the configured prefix.
+     * Parses a string into a {@link Component}, optionally including the configured prefix.
      */
     @NotNull
     public Component parseWithPrefix(String string, boolean withPrefix) {
@@ -88,6 +90,24 @@ public class TextUtil {
         }
 
         return parse(string, data);
+    }
+
+    /**
+     * Static helper to parse a list of MiniMessage strings.
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static List<Component> parseList(List<String> list) {
+        return parseList(list, Map.of());
+    }
+
+    /**
+     * Static helper to parse a list of MiniMessage strings with placeholders.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static List<Component> parseList(List<String> list, Map<String, String> data) {
+        return list.stream().map(string -> parse(string, data)).toList();
     }
 
     /**
@@ -115,6 +135,28 @@ public class TextUtil {
 
         TagResolver resolver = resolvePlaceholders(data);
         return MINI_MESSAGE.deserialize(string, TagResolver.resolver(resolver));
+    }
+
+    /**
+     * Specialized parser for Item lores.
+     * <p>
+     * Ensures items are not italicized by default and uses white as a base color.
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static List<Component> parseItemLore(List<String> list) {
+        return parseItemLore(list, Map.of());
+    }
+
+    /**
+     * Specialized parser for Item lores with placeholders.
+     * <p>
+     * Ensures items are not italicized by default and uses white as a base color.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static List<Component> parseItemLore(List<String> list, Map<String, String> data) {
+        return list.stream().map(string -> parseItem(string, data)).toList();
     }
 
     /**
@@ -155,11 +197,24 @@ public class TextUtil {
     }
 
     /**
-     * Converts a Component back into a MiniMessage string.
+     * Converts a list of {@link Component}s back into a MiniMessage string.
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static List<String> unparse(@NotNull List<Component> list) {
+        return list.stream().map(TextUtil::unparse).collect(Collectors.toList());
+    }
+
+    /**
+     * Converts a {@link Component} back into a MiniMessage string.
      */
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static String unparse(Component component) {
+        if (component == null) {
+            return "";
+        }
+
         String serialized = MINI_MESSAGE.serialize(component);
 
         if (serialized.startsWith("<!italic>")) {

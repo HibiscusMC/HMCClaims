@@ -39,7 +39,7 @@ public class PlayerOrOfflineArgument implements PartFactory {
             }
 
             OfflinePlayer offline = Bukkit.getOfflinePlayerIfCached(playerName);
-            if (offline != null) {
+            if (offline != null && offline.getName() != null && offline.hasPlayedBefore()) {
                 return Collections.singletonList(offline);
             }
 

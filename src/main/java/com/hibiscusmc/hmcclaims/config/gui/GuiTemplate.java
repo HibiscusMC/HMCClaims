@@ -14,14 +14,12 @@ import java.util.List;
 @Getter
 @ToString
 @ConfigSerializable
-public class GuisTemplate {
+public class GuiTemplate {
 
     @Getter
     @ToString
     @ConfigSerializable
     public static class DynamicIcon {
-
-        private ItemStack item = ItemStack.of(Material.STONE);
 
         private String name;
 
@@ -30,8 +28,7 @@ public class GuisTemplate {
         public DynamicIcon() {
         }
 
-        protected DynamicIcon(ItemStack item, String name, List<String> lore) {
-            this.item = item;
+        protected DynamicIcon(String name, List<String> lore) {
             this.name = name;
             this.lore = lore;
         }

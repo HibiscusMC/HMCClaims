@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.dialog.type;
 
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.dialog.Dialog;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import io.papermc.paper.dialog.DialogResponseView;
@@ -14,7 +15,9 @@ import net.kyori.adventure.text.event.ClickCallback;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"UnstableApiUsage"})
@@ -25,32 +28,44 @@ public class SearchDialog implements Dialog {
     private Consumer<DialogResponseView> onSubmit;
     private Runnable onCancel;
 
+    private final List<String> options;
+
+    public SearchDialog() {
+        options = new ArrayList<>();
+    }
+
+    public SearchDialog(List<String> options) {
+        this.options = options;
+    }
+
     @Override
-    public Dialog create() {
+    public Dialog create(Messages.Dialogs messages) {
+        List<DialogInput> inputs = new ArrayList<>();
+        inputs.add(DialogInput
+                .text("query", TextUtil.parse(messages.search().query()))
+                .maxLength(48)
+                .build());
+
+        if (!options.isEmpty()) {
+            AtomicBoolean first = new AtomicBoolean(true);
+            inputs.add(DialogInput
+                    .singleOption("option", TextUtil.parse(messages.search().optionTitle()), options.stream().map(option ->
+                            SingleOptionDialogInput.OptionEntry.create(option, TextUtil.parse(messages.search().options().get(option)), first.getAndSet(false))
+                    ).toList())
+                    .build());
+        }
+
         this.dialog = io.papermc.paper.dialog.Dialog.create(builder -> builder.empty()
                 .base(DialogBase
-                        .builder(TextUtil.parse("Search"))
+                        .builder(TextUtil.parse(messages.search().title()))
                         .canCloseWithEscape(true)
-                        .inputs(List.of(
-                                DialogInput
-                                        .text("query", TextUtil.parse("Query"))
-                                        .maxLength(48)
-                                        .build(),
-                                DialogInput
-                                        .singleOption("option", TextUtil.parse("Search by"), List.of(
-                                                SingleOptionDialogInput.OptionEntry.create("name", TextUtil.parse("Claim Name"), true),
-                                                SingleOptionDialogInput.OptionEntry.create("id", TextUtil.parse("Claim Id"), false),
-                                                SingleOptionDialogInput.OptionEntry.create("main", TextUtil.parse("Main Claim Name"), false),
-                                                SingleOptionDialogInput.OptionEntry.create("member", TextUtil.parse("Member Name"), false)
-                                        ))
-                                        .build()
-                        ))
+                        .inputs(inputs)
                         .build()
                 )
                 .type(DialogType.confirmation(
                         ActionButton.create(
-                                TextUtil.parse("Search"),
-                                TextUtil.parse("Click to search!"),
+                                TextUtil.parse(messages.search().buttons().get("submit").label()),
+                                TextUtil.parse(messages.search().buttons().get("submit").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {
@@ -65,8 +80,8 @@ public class SearchDialog implements Dialog {
                                 )
                         ),
                         ActionButton.create(
-                                TextUtil.parse("<red>Cancel"),
-                                TextUtil.parse("Click to cancel"),
+                                TextUtil.parse(messages.search().buttons().get("cancel").label()),
+                                TextUtil.parse(messages.search().buttons().get("cancel").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {

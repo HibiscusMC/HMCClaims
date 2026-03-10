@@ -15,6 +15,13 @@ public record Permission(Key key, String displayName, String description) {
         this(RegistryUtil.key(id), displayName, description);
     }
 
+    // Claim-related permissions
+    public final static Permission MANAGE_MEMBER_ROLES =
+            new Permission("manaage_member_roles", "Manage Member Roles", "Allows to modify other member roles");
+    public final static Permission MANAGE_MEMBER_PERMISSIONS =
+            new Permission("manaage_member_permissions", "Manage Member Permissions", "Allows to modify other member permissions");
+
+    // Interactions within the claim permissions
     public final static Permission PLACE_BLOCK =
             new Permission("place_block", "Place Blocks", "Allows placing blocks within the claim.");
     public final static Permission BREAK_BLOCK =

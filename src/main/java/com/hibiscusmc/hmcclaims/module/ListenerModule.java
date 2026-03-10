@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.module;
 
 import com.hibiscusmc.hmcclaims.listener.IntegrationListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerDataListener;
+import com.hibiscusmc.hmcclaims.listener.PlayerInputListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerSelectionListener;
 import org.bukkit.event.Listener;
 import team.unnamed.inject.AbstractModule;
@@ -14,6 +15,7 @@ public class ListenerModule extends AbstractModule {
                 .asSet()
                 .to(PlayerSelectionListener.class)
                 .to(PlayerDataListener.class)
-                .to(IntegrationListener.class);
+                .to(IntegrationListener.class)
+                .to(PlayerInputListener.class);
     }
 }

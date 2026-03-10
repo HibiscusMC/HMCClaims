@@ -94,7 +94,7 @@ public class CustomItemSerializer implements TypeSerializer<ItemStack> {
 
         List<String> lore = null;
         if (meta.hasLore()) { // noinspection DataFlowIssue
-            lore = meta.lore().stream().map(TextUtil::unparse).toList();
+            lore = TextUtil.unparse(meta.lore());
             setToRoot = false;
         }
 

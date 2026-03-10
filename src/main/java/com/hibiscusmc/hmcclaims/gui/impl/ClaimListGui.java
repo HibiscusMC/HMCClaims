@@ -3,8 +3,9 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
-import com.hibiscusmc.hmcclaims.config.gui.GuisTemplate;
+import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
@@ -21,7 +22,6 @@ import dev.triumphteam.gui.guis.GuiItem;
 import dev.triumphteam.gui.guis.PaginatedGui;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -33,11 +33,13 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Singleton
 @SuppressWarnings({"UnstableApiUsage"})
@@ -45,6 +47,8 @@ public class ClaimListGui implements BaseGui {
 
     @Inject
     private ConfigHolder<ClaimListConfig> configHolder;
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
 
     @Inject
     private GuiRegistry guis;
@@ -57,20 +61,20 @@ public class ClaimListGui implements BaseGui {
     @Inject
     private ClaimManager claimManager;
 
+    private final List<Integer> slots = new ArrayList<>();
     private Component title;
     private int rows = 1;
-    private List<Integer> slots = new ArrayList<>();
 
     private ClaimListConfig.ClaimsIcon claimsIcon;
     private ClaimListConfig.SubClaimsIcon subClaimsIcon;
 
-    private GuisTemplate.SimpleIcon searchIcon;
+    private GuiTemplate.SimpleIcon searchIcon;
     private ClaimListConfig.FilterIcon filterIcon;
 
-    private GuisTemplate.SimpleIcon previousPage;
-    private GuisTemplate.SimpleIcon nextPage;
+    private GuiTemplate.SimpleIcon previousPage;
+    private GuiTemplate.SimpleIcon nextPage;
 
-    private List<GuisTemplate.Icon> icons;
+    private List<GuiTemplate.Icon> icons;
 
     @Override
     public void loadConfig() {
@@ -99,7 +103,7 @@ public class ClaimListGui implements BaseGui {
     }
 
     @Override
-    public void open(Player player) {
+    public void open(@NotNull Player player) {
         PaginatedGui gui = Gui.paginated()
                 .title(title)
                 .rows(rows)
@@ -114,26 +118,10 @@ public class ClaimListGui implements BaseGui {
         });
     }
 
-    private void buildIcons(Player player, @NotNull PaginatedGui gui) {
-        GuiItem air = new GuiItem(ItemStack.of(Material.AIR));
+    private void buildIcons(@NotNull Player player, @NotNull PaginatedGui gui) {
+        buildPageLayout(gui, slots, previousPage, nextPage);
 
-        for (int i = 0; i < rows * 9; i++) {
-            if (!slots.contains(i)) {
-                gui.setItem(i, air);
-            }
-        }
-
-        gui.getFiller().fillBetweenPoints(5, 2, 5, 8, air);
-
-        if (previousPage != null) {
-            gui.setItem(previousPage.slot(), new GuiItem(previousPage.item(), action -> gui.previous()));
-        }
-
-        if (nextPage != null) {
-            gui.setItem(nextPage.slot(), new GuiItem(nextPage.item(), action -> gui.next()));
-        }
-
-        for (GuisTemplate.Icon icon : icons) {
+        for (GuiTemplate.Icon icon : icons) {
             gui.setItem(icon.slot(), new GuiItem(icon.item(), action -> {
                 for (Action iconAction : action.isLeftClick() ? icon.leftClickActions() : icon.rightClickActions()) {
                     iconAction.execute(player);
@@ -147,8 +135,8 @@ public class ClaimListGui implements BaseGui {
         AtomicReference<Query> searchQuery = new AtomicReference<>(null);
         List<Claim> claims = claimManager.getPlayerClaims(playerId);
 
-        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog()
-                .create()
+        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog(QueryType.all())
+                .create(messagesHolder.get().dialogs())
                 .onSubmit(view -> {
                     String query = view.getText("query");
                     String rawType = view.getText("option");
@@ -158,18 +146,23 @@ public class ClaimListGui implements BaseGui {
                     assert type != null;
 
                     searchQuery.set(new Query(query, type));
-                    updateClaims(gui, claims, filter, searchQuery);
 
+                    updateClaims(gui, claims, filter, searchQuery);
                     gui.update();
                 })
-                .onCancel(() -> searchQuery.set(null))
+                .onCancel(() -> {
+                    searchQuery.set(null);
+
+                    updateClaims(gui, claims, filter, searchQuery);
+                    gui.update();
+                })
                 .show(player)));
 
         updateClaims(gui, claims, filter, searchQuery);
         updateFilter(gui, claims, filter, searchQuery);
     }
 
-    private void updateFilter(PaginatedGui gui, List<Claim> claims, @NotNull AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
+    private void updateFilter(@NotNull PaginatedGui gui, List<Claim> claims, @NotNull AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
         ItemStack stack = filterIcon.item();
         ItemMeta meta = stack.getItemMeta();
 
@@ -253,7 +246,7 @@ public class ClaimListGui implements BaseGui {
                     }
 
                     case MEMBER_NAME -> {
-                        if (!StringUtil.listHas(claim.members().values().stream().map(ClaimMember::lastKnownName).toList(), query.query())) {
+                        if (!StringUtil.listHas(claim.members().stream().map(ClaimMember::lastKnownName).toList(), query.query())) {
                             continue;
                         }
                     }
@@ -265,7 +258,7 @@ public class ClaimListGui implements BaseGui {
 
                 if (action.isRightClick()) {
                     new RenameDialog()
-                            .create(claim.name())
+                            .create(messagesHolder.get().dialogs(), claim.name())
                             .onSubmit(view -> {
                                 String newName = view.getText("input");
                                 if (newName == null) {
@@ -292,7 +285,7 @@ public class ClaimListGui implements BaseGui {
     private ItemStack buildClaimIcon(@NotNull Claim claim) {
         int totalMembers = claim.members().size();
 
-        List<ClaimMember> sortedList = claim.members().values()
+        List<ClaimMember> sortedList = claim.members()
                 .stream()
                 .sorted(Comparator.comparingLong(member -> member.joinedTimestamp().getEpochSecond()))
                 .toList()
@@ -334,7 +327,7 @@ public class ClaimListGui implements BaseGui {
     }
 
     @NotNull
-    private String buildMemberRow(ClaimListConfig.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
+    private String buildMemberRow(@NotNull ClaimListConfig.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
         OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(member.lastKnownName());
 
         String name;
@@ -366,10 +359,22 @@ public class ClaimListGui implements BaseGui {
     }
 
     enum QueryType {
-        CLAIM_NAME,
-        CLAIM_ID,
-        MAIN_CLAIM_NAME,
-        MEMBER_NAME;
+        CLAIM_NAME("name"),
+        CLAIM_ID("id"),
+        MAIN_CLAIM_NAME("main"),
+        MEMBER_NAME("member");
+
+        private final static QueryType[] VALUES = values();
+
+        private final String id;
+
+        QueryType(String id) {
+            this.id = id;
+        }
+
+        public String id() {
+            return id;
+        }
 
         @Nullable
         public static QueryType fromId(@NotNull String id) {
@@ -380,6 +385,10 @@ public class ClaimListGui implements BaseGui {
                 case "member" -> MEMBER_NAME;
                 default -> null;
             };
+        }
+
+        public static List<String> all() {
+            return Arrays.stream(VALUES).map(QueryType::id).collect(Collectors.toList());
         }
     }
 

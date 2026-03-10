@@ -80,6 +80,7 @@ tasks {
     runServer {
         downloadPlugins {
             modrinth("placeholderapi", "2.12.2")
+            modrinth("luckperms", "v5.5.17-bukkit")
             url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.0/HibiscusCommons-0.9.0.jar")
         }
 

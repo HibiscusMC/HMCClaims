@@ -121,7 +121,7 @@ public class ClaimRoleRegistry {
      * @return an unmodifiable list of all roles in the hierarchy.
      */
     @Contract(pure = true)
-    public List<ClaimRole> getRoles() {
+    public List<ClaimRole> allRoles() {
         List<ClaimRole> ordered = new ArrayList<>();
 
         ordered.add(ownerRole);

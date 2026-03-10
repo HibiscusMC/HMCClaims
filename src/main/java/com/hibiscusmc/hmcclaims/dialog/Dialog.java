@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.dialog;
 
+import com.hibiscusmc.hmcclaims.config.Messages;
 import io.papermc.paper.dialog.DialogResponseView;
 import net.kyori.adventure.audience.Audience;
 
@@ -14,19 +15,21 @@ public interface Dialog {
     /**
      * Factory method to instantiate a specific dialog context with arguments.
      *
-     * @param args Contextual data needed for the dialog (e.g., claim data, role data).
+     * @param messages The dialog config messages
+     * @param args     Contextual data needed for the dialog (e.g., claim data, role data).
      * @return A new instance of the dialog.
      */
-    default Dialog create(Object... args) {
+    default Dialog create(Messages.Dialogs messages, Object... args) {
         throw new IllegalArgumentException("Dialog create[Object[]] is not implemented yet");
     }
 
     /**
      * Factory method to instantiate a parameterless dialog context.
      *
+     * @param messages The dialog config messages
      * @return A new instance of the dialog.
      */
-    default Dialog create() {
+    default Dialog create(Messages.Dialogs messages) {
         throw new IllegalArgumentException("Dialog create[] is not implemented yet");
     }
 

@@ -8,7 +8,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.entity.Player;
+import net.minecraft.server.players.NameAndId;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -96,7 +96,7 @@ public class Claim {
      * @param region  The physical boundaries of the claim.
      * @param roles   The initial role hierarchy (passed to {@link ClaimRoleRegistry}).
      */
-    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull Player owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles) {
+    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles) {
         this.claimId = claimId;
         this.region = region;
         this.main = main;
@@ -104,11 +104,11 @@ public class Claim {
 
         this.name = name;
 
-        UUID uuid = owner.getUniqueId();
+        UUID uuid = owner.id();
         this.owner = new ClaimMember(
                 uuid,
                 this,
-                owner.getName(),
+                owner.name(),
                 roleRegistry.ownerRole(),
                 PermissionRegistry.getAllPermissions()
                         .stream()
@@ -126,9 +126,9 @@ public class Claim {
     /**
      * Convenience constructor that generates a default name based on ownership.
      */
-    public Claim(@NotNull UUID claimId, @Nullable Claim main, @NotNull Player owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles, int totalClaims) {
+    public Claim(@NotNull UUID claimId, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles, int totalClaims) {
         this(claimId,
-                main == null ? owner.getName() + "'s Claim " + totalClaims : "Sub Claim of " + main.name(),
+                main == null ? owner.name() + "'s Claim " + totalClaims : "Sub Claim of " + main.name(),
                 main, owner, region, roles);
     }
 
@@ -162,17 +162,53 @@ public class Claim {
      * @return An unmodifiable view of the current members.
      */
     @NotNull
-    public Map<UUID, ClaimMember> members() {
-        return Collections.unmodifiableMap(members);
+    public Set<ClaimMember> members() {
+        return members.values().stream()
+                .filter(member -> !member.banned())
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     /**
-     * Adds a member to the claim.
-     *
-     * @param member the member to add
+     * @return An unmodifiable view of the current banned members.
      */
-    public void addMember(@NotNull ClaimMember member) {
+    @NotNull
+    public Set<ClaimMember> bannedMembers() {
+        return members.values().stream()
+                .filter(ClaimMember::banned)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * Adds an already constructed member to the claim.
+     *
+     * @param member The {@link ClaimMember} to add
+     */
+    public boolean addMember(@NotNull ClaimMember member) {
+        if (members.containsKey(member.uuid())) {
+            return false;
+        }
+
         members.put(member.uuid(), member);
+        return true;
+    }
+
+    /**
+     * Constructs a default member and adds it to the claim.
+     *
+     * @param data The {@link NameAndId} of the player to add
+     */
+    public boolean addMember(@NotNull NameAndId data) {
+        ClaimMember member = new ClaimMember(
+                data.id(),
+                this,
+                data.name(),
+                roleRegistry.defaultRole(),
+                roleRegistry.defaultRole().permissions()
+                        .stream().map(permission -> new PermissionHolder(permission, true))
+                        .collect(Collectors.toUnmodifiableSet())
+        );
+
+        return addMember(member);
     }
 
     /**
@@ -191,8 +227,10 @@ public class Claim {
      *
      * @param member the member to remove
      */
-    public void removeMember(@NotNull ClaimMember member) {
-        members.remove(member.uuid());
+    public boolean removeMember(@NotNull ClaimMember member) {
+        ClaimMember oldMember = members.remove(member.uuid());
+
+        return oldMember != null;
     }
 
     /**

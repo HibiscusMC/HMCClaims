@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.claim;
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import net.minecraft.server.players.NameAndId;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
@@ -63,7 +64,7 @@ public class ClaimManager {
         Claim newClaim = new Claim(
                 UUID.randomUUID(),
                 main,
-                player,
+                new NameAndId(player.getUniqueId(), player.getName()),
                 region,
                 rolesHolder.get().defaultRoles(),
                 (int) totalMainClaims + 1

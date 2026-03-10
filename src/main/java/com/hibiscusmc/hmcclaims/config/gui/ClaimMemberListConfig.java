@@ -15,7 +15,7 @@ import java.util.Map;
 @Getter
 @ToString
 @ConfigSerializable
-public class ClaimMemberListConfig extends GuisTemplate {
+public class ClaimMemberListConfig extends GuiTemplate {
 
     private String title = "<claim_name>";
 
@@ -28,8 +28,18 @@ public class ClaimMemberListConfig extends GuisTemplate {
             new RangeUtil(28, 34)
     );
 
+    @Setting("not-manageable-member-icon")
+    private DynamicIcon unmanageableMember = new DynamicIcon("<name>", List.of(
+            "",
+            "<gray>Role: <white><role>",
+            "",
+            "<gray>Joined date: <white><joined_date>",
+            "",
+            "<red>You can't manage this member!"
+    ));
+
     @Setting("member-icon")
-    private DynamicIcon memberIcon = new DynamicIcon(ItemStack.of(Material.AIR), "<name>", List.of(
+    private DynamicIcon memberIcon = new DynamicIcon("<name>", List.of(
             "",
             "<gray>Role: <white><role>",
             "",

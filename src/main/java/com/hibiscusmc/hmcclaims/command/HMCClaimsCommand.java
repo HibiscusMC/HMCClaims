@@ -31,7 +31,7 @@ public class HMCClaimsCommand implements CommandClass {
     @Inject
     private TextUtil text;
 
-    @Command(names = "reload", permission = "hmcclaims.admin.reload")
+    @Command(names = "reload", permission = "hmcclaims.commands.admin.reload")
     public void reload(CommandSender sender) {
         for (Service service : services) {
             service.reload();

@@ -2,58 +2,85 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
-import com.hibiscusmc.hmcclaims.config.gui.GuisTemplate;
+import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.input.Input;
+import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
+import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
+import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.GuiItem;
 import dev.triumphteam.gui.guis.PaginatedGui;
-import org.bukkit.Material;
+import net.kyori.adventure.text.Component;
+import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
+@SuppressWarnings({"UnstableApiUsage"})
 public class ClaimMemberListGui implements BaseGui {
 
     @Inject
     private ConfigHolder<ClaimMemberListConfig> configHolder;
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
 
     @Inject
     private GuiRegistry guis;
 
+    @Inject
+    private InputManager inputManager;
+
+    @Inject
+    private PlaceholderUtil placeholders;
+    @Inject
+    private SchedulerUtil scheduler;
+    @Inject
+    private TextUtil text;
+
+    private final List<Integer> slots = new ArrayList<>();
     private String title;
     private int rows = 1;
-    private List<Integer> slots = new ArrayList<>();
 
-    private GuisTemplate.DynamicIcon memberIcon;
+    private GuiTemplate.DynamicIcon unmanageableMemberIcon;
+    private GuiTemplate.DynamicIcon memberIcon;
 
     private ClaimMemberListConfig.FilterIcon filterIcon;
-    private GuisTemplate.SimpleIcon searchIcon;
-    private GuisTemplate.SimpleIcon addMemberIcon;
+    private GuiTemplate.SimpleIcon searchIcon;
+    private GuiTemplate.SimpleIcon addMemberIcon;
 
-    private GuisTemplate.SimpleIcon backIcon;
-    private GuisTemplate.SimpleIcon previousPage;
-    private GuisTemplate.SimpleIcon nextPage;
-    private GuisTemplate.SimpleIcon deleteIcon;
+    private GuiTemplate.SimpleIcon backIcon;
+    private GuiTemplate.SimpleIcon previousPage;
+    private GuiTemplate.SimpleIcon nextPage;
+    private GuiTemplate.SimpleIcon deleteIcon;
 
-    private GuisTemplate.SimpleIcon membersTab;
-    private GuisTemplate.SimpleIcon rolesTab;
-    private GuisTemplate.SimpleIcon settingsTab;
-    private GuisTemplate.SimpleIcon manageTab;
+    private GuiTemplate.SimpleIcon membersTab;
+    private GuiTemplate.SimpleIcon rolesTab;
+    private GuiTemplate.SimpleIcon settingsTab;
+    private GuiTemplate.SimpleIcon manageTab;
 
-    private List<GuisTemplate.Icon> icons;
+    private List<GuiTemplate.Icon> icons;
 
     @Override
     public void loadConfig() {
@@ -62,9 +89,11 @@ public class ClaimMemberListGui implements BaseGui {
         title = config.title();
         rows = config.rows();
 
+        unmanageableMemberIcon = config.unmanageableMember();
+        memberIcon = config.memberIcon();
+
         searchIcon = config.searchIcon();
         filterIcon = config.filterIcon();
-        memberIcon = config.memberIcon();
         addMemberIcon = config.addMemberIcon();
 
         backIcon = config.pages().get("back");
@@ -89,7 +118,7 @@ public class ClaimMemberListGui implements BaseGui {
     }
 
     @Override
-    public void open(Player player, Object... args) {
+    public void open(@NotNull Player player, Object... args) {
         Claim claim = (Claim) args[0];
 
         PaginatedGui gui = Gui.paginated()
@@ -101,21 +130,21 @@ public class ClaimMemberListGui implements BaseGui {
                 .disableAllInteractions()
                 .create();
 
-        GuiItem air = new GuiItem(ItemStack.of(Material.AIR));
-        for (int i = 0; i < rows * 9; i++) {
-            if (!slots.contains(i)) {
-                gui.setItem(i, air);
-            }
-        }
+        scheduler.scheduleAsync(() -> {
+            buildIcons(player, gui, claim);
 
-        gui.getFiller().fillTop(air);
+            scheduler.schedule(() -> gui.open(player));
+        });
+    }
 
-        gui.setItem(backIcon.slot(), new GuiItem(backIcon.item(), action -> {
-            guis.get(ClaimListGui.class)
-                    .open(player);
-        }));
+    private void buildIcons(@NotNull Player player, @NotNull PaginatedGui gui, @NotNull Claim claim) {
+        buildPageLayout(gui, slots, previousPage, nextPage);
 
-        for (GuisTemplate.Icon icon : icons) {
+        gui.setItem(backIcon.slot(), new GuiItem(backIcon.item(), action ->
+                guis.get(ClaimListGui.class).open(player)
+        ));
+
+        for (GuiTemplate.Icon icon : icons) {
             gui.setItem(icon.slot(), new GuiItem(icon.item(), action -> {
                 for (Action iconAction : action.isLeftClick() ? icon.leftClickActions() : icon.rightClickActions()) {
                     iconAction.execute(player);
@@ -123,25 +152,215 @@ public class ClaimMemberListGui implements BaseGui {
             }));
         }
 
-        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item()));
-        gui.setItem(addMemberIcon.slot(), new GuiItem(addMemberIcon.item()));
-        gui.setItem(filterIcon.slot(), new GuiItem(filterIcon.item()));
+        gui.setItem(addMemberIcon.slot(), buildAddMemberIcon(player, claim));
+
+        AtomicReference<String> searchQuery = new AtomicReference<>(null);
+        AtomicReference<String> filterQuery = new AtomicReference<>(null);
+
+        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog()
+                .create(messagesHolder.get().dialogs())
+                .onSubmit(view -> {
+                    String query = view.getText("query");
+
+                    searchQuery.set(query);
+                    updateMembers(gui, player, claim, searchQuery, filterQuery);
+
+                    gui.update();
+                })
+                .onCancel(() -> {
+                    searchQuery.set(null);
+
+                    updateMembers(gui, player, claim, searchQuery, filterQuery);
+                    gui.update();
+                })
+                .show(player)));
+
+        handleFilter(gui, player, claim, searchQuery, filterQuery);
 
         gui.setItem(membersTab.slot(), new GuiItem(membersTab.item()));
-        gui.setItem(rolesTab.slot(), new GuiItem(rolesTab.item()));
-        gui.setItem(settingsTab.slot(), new GuiItem(settingsTab.item()));
-        gui.setItem(manageTab.slot(), new GuiItem(manageTab.item()));
+        gui.setItem(rolesTab.slot(), new GuiItem(rolesTab.item(), action -> player.sendRichMessage("<green>viewing roles")));
+        gui.setItem(settingsTab.slot(), new GuiItem(settingsTab.item(), action -> player.sendRichMessage("<green>viewing settings")));
+        gui.setItem(manageTab.slot(), new GuiItem(manageTab.item(), action -> player.sendRichMessage("<green>viewing manage")));
 
-        gui.setItem(backIcon.slot(), new GuiItem(backIcon.item()));
-        gui.setItem(deleteIcon.slot(), new GuiItem(deleteIcon.item()));
+        gui.setItem(deleteIcon.slot(), new GuiItem(deleteIcon.item(), action -> player.sendRichMessage("<green>viewing delete")));
 
-        for (ClaimMember member : claim.members().values()) {
-            gui.addItem(new GuiItem(ItemUtil.buildHeadWithName(member.lastKnownName())));
+        updateMembers(gui, player, claim, searchQuery, filterQuery);
+    }
+
+    private void updateMembers(@NotNull PaginatedGui gui, @NotNull Player player, @NotNull Claim claim, @NotNull AtomicReference<String> searchQuery, @NotNull AtomicReference<String> filterQuery) {
+        gui.clearPageItems();
+
+        List<ClaimMember> sortedList = claim.members()
+                .stream()
+                .sorted(Comparator.comparingLong(member -> member.joinedTimestamp().getEpochSecond()))
+                .toList();
+
+        ClaimMember selfMember = claim.getMember(player.getUniqueId())
+                .orElse(null);
+
+        for (ClaimMember member : sortedList) {
+            if (searchQuery.get() != null) {
+                if (!StringUtil.has(member.lastKnownName(), searchQuery.get())) {
+                    continue;
+                }
+            }
+
+            if (filterQuery.get() != null) {
+                if (!member.role().id().equals(filterQuery.get())) {
+                    continue;
+                }
+            }
+
+            boolean canManage = selfMember != null && selfMember.canManage(member);
+            Map<String, String> data = placeholders.memberInfo(member);
+
+            ItemStack head = ItemUtil.buildHeadWithName(member.lastKnownName());
+            if (canManage) {
+                ItemUtil.applyDisplay(head,
+                        TextUtil.parseItem(memberIcon.name(), data),
+                        TextUtil.parseItemLore(memberIcon.lore(), data)
+                );
+            } else {
+                ItemUtil.applyDisplay(head,
+                        TextUtil.parseItem(unmanageableMemberIcon.name(), data),
+                        TextUtil.parseItemLore(unmanageableMemberIcon.lore(), data)
+                );
+            }
+
+            gui.addItem(new GuiItem(head, action -> {
+                if (!canManage) {
+                    return;
+                }
+
+                player.sendRichMessage("managing");
+            }));
         }
+    }
 
-        gui.setItem(previousPage.slot(), new GuiItem(previousPage.item()));
-        gui.setItem(nextPage.slot(), new GuiItem(nextPage.item()));
+    private void handleFilter(@NotNull PaginatedGui gui, @NotNull Player player, @NotNull Claim claim, @NotNull AtomicReference<String> searchQuery, @NotNull AtomicReference<String> filterQuery) {
+        List<ClaimRole> roles = claim.roleRegistry().allRoles();
 
-        gui.open(player);
+        ItemStack item = buildFilterIcon(filterQuery, roles);
+
+        gui.setItem(filterIcon.slot(), new GuiItem(item, action -> {
+            boolean isNext = action.isLeftClick();
+
+            String filter = filterQuery.get();
+            if (filter == null) {
+                filterQuery.set((isNext ? roles.getFirst() : roles.getLast()).id());
+            } else {
+                ClaimRole currentRole = roles.stream().filter(role -> role.id().equals(filter))
+                        .findFirst()
+                        .orElse(null);
+
+                if (currentRole == null) {
+                    filterQuery.set(null);
+                } else {
+                    int current = roles.indexOf(currentRole);
+
+                    if (isNext ? (current + 1) >= roles.size() : (current - 1) < 0) {
+                        filterQuery.set(null);
+                    } else {
+                        filterQuery.set(roles.get(isNext ? current + 1 : current - 1).id());
+                    }
+                }
+            }
+
+            handleFilter(gui, player, claim, searchQuery, filterQuery);
+            updateMembers(gui, player, claim, searchQuery, filterQuery);
+
+            gui.update();
+        }));
+    }
+
+    @NotNull
+    private ItemStack buildFilterIcon(@NotNull AtomicReference<String> filterQuery, @NotNull List<ClaimRole> roles) {
+        ItemStack item = filterIcon.item();
+        item.editMeta(meta -> {
+            meta.customName(TextUtil.parseItem(filterIcon.name()));
+
+            List<Component> lore = new ArrayList<>();
+            for (String line : filterIcon.lore()) {
+                if (line.contains("<filter_list>")) {
+                    String allName = filterIcon.filterNames().getOrDefault("ALL", "All");
+                    String roleName = filterIcon.filterNames().getOrDefault("ROLE", "<role> Role");
+
+                    List<FilterType> list = new ArrayList<>();
+                    list.add(new FilterType("ALL", allName));
+                    list.addAll(roles.stream().map(role ->
+                            new FilterType(role.id(), roleName.replace("<role>", role.name()))
+                    ).toList());
+
+                    String filter = filterQuery.get();
+                    for (FilterType role : list) {
+                        String id = role.id();
+                        String name = role.name();
+
+                        boolean selected = (id.equalsIgnoreCase("ALL") && filterQuery.get() == null) || id.equals(filter);
+
+                        String base = line.replace("<filter_list>", selected ? filterIcon.selected() : filterIcon.unselected());
+                        lore.add(TextUtil.parseItem(base, Map.of(
+                                "name", name
+                        )));
+                    }
+                    continue;
+                }
+
+                lore.add(TextUtil.parseItem(line));
+            }
+
+            meta.lore(lore);
+        });
+
+        return item;
+    }
+
+    private GuiItem buildAddMemberIcon(@NotNull Player player, @NotNull Claim claim) {
+        return new GuiItem(addMemberIcon.item(), action -> {
+            Input<?> currentInput = inputManager.fetch(player);
+
+            if (currentInput != null) {
+                return;
+            }
+
+            AtomicReference<Runnable> inputRunnable = new AtomicReference<>();
+            InventoryView inv = player.getOpenInventory();
+
+            inputRunnable.set(() -> {
+                Input<NameAndId> input = inputManager.create(player, NameAndId.class);
+                if (input == null) {
+                    return;
+                }
+
+                player.closeInventory();
+                input.onCancel(() -> {
+                            text.send(player, messagesHolder.get().inputs().cancelled());
+
+                            player.openInventory(inv);
+                        })
+                        .onSubmit((member) -> {
+                            boolean added = claim.addMember(member);
+
+                            if (added) {
+                                text.send(player, messagesHolder.get().commands().claim().add(), Map.of(
+                                        "name", member.name(),
+                                        "player_head", "<head:" + member.name() + ">",
+                                        "claim", claim.name()
+                                ));
+
+                                open(player, claim);
+                            } else {
+                                text.send(player, messagesHolder.get().commands().claim().alreadyAdded());
+
+                                scheduler.schedule(() -> inputRunnable.get().run());
+                            }
+                        });
+            });
+
+            inputRunnable.get().run();
+        });
+    }
+
+    private record FilterType(String id, String name) {
     }
 }

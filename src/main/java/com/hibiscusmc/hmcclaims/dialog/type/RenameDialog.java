@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.dialog.type;
 
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.dialog.Dialog;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import io.papermc.paper.dialog.DialogResponseView;
@@ -25,14 +26,14 @@ public class RenameDialog implements Dialog {
     private Runnable onCancel;
 
     @Override
-    public Dialog create(Object... args) {
+    public Dialog create(Messages.Dialogs messages, Object... args) {
         this.dialog = io.papermc.paper.dialog.Dialog.create(builder -> builder.empty()
                 .base(DialogBase
-                        .builder(TextUtil.parse("Rename Your Claim"))
+                        .builder(TextUtil.parse(messages.rename().title()))
                         .canCloseWithEscape(true)
                         .inputs(List.of(
                                 DialogInput
-                                        .text("input", TextUtil.parse("Input the new name"))
+                                        .text("input", TextUtil.parse(messages.rename().input()))
                                         .initial((String) args[0])
                                         .maxLength(48)
                                         .build()
@@ -41,8 +42,8 @@ public class RenameDialog implements Dialog {
                 )
                 .type(DialogType.confirmation(
                         ActionButton.create(
-                                TextUtil.parse("Confirm"),
-                                TextUtil.parse("Click to rename your claim"),
+                                TextUtil.parse(messages.rename().buttons().get("submit").label()),
+                                TextUtil.parse(messages.rename().buttons().get("submit").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {
@@ -57,8 +58,8 @@ public class RenameDialog implements Dialog {
                                 )
                         ),
                         ActionButton.create(
-                                TextUtil.parse("<red>Cancel"),
-                                TextUtil.parse("Click to cancel"),
+                                TextUtil.parse(messages.rename().buttons().get("cancel").label()),
+                                TextUtil.parse(messages.rename().buttons().get("cancel").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {

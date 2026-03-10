@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.util;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
@@ -71,6 +72,33 @@ public class PlaceholderUtil {
         return map;
     }
 
+
+    /**
+     * Generates a placeholder map containing claim block statistics for a specific user.
+     * <p>
+     * <b>Available Placeholders:</b>
+     * <ul>
+     * <li>{@code name}: The claim name.</li>
+     * <li>{@code id}: The claim id.</li>
+     * <li>{@code short_id}: The first section of the claim id.</li>
+     * <li>{@code locked}: If foreigners can walk or teleport into the claim.</li>
+     * <li>{@code total_sub_claims}: The amount of sub-claims this claim has.</li>
+     * <li>{@code main_claim}: The name of the claim that owns this sub-claim.</li>
+     * <li>{@code inherits_permissions}: If the claim will inherit permissions from its main claim.</li>
+     * <li>{@code world}: The alias of the world where this claim is located.</li>
+     * <li>{@code raw_world}: The unparsed name of the world where this claim is located.</li>
+     * <li>{@code x}: The x-coordinate where the top border of this claim is located.</li>
+     * <li>{@code z}: The z-coordinate where the top border of this claim is located.</li>
+     * <li>{@code surface_area}: The amount of blocks this claim surfaces.</li>
+     * <li>{@code total_x}: The horizontal length of this claim.</li>
+     * <li>{@code total_z}: The vertical length of this claim.</li>
+     * <li>{@code member_count}: The amount of members in this claim.</li>
+     * <li>{@code creation_date}: The formatted date when this claim was created.</li>
+     * </ul>
+     *
+     * @param claim The {@link Claim} to process.
+     * @return A newly constructed, mutable {@link Map} of claim placeholders.
+     */
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public Map<String, String> claimInfo(@NotNull Claim claim) {
@@ -85,12 +113,14 @@ public class PlaceholderUtil {
         String worldName = region.worldName();
 
         map.put("name", claim.name());
+        map.put("id", claim.claimId().toString());
         map.put("short_id", shortId);
         map.put("locked", claim.locked() ? "Yes" : "No");
         map.put("total_sub_claims", totalSubClaims + "");
         map.put("main_claim", claim.main() != null ? claim.main().name() : "");
         map.put("inherits_permissions", claim.inheritPermissions() ? "Yes" : "No");
         map.put("world", settings.worldAliases().getOrDefault(worldName, worldName));
+        map.put("raw_world", worldName);
         map.put("x", region.maxX() + "");
         map.put("z", region.maxZ() + "");
         map.put("surface_area", region.getSurfaceArea() + "");
@@ -98,6 +128,32 @@ public class PlaceholderUtil {
         map.put("total_z", ((region.maxZ() - region.minZ()) + 1) + "");
         map.put("member_count", totalMembers + "");
         map.put("creation_date", FORMATTER.format(claim.claimedTimestamp()));
+
+        return map;
+    }
+
+
+    /**
+     * Generates a placeholder map containing information from the member of the claim.
+     * <p>
+     * <b>Available Placeholders:</b>
+     * <ul>
+     * <li>{@code name}: The name of the member.</li>
+     * <li>{@code role}: The name of the role this member has.</li>
+     * <li>{@code joined_date}: The formatted date when this member joined the claim.</li>
+     * </ul>
+     *
+     * @param member The {@link ClaimMember} to process.
+     * @return A newly constructed, mutable {@link Map} of member placeholders.
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public Map<String, String> memberInfo(@NotNull ClaimMember member) {
+        Map<String, String> map = new HashMap<>();
+
+        map.put("name", member.lastKnownName());
+        map.put("role", member.role().name());
+        map.put("joined_date", FORMATTER.format(member.joinedTimestamp()));
 
         return map;
     }

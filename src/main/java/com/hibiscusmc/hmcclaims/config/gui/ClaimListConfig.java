@@ -15,7 +15,7 @@ import java.util.Map;
 @Getter
 @ToString
 @ConfigSerializable
-public class ClaimListConfig extends GuisTemplate {
+public class ClaimListConfig extends GuiTemplate {
 
     private String title = "Your claims";
 
@@ -42,15 +42,15 @@ public class ClaimListConfig extends GuisTemplate {
     );
 
     @Setting("extra-icons")
-    private Map<String, GuisTemplate.Icon> extraIcons = Map.of(
-            "example-icon", new GuisTemplate.Icon()
+    private Map<String, GuiTemplate.Icon> extraIcons = Map.of(
+            "example-icon", new GuiTemplate.Icon()
     );
 
-    private Map<String, GuisTemplate.SimpleIcon> pages = Map.of(
-            "previous-page", new GuisTemplate.SimpleIcon(ItemUtil.build(
+    private Map<String, GuiTemplate.SimpleIcon> pages = Map.of(
+            "previous-page", new GuiTemplate.SimpleIcon(ItemUtil.build(
                     Material.STONE_BUTTON, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
             ), 39),
-            "next-page", new GuisTemplate.SimpleIcon(ItemUtil.build(
+            "next-page", new GuiTemplate.SimpleIcon(ItemUtil.build(
                     Material.STONE_BUTTON, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
             ), 41)
     );

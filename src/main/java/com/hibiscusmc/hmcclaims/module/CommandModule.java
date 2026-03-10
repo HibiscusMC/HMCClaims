@@ -1,7 +1,8 @@
 package com.hibiscusmc.hmcclaims.module;
 
 import com.hibiscusmc.hmcclaims.command.ClaimBlocksCommand;
-import com.hibiscusmc.hmcclaims.command.ClaimsCommand;
+import com.hibiscusmc.hmcclaims.command.ClaimCommand;
+import com.hibiscusmc.hmcclaims.command.ClaimListCommand;
 import com.hibiscusmc.hmcclaims.command.HMCClaimsCommand;
 import team.unnamed.commandflow.annotated.CommandClass;
 import team.unnamed.inject.AbstractModule;
@@ -14,6 +15,7 @@ public class CommandModule extends AbstractModule {
                 .asSet()
                 .to(HMCClaimsCommand.class)
                 .to(ClaimBlocksCommand.class)
-                .to(ClaimsCommand.class);
+                .to(ClaimListCommand.class)
+                .to(ClaimCommand.class);
     }
 }
