@@ -29,7 +29,7 @@ public class ClaimMember {
     private final Claim claim;
     private final String lastKnownName;
 
-    private final ClaimRole role;
+    private ClaimRole role;
 
     /**
      * Explicit permission overrides for this member.
@@ -43,7 +43,7 @@ public class ClaimMember {
      * <p>A value of {@code true} explicitly grants the permission,
      * while {@code false} explicitly denies it.</p>
      */
-    private final Set<PermissionHolder> permissions;
+    private Set<PermissionHolder> permissions;
 
     /**
      * Whether this member is currently banned from the claim.
@@ -100,7 +100,7 @@ public class ClaimMember {
      * @return {@code true} if this member has the permission
      */
     public boolean hasPermission(Permission permission) {
-        if (claim.owner().equals(this)) {
+        if (claim.owner().uuid.equals(this.uuid)) {
             return true;
         }
 

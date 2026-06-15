@@ -61,16 +61,6 @@ public class SelectionManager {
         boolean isMain = claims.size() == 1;
 
         Claim claim = isMain ? claims.getFirst() : null;
-        if (claim != null && !claim.owner().uuid().equals(player.getUniqueId())) {
-            text.send(player, messages.claims().selecting().landAlreadyClaimed());
-            return;
-        }
-
-        boolean hasSubClaim = claims.size() > 1;
-        if (hasSubClaim) {
-            text.send(player, messages.claims().selecting().claimWithinSub());
-            return;
-        }
 
         Selection selection;
         if (!user.hasActiveSelection()) {
@@ -78,6 +68,62 @@ public class SelectionManager {
             user.currentSelection(selection);
         } else {
             selection = user.currentSelection();
+        }
+
+        boolean isResizing = selection.resizingClaim() != null;
+
+        if (claim != null) {
+            if (isResizing && !selection.resizingClaim().claimId().equals(claim.claimId())) {
+                text.send(player, messages.claims().selecting().resizingWrongClaim());
+                return;
+            } else if (!claim.owner().uuid().equals(player.getUniqueId())) {
+                text.send(player, messages.claims().selecting().landAlreadyClaimed());
+                return;
+            }
+        }
+
+        if (isResizing) {
+            Claim resizingClaim = selection.resizingClaim();
+            ClaimRegion originalRegion = resizingClaim.region();
+
+            if (selection.points().isEmpty() || selection.points().size() == 2) {
+                if (!selection.region().isCorner(blockSelection)) {
+                    text.send(player, "<red>You should select only a corner!");
+                    return;
+                }
+
+                BlockSelection oppositeCorner = selection.region().getOppositeCorner(blockSelection);
+                selection.clearPoints();
+                selection.region(new ClaimRegion(selection.region().worldName()));
+
+                selection.addBlock(oppositeCorner);
+            } else {
+                BlockSelection anchor = selection.points().getFirst();
+
+                int hypMinX = Math.min(anchor.x(), blockSelection.x());
+                int hypMaxX = Math.max(anchor.x(), blockSelection.x());
+                int hypMinZ = Math.min(anchor.z(), blockSelection.z());
+                int hypMaxZ = Math.max(anchor.z(), blockSelection.z());
+
+                if (hypMinX > originalRegion.minX() ||
+                        hypMaxX < originalRegion.maxX() ||
+                        hypMinZ > originalRegion.minZ() ||
+                        hypMaxZ < originalRegion.maxZ()) {
+
+                    text.send(player, "<red>The new region must completely enclose the original claim boundaries!");
+                    return;
+                }
+
+                selection.addBlock(blockSelection);
+            }
+
+            return;
+        }
+
+        boolean hasSubClaim = claims.size() > 1;
+        if (hasSubClaim) {
+            text.send(player, messages.claims().selecting().claimWithinSub());
+            return;
         }
 
         if (selection.main() != null && !selection.main().equals(claim)) {

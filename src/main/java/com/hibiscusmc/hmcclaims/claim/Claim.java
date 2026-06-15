@@ -41,19 +41,19 @@ public class Claim {
     private final UUID claimId;
 
     /**
-     * The primary authority and creator of this claim.
-     */
-    private final ClaimMember owner;
-
-    /**
      * The spatial bounds defining where this claim exists in the world.
      */
     private final ClaimRegion region;
 
     /**
+     * The current owner of the claim.
+     */
+    private ClaimMember owner;
+
+    /**
      * The local authority for managing roles and permissions within this claim.
      */
-    private final ClaimRoleRegistry roleRegistry;
+    private ClaimRoleRegistry roleRegistry;
 
     @Getter(AccessLevel.NONE)
     private final Map<UUID, ClaimMember> members = new HashMap<>();
@@ -72,13 +72,6 @@ public class Claim {
 
     @Setter
     private String name;
-
-    /**
-     * Whether this claim should automatically inherit permissions from its
-     * parent ({@link #main}) claim.
-     */
-    @Setter
-    private boolean inheritPermissions;
 
     /**
      * If {@code true}, players without bypass permissions cannot interact
@@ -118,7 +111,6 @@ public class Claim {
         addMember(this.owner);
 
         this.locked = false;
-        this.inheritPermissions = true;
 
         this.claimedTimestamp = Instant.now();
     }
@@ -130,6 +122,96 @@ public class Claim {
         this(claimId,
                 main == null ? owner.name() + "'s Claim " + totalClaims : "Sub Claim of " + main.name(),
                 main, owner, region, roles);
+    }
+
+    /**
+     * Inherits every member, role and permission from the main claim
+     *
+     * @throws IllegalStateException if the claim is not a sub claim
+     */
+    public void inheritPermissions() {
+        if (main == null) {
+            throw new IllegalStateException("A main claim can't inherit permissions");
+        }
+
+        ClaimRoleRegistry mainRegistry = main.roleRegistry();
+
+        roleRegistry = new ClaimRoleRegistry(mainRegistry.allRoles());
+
+        List<ClaimRole> roles = roleRegistry.allRoles();
+        members.clear();
+
+        long start = 0;
+        for (ClaimMember member : main.members()) {
+            ClaimMember newMember = new ClaimMember(
+                    member.uuid(),
+                    this,
+                    member.lastKnownName(),
+                    roles.stream().filter(role -> role.id().equals(member.role().id()))
+                            .findAny()
+                            .orElse(roleRegistry.defaultRole()),
+                    member.permissions()
+            );
+            newMember.banned(member.banned());
+            newMember.joinedTimestamp(member.joinedTimestamp().plusMillis(start++));
+
+            members.put(member.uuid(), newMember);
+        }
+    }
+
+    /**
+     * Transfer the claim ownership to another player.
+     *
+     * @param newOwner The player that will be the new owner of the claim
+     * @return {@code false} if the new owner is the same as the current one, {@code true} otherwise.
+     */
+    public boolean transfer(@NotNull NameAndId newOwner) {
+        String name = newOwner.name();
+        UUID id = newOwner.id();
+
+        if (id.equals(owner.uuid())) {
+            return false;
+        }
+
+        ClaimMember oldOwner = members.get(owner.uuid());
+        ClaimMember member;
+        Set<PermissionHolder> allPermissions = PermissionRegistry.getAllPermissions()
+                .stream()
+                .map(permission -> new PermissionHolder(permission, true))
+                .collect(Collectors.toUnmodifiableSet());
+
+        if (members.containsKey(id)) {
+            member = members.get(id);
+
+            member.role(roleRegistry.ownerRole());
+            member.permissions(allPermissions);
+
+            if (member.banned()) {
+                member.banned(false);
+            }
+        } else {
+            member = new ClaimMember(
+                    id,
+                    this,
+                    name,
+                    roleRegistry.ownerRole(),
+                    allPermissions
+            );
+
+            members.put(id, member);
+        }
+
+        owner = member;
+        oldOwner.role(roleRegistry.defaultRole());
+        oldOwner.permissions(roleRegistry.defaultRole().permissions()
+                .stream().map(permission -> new PermissionHolder(permission, true))
+                .collect(Collectors.toUnmodifiableSet()));
+
+        if (!subClaims.isEmpty()) {
+            subClaims.forEach(subClaim -> subClaim.transfer(newOwner));
+        }
+
+        return true;
     }
 
     /**
@@ -225,10 +307,10 @@ public class Claim {
     /**
      * Removes a member to the claim.
      *
-     * @param member the member to remove
+     * @param uuid the uuid of the member to remove
      */
-    public boolean removeMember(@NotNull ClaimMember member) {
-        ClaimMember oldMember = members.remove(member.uuid());
+    public boolean removeMember(@NotNull UUID uuid) {
+        ClaimMember oldMember = members.remove(uuid);
 
         return oldMember != null;
     }
@@ -246,9 +328,13 @@ public class Claim {
      * Links a sub-claim to this claim.
      *
      * @param claim The sub-claim to add.
-     * @throws IllegalStateException If trying to add the claim to itself.
+     * @throws IllegalStateException If trying to add the claim to itself or adding to another sub claim.
      */
     public void addSubClaim(@NotNull Claim claim) {
+        if (main != null) {
+            throw new IllegalStateException("You can't add a sub claim to another sub claim");
+        }
+
         if (claim.equals(this)) {
             throw new IllegalStateException("This claim can't be a sub claim of itself");
         }

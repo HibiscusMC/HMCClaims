@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.marker.MarkType;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a player's active area selection process.
@@ -28,23 +30,37 @@ public class Selection {
     private final Deque<BlockSelection> points = new ArrayDeque<>(2);
 
     @Getter
-    private final ClaimRegion region;
-    @Getter
     private final Claim main;
+
+    @Getter
+    private final Claim resizingClaim;
+
+    @Setter
+    @Getter
+    private ClaimRegion region;
+
+    public Selection(Player player, BlockMarker marker, Claim main) {
+        this(player, marker, main, null, null);
+    }
 
     /**
      * Constructs a new selection session for a player.
      *
-     * @param player The player making the selection.
-     * @param marker The visual handler for showing block markers.
-     * @param main   The parent claim (if creating a sub-claim), or {@code null} for a primary claim.
+     * @param player        The player making the selection.
+     * @param marker        The visual handler for showing block markers.
+     * @param main          The parent claim (if creating a sub-claim), or {@code null} for a primary claim.
+     * @param region        The pre-defined region of the selection, or {@code null} if it's a new selection.
+     * @param resizingClaim The claim this selection is resizing, or {@code null} if it's not resizing any claim.
      */
-    public Selection(Player player, BlockMarker marker, Claim main) {
+    public Selection(Player player, BlockMarker marker, Claim main, ClaimRegion region, Claim resizingClaim) {
         this.marker = marker;
         this.player = player;
         this.main = main;
+        this.resizingClaim = resizingClaim;
 
-        this.region = new ClaimRegion(player.getWorld().getName());
+        this.region = Objects.requireNonNullElseGet(region, () ->
+                new ClaimRegion(player.getWorld().getName())
+        );
     }
 
     /**
@@ -73,7 +89,7 @@ public class Selection {
         points.add(block);
         region.addCorner(block);
 
-        refreshVisuals();
+        refreshVisuals(false);
     }
 
     /**
@@ -89,7 +105,7 @@ public class Selection {
 
         points.remove(block);
         region.removeCorner(block);
-        refreshVisuals();
+        refreshVisuals(false);
 
         return points.isEmpty();
     }
@@ -127,14 +143,22 @@ public class Selection {
 
     /**
      * Updates the visual block markers for the player based on current points.
+     *
+     * @param preferRegion If it should use region corners explicitly instead of relying on the selection points.
      */
-    public void refreshVisuals() {
+    public void refreshVisuals(boolean preferRegion) {
         marker.clearAllMarks(player.getUniqueId());
 
-        if (points.size() == 2) {
-            marker.mark(player, region.getLCornerBlocks(), main == null ? MarkType.SELECT : MarkType.SELECT_SUB, 0);
+        MarkType type = main == null ?
+                resizingClaim != null ? MarkType.RESIZE : MarkType.SELECT :
+                resizingClaim != null ? MarkType.RESIZE_SUB : MarkType.SELECT_SUB;
+
+        if (preferRegion || points.size() == 2) {
+            marker.mark(player, region.getLCornerBlocks(), type,
+                    0);
         } else if (!points.isEmpty()) {
-            marker.mark(player, List.of(points.peekFirst()), main == null ? MarkType.SELECT : MarkType.SELECT_SUB, 0);
+            marker.mark(player, List.of(points.peekFirst()), type,
+                    0);
         }
     }
 

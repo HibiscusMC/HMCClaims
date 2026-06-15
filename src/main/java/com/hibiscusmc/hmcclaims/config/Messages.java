@@ -38,6 +38,36 @@ public class Messages {
         @Setting("sub-claim-created")
         private String subCreated = "<gray>The sub claim <#d24c9f><name> <gray>has been created!";
 
+        @Setting("member-added")
+        private String memberAdded = "<green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
+
+        @Setting("member-remove")
+        private String memberRemoved = "<red>Player <white><player_head> <name></white> <red>removed from <white><claim></white>!";
+
+        @Setting("member-already-added")
+        private String memberAlreadyAdded = "<red>This player is already in the claim!";
+
+        @Setting("member-already-banned")
+        private String memberAlreadyBanned = "<red>This player is already banned!";
+
+        @Setting("cant-ban-member")
+        private String cantBanMember = "<red>You can't ban this member!";
+
+        @Setting("player-not-member")
+        private String playerNotMember = "<red>This player is not a member of this claim!";
+
+        @Setting("self-already-owner")
+        private String selfAlreadyOwner = "<red>You're already the owner of this claim!";
+
+        @Setting("member-already-owner")
+        private String memberAlreadyOwner = "<red>This member is already the owner of this claim!";
+
+        @Setting("claim-transferred")
+        private String claimTransferred = "<green>Claim <white><claim></white> transferred to <white><player_head> <name></white>!";
+
+        @Setting("member-banned")
+        private String memberBanned = "<green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
+
         private Selecting selecting = new Selecting();
 
         @Getter
@@ -75,6 +105,9 @@ public class Messages {
             @Setting("land-already-claimed")
             private String landAlreadyClaimed = "<red>Someone already claimed this land!";
 
+            @Setting("resizing-wrong-claim")
+            private String resizingWrongClaim = "<red>You are not resizing this claim!";
+
             @Setting("claim-within-sub")
             private String claimWithinSub = "<red>Can't create a claim within a sub claim";
 
@@ -107,19 +140,6 @@ public class Messages {
 
         @Setting("claim-blocks")
         private ClaimBlocks claimBlocks = new ClaimBlocks();
-
-        private Claim claim = new Claim();
-
-        @Getter
-        @ToString
-        @ConfigSerializable
-        public static class Claim {
-
-            private String add = "<green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
-
-            @Setting("already-added")
-            private String alreadyAdded = "<red>This player is already in the claim!";
-        }
 
         @Getter
         @ToString

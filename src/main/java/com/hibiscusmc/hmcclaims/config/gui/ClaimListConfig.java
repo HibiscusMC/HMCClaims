@@ -111,7 +111,6 @@ public class ClaimListConfig extends GuiTemplate {
                             "",
                             "<gray>Private: <white><locked>",
                             "<gray>Main Claim: <white><main_claim>",
-                            "<gray>Inherits Permissions: <white><inherits_permissions>",
                             "",
                             "<gray>Location: <white><world>, X: <x>, Z: <z>",
                             "<gray>Area: <white><surface_area> <dark_gray>(<total_x>x<total_z>)",

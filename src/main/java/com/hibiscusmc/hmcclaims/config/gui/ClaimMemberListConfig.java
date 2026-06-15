@@ -127,5 +127,4 @@ public class ClaimMemberListConfig extends GuiTemplate {
 
         private String unselected = "<#c2c2c2><name>";
     }
-
 }

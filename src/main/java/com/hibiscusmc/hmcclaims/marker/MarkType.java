@@ -19,6 +19,16 @@ public enum MarkType {
     SELECT_SUB(255, 211, 92),
 
     /**
+     * Orange: Used when dragging or adjusting the corners of an existing top-level claim.
+     */
+    RESIZE(255, 128, 0),
+
+    /**
+     * Light Orange: Used when dragging or adjusting the corners of an existing sub-claim.
+     */
+    RESIZE_SUB(255, 170, 92),
+
+    /**
      * Green: Indicates a successful creation of a personal claim.
      */
     CREATE(3, 181, 0),

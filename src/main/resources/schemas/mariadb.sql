@@ -11,15 +11,14 @@ CREATE TABLE IF NOT EXISTS `{prefix}users`
 
 CREATE TABLE IF NOT EXISTS `{prefix}claims`
 (
-    uuid                BINARY(16) PRIMARY KEY,
-    owner               BINARY(16)              NOT NULL,
-    name                VARCHAR(48)             NOT NULL,
-    world_name          VARCHAR(64)             NOT NULL,
-    region              VARCHAR(64)             NOT NULL,
-    parent_uuid         BINARY(16)              NULL,
-    inherit_permissions BOOLEAN   DEFAULT TRUE  NOT NULL,
-    locked              BOOLEAN   DEFAULT FALSE NOT NULL,
-    claimed_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    uuid        BINARY(16) PRIMARY KEY,
+    owner       BINARY(16)              NOT NULL,
+    name        VARCHAR(48)             NOT NULL,
+    world_name  VARCHAR(64)             NOT NULL,
+    region      VARCHAR(64)             NOT NULL,
+    parent_uuid BINARY(16)              NULL,
+    locked      BOOLEAN   DEFAULT FALSE NOT NULL,
+    claimed_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_parent FOREIGN KEY (parent_uuid)
         REFERENCES `{prefix}claims` (uuid) ON DELETE CASCADE,

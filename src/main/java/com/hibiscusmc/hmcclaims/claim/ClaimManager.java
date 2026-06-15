@@ -213,6 +213,29 @@ public class ClaimManager {
     }
 
     /**
+     * Transfers a player claim and all of its sub claims to a new player
+     */
+    public void transferClaim(@NotNull Claim claimToTransfer, @NotNull UUID oldId, @NotNull UUID newId) {
+        List<Claim> claims = playerClaims.get(oldId);
+        if (claims == null || claims.isEmpty()) {
+            return;
+        }
+
+        List<Claim> newClaims = playerClaims.computeIfAbsent(newId, k -> Collections.synchronizedList(new ArrayList<>()));
+
+        claims.removeIf(claim -> {
+            if (claim.claimId().equals(claimToTransfer.claimId()) ||
+                    (claim.main() != null && claim.main().claimId().equals(claimToTransfer.claimId()))
+            ) {
+                newClaims.add(claim);
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    /**
      * Checks if a new region overlaps with any existing claims.
      *
      * @param newRegion   The region to test.

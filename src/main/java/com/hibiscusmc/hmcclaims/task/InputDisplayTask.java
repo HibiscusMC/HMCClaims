@@ -35,7 +35,7 @@ public class InputDisplayTask extends BukkitRunnable {
                     TextUtil.parse(messages.title().subtitle()),
                     0,
                     21,
-                    0
+                    20
             ));
         }
 

@@ -86,6 +86,10 @@ public class ClaimMemberListGui implements BaseGui {
     public void loadConfig() {
         ClaimMemberListConfig config = configHolder.get();
 
+        if (config == null) {
+            throw new NullPointerException("Config is not initialized yet!");
+        }
+
         title = config.title();
         rows = config.rows();
 
@@ -180,7 +184,11 @@ public class ClaimMemberListGui implements BaseGui {
         gui.setItem(membersTab.slot(), new GuiItem(membersTab.item()));
         gui.setItem(rolesTab.slot(), new GuiItem(rolesTab.item(), action -> player.sendRichMessage("<green>viewing roles")));
         gui.setItem(settingsTab.slot(), new GuiItem(settingsTab.item(), action -> player.sendRichMessage("<green>viewing settings")));
-        gui.setItem(manageTab.slot(), new GuiItem(manageTab.item(), action -> player.sendRichMessage("<green>viewing manage")));
+        gui.setItem(manageTab.slot(), new GuiItem(manageTab.item(), action -> {
+            BaseGui tab = claim.main() == null ? guis.get(ClaimManageGui.class) : guis.get(SubClaimManageGui.class);
+
+            tab.open(player, claim);
+        }));
 
         gui.setItem(deleteIcon.slot(), new GuiItem(deleteIcon.item(), action -> player.sendRichMessage("<green>viewing delete")));
 
@@ -192,7 +200,9 @@ public class ClaimMemberListGui implements BaseGui {
 
         List<ClaimMember> sortedList = claim.members()
                 .stream()
-                .sorted(Comparator.comparingLong(member -> member.joinedTimestamp().getEpochSecond()))
+                .sorted(Comparator.comparing(member -> member.equals(claim.owner()), Comparator.reverseOrder())
+                        .thenComparingLong(member -> ((ClaimMember) member).joinedTimestamp().getEpochSecond())
+                )
                 .toList();
 
         ClaimMember selfMember = claim.getMember(player.getUniqueId())
@@ -342,7 +352,7 @@ public class ClaimMemberListGui implements BaseGui {
                             boolean added = claim.addMember(member);
 
                             if (added) {
-                                text.send(player, messagesHolder.get().commands().claim().add(), Map.of(
+                                text.send(player, messagesHolder.get().claims().memberAdded(), Map.of(
                                         "name", member.name(),
                                         "player_head", "<head:" + member.name() + ">",
                                         "claim", claim.name()
@@ -350,7 +360,7 @@ public class ClaimMemberListGui implements BaseGui {
 
                                 open(player, claim);
                             } else {
-                                text.send(player, messagesHolder.get().commands().claim().alreadyAdded());
+                                text.send(player, messagesHolder.get().claims().memberAlreadyAdded());
 
                                 scheduler.schedule(() -> inputRunnable.get().run());
                             }

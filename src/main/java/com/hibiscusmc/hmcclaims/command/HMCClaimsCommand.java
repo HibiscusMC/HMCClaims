@@ -1,9 +1,6 @@
 package com.hibiscusmc.hmcclaims.command;
 
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
-import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
@@ -38,11 +35,9 @@ public class HMCClaimsCommand implements CommandClass {
         }
 
         try {
-            ConfigFactory.reload(Settings.class);
-            ConfigFactory.reload(Messages.class);
-
-            ConfigFactory.reload(ClaimListConfig.class);
-            ConfigFactory.reload(ClaimMemberListConfig.class);
+            for (Class<?> clazz : ConfigFactory.all(false)) {
+                ConfigFactory.reload(clazz);
+            }
 
             guis.reload();
 

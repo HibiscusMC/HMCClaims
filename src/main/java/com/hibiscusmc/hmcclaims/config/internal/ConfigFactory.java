@@ -129,4 +129,17 @@ public class ConfigFactory {
         // noinspection unchecked
         return (ConfigHolder<T>) CONFIG_FILES.get(clazz);
     }
+
+    /**
+     * Retrieves every currently stored config class.
+     *
+     * @param deferred {@code true} if should only return the config files that are not yet loaded.
+     * @return An array of {@link Class}es associated to every config file.
+     */
+    public static Class<?>[] all(boolean deferred) {
+        return CONFIG_FILES.entrySet().stream()
+                .filter(entry -> !deferred || entry.getValue().get() == null)
+                .map(Map.Entry::getKey)
+                .toArray(Class<?>[]::new);
+    }
 }

@@ -1,7 +1,5 @@
 package com.hibiscusmc.hmcclaims.listener;
 
-import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
-import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -28,8 +26,9 @@ public class IntegrationListener implements Listener {
     public void onItemsLoad(HibiscusHooksAllActiveEvent event) {
         scheduler.schedule(() -> {
             try {
-                ConfigFactory.reload(ClaimListConfig.class);
-                ConfigFactory.reload(ClaimMemberListConfig.class);
+                for (Class<?> clazz : ConfigFactory.all(true)) {
+                    ConfigFactory.reload(clazz);
+                }
             } catch (Exception ex) {
                 log.severe("Failed to reload GUI configs");
                 ex.printStackTrace();

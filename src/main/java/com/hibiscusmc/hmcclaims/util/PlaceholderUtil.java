@@ -84,7 +84,6 @@ public class PlaceholderUtil {
      * <li>{@code locked}: If foreigners can walk or teleport into the claim.</li>
      * <li>{@code total_sub_claims}: The amount of sub-claims this claim has.</li>
      * <li>{@code main_claim}: The name of the claim that owns this sub-claim.</li>
-     * <li>{@code inherits_permissions}: If the claim will inherit permissions from its main claim.</li>
      * <li>{@code world}: The alias of the world where this claim is located.</li>
      * <li>{@code raw_world}: The unparsed name of the world where this claim is located.</li>
      * <li>{@code x}: The x-coordinate where the top border of this claim is located.</li>
@@ -118,7 +117,6 @@ public class PlaceholderUtil {
         map.put("locked", claim.locked() ? "Yes" : "No");
         map.put("total_sub_claims", totalSubClaims + "");
         map.put("main_claim", claim.main() != null ? claim.main().name() : "");
-        map.put("inherits_permissions", claim.inheritPermissions() ? "Yes" : "No");
         map.put("world", settings.worldAliases().getOrDefault(worldName, worldName));
         map.put("raw_world", worldName);
         map.put("x", region.maxX() + "");

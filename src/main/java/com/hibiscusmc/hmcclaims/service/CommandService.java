@@ -17,11 +17,15 @@ import team.unnamed.commandflow.exception.ArgumentParseException;
 import team.unnamed.commandflow.exception.CommandUsage;
 import team.unnamed.commandflow.exception.NoPermissionsException;
 import team.unnamed.inject.Inject;
+import team.unnamed.inject.Injector;
 
 import java.util.Map;
 import java.util.Set;
 
 public class CommandService implements Service {
+
+    @Inject
+    private Injector moduleInjector;
 
     @Inject
     private Set<CommandClass> commands;
@@ -37,7 +41,7 @@ public class CommandService implements Service {
         PartInjector injector = PartInjector.create();
         injector.install(new DefaultsModule());
         injector.install(new BukkitModule());
-        injector.install(new CommandArgumentImpl());
+        injector.install(moduleInjector.getInstance(CommandArgumentImpl.class));
 
         CommandManager manager = new BukkitMapCommandManager("hmcclaims");
         AnnotatedCommandTreeBuilder treeBuilder = AnnotatedCommandTreeBuilder.create(injector);

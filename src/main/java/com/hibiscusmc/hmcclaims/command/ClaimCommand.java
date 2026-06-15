@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.command;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.command.argument.ClaimMember;
 import com.hibiscusmc.hmcclaims.command.argument.PlayerOrOffline;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
@@ -73,11 +74,43 @@ public class ClaimCommand implements CommandClass {
         String playerName = Objects.requireNonNull(player.getName(), "playerName should never be null");
         boolean added = claim.addMember(new NameAndId(player.getUniqueId(), playerName));
         if (!added) {
-            text.send(sender, messages.commands().claim().alreadyAdded());
+            text.send(sender, messages.claims().memberAlreadyAdded());
             return;
         }
 
-        text.send(sender, messages.commands().claim().add(), Map.of(
+        text.send(sender, messages.claims().memberAdded(), Map.of(
+                "player_head", "<head:" + playerName + ">",
+                "name", playerName,
+                "claim", claim.name()
+        ));
+    }
+
+    @Command(names = {"remove", "untrust"}, permission = "hmcclaims.commands.claim.remove")
+    @Usage("<claim member>")
+    public void remove(@Sender Player sender, @ClaimMember OfflinePlayer player) {
+        Messages messages = messagesHolder.get();
+
+        Claim claim = claimManager.getClaimAt(sender.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            text.send(sender, messages.commands().notInClaim());
+            return;
+        }
+
+        if (player == null) {
+            text.send(sender, messages.commands().playerNotFound());
+            return;
+        }
+
+        String playerName = Objects.requireNonNull(player.getName(), "playerName should never be null");
+        boolean added = claim.removeMember(player.getUniqueId());
+        if (!added) {
+            text.send(sender, messages.claims().playerNotMember());
+            return;
+        }
+
+        text.send(sender, messages.claims().memberRemoved(), Map.of(
                 "player_head", "<head:" + playerName + ">",
                 "name", playerName,
                 "claim", claim.name()

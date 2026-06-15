@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.config.internal;
 
 import lombok.NoArgsConstructor;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 import java.nio.file.Path;
 
@@ -10,7 +11,9 @@ import java.nio.file.Path;
 @NoArgsConstructor
 public class ConfigHolder<T> {
 
+    @MonotonicNonNull
     private T instance;
+
     private Path path;
 
     /**

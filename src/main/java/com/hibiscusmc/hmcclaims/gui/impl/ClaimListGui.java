@@ -80,6 +80,10 @@ public class ClaimListGui implements BaseGui {
     public void loadConfig() {
         ClaimListConfig config = configHolder.get();
 
+        if (config == null) {
+            throw new NullPointerException("Config is not initialized yet!");
+        }
+
         this.title = TextUtil.parse(config.title());
         this.rows = config.rows();
 
@@ -287,9 +291,11 @@ public class ClaimListGui implements BaseGui {
 
         List<ClaimMember> sortedList = claim.members()
                 .stream()
-                .sorted(Comparator.comparingLong(member -> member.joinedTimestamp().getEpochSecond()))
-                .toList()
-                .subList(0, Math.min(4, totalMembers));
+                .sorted(Comparator.comparing(member -> member.equals(claim.owner()), Comparator.reverseOrder())
+                        .thenComparingLong(member -> ((ClaimMember) member).joinedTimestamp().getEpochSecond())
+                )
+                .limit(4)
+                .toList();
 
         Map<String, String> claimPlaceholders = placeholders.claimInfo(claim);
 
@@ -303,7 +309,7 @@ public class ClaimListGui implements BaseGui {
             if (line.toLowerCase().contains("<member_list>")) {
                 ClaimMember owner = claim.owner();
                 for (ClaimMember member : sortedList) {
-                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.equals(owner)))));
+                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(owner.uuid())))));
                 }
 
                 if (totalMembers > sortedList.size()) {

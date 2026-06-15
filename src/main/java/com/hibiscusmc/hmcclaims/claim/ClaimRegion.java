@@ -6,6 +6,7 @@ import lombok.ToString;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,8 +26,7 @@ public class ClaimRegion {
     private int minX, maxX, minZ, maxZ;
 
     public ClaimRegion(String worldName) {
-        this.worldName = worldName;
-        this.corners = new ArrayList<>();
+        this(worldName, new ArrayList<>());
     }
 
     /**
@@ -39,6 +39,40 @@ public class ClaimRegion {
         if (this.corners.size() == 2) {
             calculateCorners();
         }
+    }
+
+    /**
+     * Resizes the claim region along a horizontal direction.
+     *
+     * @param face   The horizontal BlockFace to move (NORTH, SOUTH, EAST, WEST).
+     * @param amount The number of blocks to move the face. Positive expands, negative shrinks.
+     * @return {@code true} if the claim was resized successfully, {@code false} otherwise.
+     * @throws IllegalArgumentException If an invalid face is provided or if resizing makes the region invalid.
+     */
+    public boolean resize(@NotNull BlockFace face, int amount) {
+        if (amount <= 0) {
+            return false;
+        }
+
+        switch (face) {
+            case NORTH -> this.minZ -= amount;
+            case SOUTH -> this.maxZ += amount;
+            case EAST -> this.maxX += amount;
+            case WEST -> this.minX -= amount;
+            default -> {
+                return false;
+            }
+        }
+
+        if (this.minX > this.maxX || this.minZ > this.maxZ) {
+            return false;
+        }
+
+        this.corners.clear();
+        this.corners.add(new BlockSelection(this.minX, this.minZ));
+        this.corners.add(new BlockSelection(this.maxX, this.maxZ));
+
+        return true;
     }
 
     /**
@@ -83,6 +117,27 @@ public class ClaimRegion {
     public boolean isCorner(@NotNull BlockSelection selection) {
         return (selection.x() == minX || selection.x() == maxX) &&
                 (selection.z() == minZ || selection.z() == maxZ);
+    }
+
+    /**
+     * Finds the diagonally opposite corner of a given corner.
+     *
+     * @param corner The current selected corner.
+     * @return The diagonally opposite {@link BlockSelection}.
+     * @throws IllegalArgumentException If the provided block selection is not a valid corner.
+     */
+    @NotNull
+    @Contract(pure = true)
+    public BlockSelection getOppositeCorner(@NotNull BlockSelection corner) {
+        if (!isCorner(corner)) {
+            throw new IllegalArgumentException("Provided block selection is not a corner of this region.");
+        }
+
+        // Determine the opposite coordinate based on current bounds
+        int oppositeX = (corner.x() == minX) ? maxX : minX;
+        int oppositeZ = (corner.z() == minZ) ? maxZ : minZ;
+
+        return new BlockSelection(oppositeX, oppositeZ);
     }
 
     /**

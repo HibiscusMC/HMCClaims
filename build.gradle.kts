@@ -2,14 +2,14 @@ plugins {
     id("java")
     id("com.gradleup.shadow") version "9.1.0"
     id("xyz.jpenilla.run-paper") version "3.0.2"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
 
 group = "com.hibiscusmc"
 version = "0.1.0"
 
-val serverVersion = "1.21.11"
-val serverSnapshot = "R0.1-SNAPSHOT"
+val serverVersion = "26.1.2"
+val serverSnapshot = "build.+"
 
 repositories {
     mavenCentral()
@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     // PaperMC
-    paperweight.paperDevBundle("$serverVersion-$serverSnapshot")
+    paperweight.paperDevBundle("$serverVersion.$serverSnapshot")
 
     // Inject
     implementation("team.unnamed:inject:2.0.1")
@@ -37,7 +37,7 @@ dependencies {
     }
 
     // HibiscusCommons
-    compileOnly("me.lojosho:HibiscusCommons:0.8.2-f3f79539")
+    compileOnly("me.lojosho:HibiscusCommons:0.9.1")
     // PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.12.2")
 
@@ -53,11 +53,11 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 tasks {
@@ -81,7 +81,7 @@ tasks {
         downloadPlugins {
             modrinth("placeholderapi", "2.12.2")
             modrinth("luckperms", "v5.5.17-bukkit")
-            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.0/HibiscusCommons-0.9.0.jar")
+            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.1/HibiscusCommons-0.9.1.jar")
         }
 
         minecraftVersion(serverVersion)
