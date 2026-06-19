@@ -57,25 +57,32 @@ public class SelectionManager {
                 "location", blockSelection.x() + ", " + blockSelection.z()
         );
 
-        List<Claim> claims = claimManager.getClaimsAt(location);
-        boolean isMain = claims.size() == 1;
-
-        Claim claim = isMain ? claims.getFirst() : null;
+        Claim claim = claimManager.getClaimAt(location)
+                .orElse(null);
 
         Selection selection;
         if (!user.hasActiveSelection()) {
-            selection = new Selection(player, blockMarker, claim);
+            selection = new Selection(player, blockMarker, claim != null ? claim.main() != null ? claim.main() : claim : null);
             user.currentSelection(selection);
         } else {
             selection = user.currentSelection();
         }
 
-        boolean isResizing = selection.resizingClaim() != null;
-
+        Claim resizingClaim = selection.resizingClaim();
+        boolean isResizing = resizingClaim != null;
         if (claim != null) {
-            if (isResizing && !selection.resizingClaim().claimId().equals(claim.claimId())) {
-                text.send(player, messages.claims().selecting().resizingWrongClaim());
-                return;
+            if (isResizing) {
+                Claim mainClaim = resizingClaim.main();
+                UUID currentClaimId = claim.claimId();
+                Claim currentMain = claim.main();
+
+                UUID resizingRootId = (mainClaim != null) ? mainClaim.claimId() : resizingClaim.claimId();
+                UUID currentRootId = (currentMain != null) ? currentMain.claimId() : currentClaimId;
+
+                if (!resizingRootId.equals(currentRootId)) {
+                    text.send(player, messages.claims().selecting().resizingWrongClaim());
+                    return;
+                }
             } else if (!claim.owner().uuid().equals(player.getUniqueId())) {
                 text.send(player, messages.claims().selecting().landAlreadyClaimed());
                 return;
@@ -83,12 +90,12 @@ public class SelectionManager {
         }
 
         if (isResizing) {
-            Claim resizingClaim = selection.resizingClaim();
             ClaimRegion originalRegion = resizingClaim.region();
+            ClaimRegion originalMainRegion = resizingClaim.main() != null ? resizingClaim.main().region() : null;
 
             if (selection.points().isEmpty() || selection.points().size() == 2) {
                 if (!selection.region().isCorner(blockSelection)) {
-                    text.send(player, "<red>You should select only a corner!");
+                    text.send(player, messages.claims().resizing().selectACorner());
                     return;
                 }
 
@@ -105,12 +112,24 @@ public class SelectionManager {
                 int hypMinZ = Math.min(anchor.z(), blockSelection.z());
                 int hypMaxZ = Math.max(anchor.z(), blockSelection.z());
 
-                if (hypMinX > originalRegion.minX() ||
+                if ((hypMinX > originalRegion.minX() ||
                         hypMaxX < originalRegion.maxX() ||
                         hypMinZ > originalRegion.minZ() ||
-                        hypMaxZ < originalRegion.maxZ()) {
+                        hypMaxZ < originalRegion.maxZ())) {
+                    text.send(player, messages.claims().resizing().encloseClaimBoundaries());
+                    return;
+                }
 
-                    text.send(player, "<red>The new region must completely enclose the original claim boundaries!");
+                if (originalMainRegion != null && (hypMinX < originalMainRegion.minX() ||
+                        hypMaxX > originalMainRegion.maxX() ||
+                        hypMinZ < originalMainRegion.minZ() ||
+                        hypMaxZ > originalMainRegion.maxZ())) {
+                    text.send(player, messages.claims().resizing().withinMainClaim());
+                    return;
+                }
+
+                if (claim != null && claim.main() != null && !claim.claimId().equals(resizingClaim.claimId())) {
+                    text.send(player, messages.claims().resizing().subWithinSub());
                     return;
                 }
 
@@ -120,8 +139,8 @@ public class SelectionManager {
             return;
         }
 
-        boolean hasSubClaim = claims.size() > 1;
-        if (hasSubClaim) {
+        boolean isSubClaim = claim != null && claim.main() != null;
+        if (isSubClaim) {
             text.send(player, messages.claims().selecting().claimWithinSub());
             return;
         }
@@ -216,7 +235,7 @@ public class SelectionManager {
             ));
         }
 
-        if (region != null && claimManager.isOverlapping(region, playerId, selection.main() != null)) {
+        if (region != null && claimManager.isOverlapping(region, playerId, selection.main() != null, null)) {
             return InvalidSelectionReason.OVERLAPPING;
         }
 

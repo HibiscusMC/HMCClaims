@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.claim;
 
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
-import com.hibiscusmc.hmcclaims.user.UserManager;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -41,9 +40,6 @@ public class ClaimManager {
             = new ConcurrentHashMap<>();
 
     @Inject
-    private UserManager userManager;
-
-    @Inject
     private ConfigHolder<DefaultRoles> rolesHolder;
 
     /**
@@ -75,7 +71,6 @@ public class ClaimManager {
         }
 
         addClaimToCache(newClaim);
-        userManager.calculateUsedBlocks(player.getUniqueId());
 
         return newClaim;
     }
@@ -238,13 +233,14 @@ public class ClaimManager {
     /**
      * Checks if a new region overlaps with any existing claims.
      *
-     * @param newRegion   The region to test.
-     * @param playerId    The player attempting the claim.
-     * @param checkForSub Whether to allow overlap with the player's own main claims (for sub-claiming).
+     * @param newRegion     The region to test.
+     * @param playerId      The player attempting the claim.
+     * @param checkForSub   Whether to allow overlap with the player's own main claims (for sub-claiming).
+     * @param resizingClaim The claim this player is resizing, {@code null} if it's a new claim.
      * @return {@code true} if an illegal overlap is detected.
      */
     @Contract(pure = true)
-    public boolean isOverlapping(@NotNull ClaimRegion newRegion, @NotNull UUID playerId, boolean checkForSub) {
+    public boolean isOverlapping(@NotNull ClaimRegion newRegion, @NotNull UUID playerId, boolean checkForSub, Claim resizingClaim) {
         int minX = newRegion.minX() >> 4;
         int maxX = newRegion.maxX() >> 4;
         int minZ = newRegion.minZ() >> 4;
@@ -265,6 +261,16 @@ public class ClaimManager {
                 }
 
                 for (Claim existingClaim : claimsInChunk) {
+                    if (resizingClaim != null) {
+                        if (resizingClaim.claimId().equals(existingClaim.claimId())) {
+                            continue;
+                        }
+
+                        if (existingClaim.main() != null && resizingClaim.claimId().equals(existingClaim.main().claimId())) {
+                            continue;
+                        }
+                    }
+
                     if (checkForSub && existingClaim.owner().uuid().equals(playerId) && existingClaim.main() == null) {
                         continue;
                     }

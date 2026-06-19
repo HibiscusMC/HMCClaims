@@ -43,7 +43,8 @@ public class Claim {
     /**
      * The spatial bounds defining where this claim exists in the world.
      */
-    private final ClaimRegion region;
+    @Setter
+    private ClaimRegion region;
 
     /**
      * The current owner of the claim.

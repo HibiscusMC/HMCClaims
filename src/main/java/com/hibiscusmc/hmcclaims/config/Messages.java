@@ -35,8 +35,13 @@ public class Messages {
 
         private String created = "<gray>The claim <#d24c9f><name> <gray>has been created! Price: <#d24c9f><price>";
 
+        private String resized = "<gray>The claim <#d24c9f><name> <gray>has been resized! Price: <#d24c9f><price>";
+
         @Setting("sub-claim-created")
         private String subCreated = "<gray>The sub claim <#d24c9f><name> <gray>has been created!";
+
+        @Setting("sub-claim-resized")
+        private String subResized = "<gray>The sub claim <#d24c9f><name> <gray>has been resized!";
 
         @Setting("member-added")
         private String memberAdded = "<green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
@@ -69,6 +74,8 @@ public class Messages {
         private String memberBanned = "<green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
 
         private Selecting selecting = new Selecting();
+
+        private Resizing resizing = new Resizing();
 
         @Getter
         @ToString
@@ -113,6 +120,24 @@ public class Messages {
 
             @Setting("sub-outside-boundaries")
             private String subOutsideBoundaries = "<red>Sub claim can't be outside of main claim boundaries";
+        }
+
+        @Getter
+        @ToString
+        @ConfigSerializable
+        public static class Resizing {
+
+            @Setting("select-a-corner")
+            private String selectACorner = "<red>You should select a corner";
+
+            @Setting("enclose-claim-boundaries")
+            private String encloseClaimBoundaries = "<red>The new region must completely enclose the original claim boundaries!";
+
+            @Setting("within-main-claim")
+            private String withinMainClaim = "<red>The new region must be inside of the main claim boundaries!";
+
+            @Setting("sub-within-sub")
+            private String subWithinSub = "<red>There's already a sub claim here!";
         }
     }
 

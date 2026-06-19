@@ -145,43 +145,56 @@ public class PlayerSelectionListener implements Listener {
 
                 ClaimRegion region = selection.region();
 
-                if (claimManager.isOverlapping(region, player.getUniqueId(), selection.main() != null)) {
+                if (claimManager.isOverlapping(region, player.getUniqueId(), selection.main() != null, selection.resizingClaim())) {
                     text.send(player, messages.claims().selecting().claimOverlaps());
                     return;
                 }
 
+                Claim resizingClaim = selection.resizingClaim();
+
                 if (selection.main() == null) {
                     long surfaceArea = region.getSurfaceArea();
                     long currentBlocks = userManager.getRemainingBlocks(user);
+                    long diff = surfaceArea - (resizingClaim == null ? 0 : resizingClaim.region().getSurfaceArea());
 
-                    if (surfaceArea > currentBlocks) {
+                    if (diff > currentBlocks) {
                         text.send(player, messages.claims().selecting().notEnoughClaimBlocks(), Map.of(
-                                "required_blocks", surfaceArea + "",
+                                "required_blocks", diff + "",
                                 "current_blocks", currentBlocks + ""
                         ));
 
                         return;
                     }
 
-                    Claim claim = claimManager.createClaim(player, region, selection.main());
+                    Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
+                    if (resizingClaim != null) {
+                        resizingClaim.region(region);
+                    }
+
                     selectionManager.destroySelection(player);
 
                     text.send(player, messages.claims().created(), Map.of(
                             "name", claim.name(),
-                            "price", surfaceArea + ""
+                            "price", diff + ""
                     ));
 
                     marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
                 } else {
-                    Claim claim = claimManager.createClaim(player, region, selection.main());
+                    Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
+                    if (resizingClaim != null) {
+                        resizingClaim.region(region);
+                    }
+
                     selectionManager.destroySelection(player);
 
-                    text.send(player, messages.claims().subCreated(), Map.of(
+                    text.send(player, resizingClaim == null ? messages.claims().subCreated() : messages.claims().subResized(), Map.of(
                             "name", claim.name()
                     ));
 
                     marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE_SUB, TimeUnit.SECONDS.toMillis(10));
                 }
+
+                userManager.calculateUsedBlocks(player.getUniqueId());
             }
         });
     }
@@ -201,7 +214,7 @@ public class PlayerSelectionListener implements Listener {
 
         if ((newItem == null || !newItem.isSimilar(claimTool)) &&
                 (oldItem != null && oldItem.isSimilar(claimTool))) {
-            removeSelection(player);
+            removeSelection(player, false);
         }
     }
 
@@ -211,7 +224,7 @@ public class PlayerSelectionListener implements Listener {
      */
     @EventHandler
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        removeSelection(event.getPlayer());
+        removeSelection(event.getPlayer(), true);
     }
 
     /**
@@ -220,7 +233,7 @@ public class PlayerSelectionListener implements Listener {
      */
     @EventHandler
     public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
-        removeSelection(event.getPlayer());
+        removeSelection(event.getPlayer(), true);
     }
 
     /**
@@ -235,9 +248,27 @@ public class PlayerSelectionListener implements Listener {
      * Utility method to reset a player's selection state and notify them.
      *
      * @param player The player to reset.
+     * @param force  {@code true} if the action triggering the method requires the selection to
+     *               be removed, {@code false} if it's a soft removal (like switching the held item).
+     *               <br>A soft removal (passing a {@code false} value) won't remove the selection if the player
+     *               is resizing the claim.
      */
-    private void removeSelection(Player player) {
+    private void removeSelection(Player player, boolean force) {
         if (selectionManager.hasSelection(player)) {
+            if (!force) {
+                User user = userManager.getUser(player.getUniqueId())
+                        .orElseThrow(() -> new IllegalStateException("User not loaded!"));
+
+                Selection selection = user.currentSelection();
+                if (selection == null) {
+                    return;
+                }
+
+                if (selection.resizingClaim() != null) {
+                    return;
+                }
+            }
+
             selectionManager.destroySelection(player);
             text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
         }
