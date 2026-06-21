@@ -29,10 +29,22 @@ CREATE TABLE IF NOT EXISTS `{prefix}claims`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `{prefix}claim_chunks`
+(
+    claim_uuid BINARY(16) NOT NULL,
+    chunk_key  BIGINT     NOT NULL,
+
+    PRIMARY KEY (claim_uuid, chunk_key),
+
+    CONSTRAINT fk_chunk_claim FOREIGN KEY (claim_uuid)
+        REFERENCES `{prefix}claims` (uuid) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `{prefix}claim_roles`
 (
     claim_uuid BINARY(16)  NOT NULL,
-    role_id    BINARY(16)  NOT NULL,
+    role_id VARCHAR(32) NOT NULL,
     name       VARCHAR(32) NOT NULL,
     position   INT         NOT NULL,
 
@@ -40,6 +52,20 @@ CREATE TABLE IF NOT EXISTS `{prefix}claim_roles`
 
     CONSTRAINT fk_role_claim FOREIGN KEY (claim_uuid)
         REFERENCES `{prefix}claims` (uuid) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `{prefix}role_permissions`
+(
+    claim_uuid BINARY(16)  NOT NULL,
+    role_id    VARCHAR(32) NOT NULL,
+    permission VARCHAR(32) NOT NULL,
+
+    PRIMARY KEY (claim_uuid, role_id, permission),
+
+    CONSTRAINT fk_role_perms FOREIGN KEY (claim_uuid, role_id)
+        REFERENCES `{prefix}claim_roles` (claim_uuid, role_id)
+        ON DELETE CASCADE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 

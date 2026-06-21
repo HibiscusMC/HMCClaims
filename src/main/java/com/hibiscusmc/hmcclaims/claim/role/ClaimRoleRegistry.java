@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Manages the ordered role hierarchy of a claim.
@@ -67,6 +68,23 @@ public class ClaimRoleRegistry {
         }
 
         roles.add(role);
+    }
+
+    /**
+     * Finds a role by its unique identifier.
+     *
+     * @param id the unique string identifier of the role.
+     * @return an {@link Optional} containing the matching {@link ClaimRole},
+     * or an empty Optional if no match is found.
+     */
+    public @NotNull Optional<ClaimRole> find(@NotNull String id) {
+        if (ownerRole.id().equals(id)) return Optional.of(ownerRole);
+        if (defaultRole.id().equals(id)) return Optional.of(defaultRole);
+        if (everyoneRole.id().equals(id)) return Optional.of(everyoneRole);
+
+        return roles.stream()
+                .filter(role -> role.id().equals(id))
+                .findFirst();
     }
 
     /**

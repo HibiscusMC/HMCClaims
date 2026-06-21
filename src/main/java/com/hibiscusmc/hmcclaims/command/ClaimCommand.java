@@ -14,12 +14,14 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import team.unnamed.commandflow.annotated.CommandClass;
 import team.unnamed.commandflow.annotated.annotation.Command;
+import team.unnamed.commandflow.annotated.annotation.OptArg;
 import team.unnamed.commandflow.annotated.annotation.Sender;
 import team.unnamed.commandflow.annotated.annotation.Usage;
 import team.unnamed.inject.Inject;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 @Command(names = {"claim"}, permission = "hmcclaims.commands.claim")
 public class ClaimCommand implements CommandClass {
@@ -48,9 +50,58 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
+        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+            text.send(sender, messages.commands().notYourClaim());
+            return;
+        }
+
         ClaimMemberListGui gui = guis.get(ClaimMemberListGui.class);
 
         gui.open(sender, claim);
+    }
+
+    @Command(names = {"delete"})
+    public void delete(@Sender Player sender, @OptArg String confirmationId) {
+        Messages messages = messagesHolder.get();
+
+        String claimId = null;
+        if (confirmationId != null && !confirmationId.isEmpty()) {
+            String[] parts = confirmationId.split(";");
+            if (parts.length != 2 || !parts[0].equals("confirm")) {
+                return;
+            }
+
+            claimId = parts[1];
+        }
+
+        Claim claim;
+        if (claimId != null) {
+            claim = claimManager.getClaim(UUID.fromString(claimId))
+                    .orElse(null);
+        } else {
+            claim = claimManager.getClaimAt(sender.getLocation())
+                    .orElse(null);
+        }
+
+        if (claim == null) {
+            text.send(sender, messages.commands().notInClaim());
+            return;
+        }
+
+        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+            text.send(sender, messages.commands().notYourClaim());
+            return;
+        }
+
+        if (confirmationId == null || confirmationId.isEmpty()) {
+            text.send(sender, messages.commands().deleteConfirm(), Map.of(
+                    "claim_name", claim.name(),
+                    "claim_id", claim.claimId().toString()
+            ));
+        } else {
+            claimManager.deleteClaim(claim);
+            text.send(sender, messages.commands().deleteSuccess());
+        }
     }
 
     @Command(names = {"add", "trust"}, permission = "hmcclaims.commands.claim.add")
@@ -63,6 +114,11 @@ public class ClaimCommand implements CommandClass {
 
         if (claim == null) {
             text.send(sender, messages.commands().notInClaim());
+            return;
+        }
+
+        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+            text.send(sender, messages.commands().notYourClaim());
             return;
         }
 
@@ -95,6 +151,11 @@ public class ClaimCommand implements CommandClass {
 
         if (claim == null) {
             text.send(sender, messages.commands().notInClaim());
+            return;
+        }
+
+        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+            text.send(sender, messages.commands().notYourClaim());
             return;
         }
 

@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.config.internal.serializer;
 
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
-import com.hibiscusmc.hmcclaims.permission.Permission;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;

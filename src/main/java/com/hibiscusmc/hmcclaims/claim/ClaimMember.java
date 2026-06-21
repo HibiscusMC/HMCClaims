@@ -1,11 +1,12 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
-import com.hibiscusmc.hmcclaims.permission.Permission;
-import com.hibiscusmc.hmcclaims.permission.PermissionHolder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.List;
@@ -51,6 +52,7 @@ public class ClaimMember {
      */
     private boolean banned;
 
+    @Setter
     private Instant joinedTimestamp;
 
     public ClaimMember(UUID uuid, Claim claim, String lastKnownName, ClaimRole role, Set<PermissionHolder> permissions) {

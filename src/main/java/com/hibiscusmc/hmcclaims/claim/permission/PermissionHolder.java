@@ -1,4 +1,4 @@
-package com.hibiscusmc.hmcclaims.permission;
+package com.hibiscusmc.hmcclaims.claim.permission;
 
 /**
  * An immutable record that pairs a permission node with its toggled state.

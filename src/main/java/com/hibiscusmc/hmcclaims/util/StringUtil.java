@@ -43,7 +43,7 @@ public class StringUtil {
      * Sanitizes a string by normalizing it to NFD form, stripping accents,
      * and converting it to lowercase.
      * <p>
-     * Example: {@code "Fänný"} becomes {@code "fanny"}.
+     * Example: {@code "Jóshüá"} becomes {@code "joshua"}.
      *
      * @param string The string to sanitize.
      * @return A normalized, lowercase, accent-free version of the input.

@@ -1,8 +1,9 @@
 package com.hibiscusmc.hmcclaims.claim.role;
 
-import com.hibiscusmc.hmcclaims.permission.Permission;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -24,6 +25,9 @@ public class ClaimRole {
     private final Set<Permission> permissions;
 
     private String name;
+
+    @Setter
+    private transient int position = -1;
 
     /**
      * Creates a new immutable claim role.

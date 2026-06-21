@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
@@ -8,7 +9,6 @@ import com.hibiscusmc.hmcclaims.module.CommandModule;
 import com.hibiscusmc.hmcclaims.module.ConfigModule;
 import com.hibiscusmc.hmcclaims.module.ListenerModule;
 import com.hibiscusmc.hmcclaims.module.ServiceModule;
-import com.hibiscusmc.hmcclaims.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;

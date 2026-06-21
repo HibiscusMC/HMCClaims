@@ -169,6 +169,7 @@ public class PlayerSelectionListener implements Listener {
                     Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
                     if (resizingClaim != null) {
                         resizingClaim.region(region);
+                        claimManager.addClaimToCache(claim);
                     }
 
                     selectionManager.destroySelection(player);
@@ -183,6 +184,7 @@ public class PlayerSelectionListener implements Listener {
                     Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
                     if (resizingClaim != null) {
                         resizingClaim.region(region);
+                        claimManager.addClaimToCache(claim);
                     }
 
                     selectionManager.destroySelection(player);

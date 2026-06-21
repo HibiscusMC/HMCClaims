@@ -1,9 +1,11 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
-import com.hibiscusmc.hmcclaims.permission.PermissionHolder;
-import com.hibiscusmc.hmcclaims.permission.PermissionRegistry;
+import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -47,6 +49,12 @@ public class Claim {
     private ClaimRegion region;
 
     /**
+     * The chunks this claim occupies.
+     */
+    @Setter
+    private LongSet chunks;
+
+    /**
      * The current owner of the claim.
      */
     private ClaimMember owner;
@@ -55,6 +63,8 @@ public class Claim {
      * The local authority for managing roles and permissions within this claim.
      */
     private ClaimRoleRegistry roleRegistry;
+
+    private final Map<String, SettingHolder<?>> settings = new HashMap<>();
 
     @Getter(AccessLevel.NONE)
     private final Map<UUID, ClaimMember> members = new HashMap<>();
@@ -90,7 +100,7 @@ public class Claim {
      * @param region  The physical boundaries of the claim.
      * @param roles   The initial role hierarchy (passed to {@link ClaimRoleRegistry}).
      */
-    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles) {
+    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles, @Nullable Instant claimedTimestamp) {
         this.claimId = claimId;
         this.region = region;
         this.main = main;
@@ -113,7 +123,13 @@ public class Claim {
 
         this.locked = false;
 
-        this.claimedTimestamp = Instant.now();
+        if (claimedTimestamp != null) {
+            this.claimedTimestamp = claimedTimestamp;
+        } else {
+            this.claimedTimestamp = Instant.now();
+        }
+
+
     }
 
     /**
@@ -122,7 +138,7 @@ public class Claim {
     public Claim(@NotNull UUID claimId, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles, int totalClaims) {
         this(claimId,
                 main == null ? owner.name() + "'s Claim " + totalClaims : "Sub Claim of " + main.name(),
-                main, owner, region, roles);
+                main, owner, region, roles, null);
     }
 
     /**

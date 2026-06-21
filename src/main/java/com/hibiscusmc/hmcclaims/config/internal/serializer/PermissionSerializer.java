@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.config.internal.serializer;
 
-import com.hibiscusmc.hmcclaims.permission.Permission;
-import com.hibiscusmc.hmcclaims.permission.PermissionRegistry;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.intellij.lang.annotations.Subst;

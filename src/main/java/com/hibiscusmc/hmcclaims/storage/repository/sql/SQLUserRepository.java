@@ -19,9 +19,6 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * A SQL-based implementation of the {@link UserRepository} using JDBC.
- * <p>
- * This class utilizes {@code ON DUPLICATE KEY UPDATE} (MariaDB/MySQL syntax)
- * for upserts and leverages the {@link SQLUtil} for binary UUID conversion.
  */
 public class SQLUserRepository implements UserRepository {
 

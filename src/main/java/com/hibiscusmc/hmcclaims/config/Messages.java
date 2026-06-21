@@ -160,8 +160,17 @@ public class Messages {
         @Setting("player-not-found")
         private String playerNotFound = "<red>Player not found";
 
+        @Setting("not-your-claim")
+        private String notYourClaim = "<red>This is not your claim!";
+
         @Setting("not-in-claim")
         private String notInClaim = "<red>You're not standing in a claim!";
+
+        @Setting("delete-confirm")
+        private String deleteConfirm = "<red><b>DANGER!</b> <gray>Are you sure you want to delete <white><claim_name></white>?<br>  <red><click:run_command:'/claim delete confirm;<claim_id>'>[Yes! Delete claim]</click>";
+
+        @Setting("delete-success")
+        private String deleteSuccess = "<white>Claim deleted successfully!";
 
         @Setting("claim-blocks")
         private ClaimBlocks claimBlocks = new ClaimBlocks();

@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.listener.IntegrationListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerDataListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerInputListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerSelectionListener;
+import com.hibiscusmc.hmcclaims.listener.WorldListener;
 import org.bukkit.event.Listener;
 import team.unnamed.inject.AbstractModule;
 
@@ -16,6 +17,7 @@ public class ListenerModule extends AbstractModule {
                 .to(PlayerSelectionListener.class)
                 .to(PlayerDataListener.class)
                 .to(IntegrationListener.class)
-                .to(PlayerInputListener.class);
+                .to(PlayerInputListener.class)
+                .to(WorldListener.class);
     }
 }

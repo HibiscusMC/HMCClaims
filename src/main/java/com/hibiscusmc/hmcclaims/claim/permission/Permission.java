@@ -1,4 +1,4 @@
-package com.hibiscusmc.hmcclaims.permission;
+package com.hibiscusmc.hmcclaims.claim.permission;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -17,9 +17,9 @@ public record Permission(Key key, String displayName, String description) {
 
     // Claim-related permissions
     public final static Permission MANAGE_MEMBER_ROLES =
-            new Permission("manaage_member_roles", "Manage Member Roles", "Allows to modify other member roles");
+            new Permission("manage_member_roles", "Manage Member Roles", "Allows to modify other member roles");
     public final static Permission MANAGE_MEMBER_PERMISSIONS =
-            new Permission("manaage_member_permissions", "Manage Member Permissions", "Allows to modify other member permissions");
+            new Permission("manage_member_permissions", "Manage Member Permissions", "Allows to modify other member permissions");
 
     // Interactions within the claim permissions
     public final static Permission PLACE_BLOCK =

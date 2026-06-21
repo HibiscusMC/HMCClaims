@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -137,7 +138,7 @@ public class ClaimListGui implements BaseGui {
 
         AtomicReference<Filter> filter = new AtomicReference<>(Filter.ALL);
         AtomicReference<Query> searchQuery = new AtomicReference<>(null);
-        List<Claim> claims = claimManager.getPlayerClaims(playerId);
+        Set<Claim> claims = claimManager.getPlayerClaims(playerId);
 
         gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog(QueryType.all())
                 .create(messagesHolder.get().dialogs())
@@ -166,7 +167,7 @@ public class ClaimListGui implements BaseGui {
         updateFilter(gui, claims, filter, searchQuery);
     }
 
-    private void updateFilter(@NotNull PaginatedGui gui, List<Claim> claims, @NotNull AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
+    private void updateFilter(@NotNull PaginatedGui gui, Set<Claim> claims, @NotNull AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
         ItemStack stack = filterIcon.item();
         ItemMeta meta = stack.getItemMeta();
 
@@ -211,7 +212,7 @@ public class ClaimListGui implements BaseGui {
         }));
     }
 
-    private void updateClaims(@NotNull PaginatedGui gui, @NotNull List<Claim> claims, AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
+    private void updateClaims(@NotNull PaginatedGui gui, @NotNull Set<Claim> claims, AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
         gui.clearPageItems();
 
         for (Claim claim : claims) {

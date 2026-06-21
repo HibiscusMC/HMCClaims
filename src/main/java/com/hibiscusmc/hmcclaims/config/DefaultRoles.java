@@ -1,8 +1,8 @@
 package com.hibiscusmc.hmcclaims.config;
 
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
-import com.hibiscusmc.hmcclaims.permission.Permission;
-import com.hibiscusmc.hmcclaims.permission.PermissionRegistry;
 import lombok.Getter;
 import lombok.ToString;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;

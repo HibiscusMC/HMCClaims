@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.claim;
 
 import com.hibiscusmc.hmcclaims.selection.BlockSelection;
 import lombok.Getter;
-import lombok.ToString;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -17,7 +16,6 @@ import java.util.List;
  * Represents the physical 2D boundaries of a claim within a specific world.
  */
 @Getter
-@ToString
 public class ClaimRegion {
 
     private final String worldName;
@@ -25,6 +23,9 @@ public class ClaimRegion {
 
     private int minX, maxX, minZ, maxZ;
 
+    /**
+     * Constructs a region without a set of corners predefined.
+     */
     public ClaimRegion(String worldName) {
         this(worldName, new ArrayList<>());
     }
@@ -39,6 +40,22 @@ public class ClaimRegion {
         if (this.corners.size() == 2) {
             calculateCorners();
         }
+    }
+
+    /**
+     * Constructs a region with a predefined set of corners.
+     */
+    public ClaimRegion(String worldName, int minX, int maxX, int minZ, int maxZ) {
+        this.worldName = worldName;
+
+        this.minX = minX;
+        this.maxX = maxX;
+        this.minZ = minZ;
+        this.maxZ = maxZ;
+
+        this.corners = new ArrayList<>();
+        corners.add(new BlockSelection(minX, minZ));
+        corners.add(new BlockSelection(maxX, maxZ));
     }
 
     /**
@@ -86,7 +103,7 @@ public class ClaimRegion {
     }
 
     /**
-     * Adds a defining corner to the region. Triggers bounds recalculation on the second corner.
+     * Adds a defining corner to the region. Triggers recalculation of bounds on the second corner.
      *
      * @param selection The block coordinate selection.
      */
@@ -225,5 +242,17 @@ public class ClaimRegion {
         this.maxX = Math.max(firstCorner.x(), secondCorner.x());
         this.minZ = Math.min(firstCorner.z(), secondCorner.z());
         this.maxZ = Math.max(firstCorner.z(), secondCorner.z());
+    }
+
+    /**
+     * Serializes the region corners into a format ready to be stored.
+     * <p>
+     * <b>IMPORTANT:</b> This method does <b>NOT</b> return the world name. It should be stored separate from the coordinates.
+     *
+     * @return The formatted corners of the region
+     */
+    @Override
+    public String toString() {
+        return minX + ";" + maxX + ";" + minZ + ";" + maxZ;
     }
 }

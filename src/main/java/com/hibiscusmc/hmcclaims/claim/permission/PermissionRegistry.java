@@ -1,4 +1,4 @@
-package com.hibiscusmc.hmcclaims.permission;
+package com.hibiscusmc.hmcclaims.claim.permission;
 
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import net.kyori.adventure.key.Key;
