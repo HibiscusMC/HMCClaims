@@ -10,6 +10,9 @@ import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.marker.MarkType;
 import com.hibiscusmc.hmcclaims.selection.Selection;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
+import com.hibiscusmc.hmcclaims.storage.Storage;
+import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -53,6 +56,9 @@ public class PlayerSelectionListener implements Listener {
     private ConfigHolder<Settings> settingsHolder;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private StorageHolder storageHolder;
 
     @Inject
     private SchedulerUtil scheduler;
@@ -152,6 +158,7 @@ public class PlayerSelectionListener implements Listener {
 
                 Claim resizingClaim = selection.resizingClaim();
 
+                Storage storage = storageHolder.get();
                 if (selection.main() == null) {
                     long surfaceArea = region.getSurfaceArea();
                     long currentBlocks = userManager.getRemainingBlocks(user);
@@ -166,13 +173,7 @@ public class PlayerSelectionListener implements Listener {
                         return;
                     }
 
-                    Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
-                    if (resizingClaim != null) {
-                        resizingClaim.region(region);
-                        claimManager.addClaimToCache(claim);
-                    }
-
-                    selectionManager.destroySelection(player);
+                    Claim claim = getClaimAndUpdate(player, selection, region, resizingClaim, storage);
 
                     text.send(player, messages.claims().created(), Map.of(
                             "name", claim.name(),
@@ -181,13 +182,7 @@ public class PlayerSelectionListener implements Listener {
 
                     marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
                 } else {
-                    Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
-                    if (resizingClaim != null) {
-                        resizingClaim.region(region);
-                        claimManager.addClaimToCache(claim);
-                    }
-
-                    selectionManager.destroySelection(player);
+                    Claim claim = getClaimAndUpdate(player, selection, region, resizingClaim, storage);
 
                     text.send(player, resizingClaim == null ? messages.claims().subCreated() : messages.claims().subResized(), Map.of(
                             "name", claim.name()
@@ -244,6 +239,40 @@ public class PlayerSelectionListener implements Listener {
     @EventHandler
     public void onPlayerDisconnect(PlayerQuitEvent event) {
         selectionManager.destroySelection(event.getPlayer());
+    }
+
+    /**
+     * Retrieves an existing claim being resized, or creates a new claim if none is provided,
+     * while updating the claim's region, cache, and persistent storage.
+     * <p>
+     * If {@code resizingClaim} is present, its region is updated to the new {@code region} and
+     * it is re-added to the cache and saved to the {@code storage} (if available). Finally,
+     * the player's active visual selection is destroyed.
+     * </p>
+     *
+     * @param player        The {@link Player} who owns or is modifying the claim.
+     * @param selection     The current {@link Selection} context containing selection data.
+     * @param region        The new {@link ClaimRegion} boundaries to apply to the claim.
+     * @param resizingClaim The existing {@link Claim} currently being resized, or {@code null}
+     *                      if a new claim should be created.
+     * @param storage       The {@link Storage} system used to persist claim data, or {@code null}
+     *                      to bypass database persistence.
+     * @return The newly created or updated {@link Claim} instance.
+     */
+    private Claim getClaimAndUpdate(Player player, Selection selection, ClaimRegion region, Claim resizingClaim, Storage storage) {
+        Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
+        if (resizingClaim != null) {
+            resizingClaim.region(region);
+            claimManager.addClaimToCache(claim);
+
+            if (storage != null) {
+                ClaimRepository claimRepository = storage.claims();
+                claimRepository.saveClaim(claim);
+            }
+        }
+
+        selectionManager.destroySelection(player);
+        return claim;
     }
 
     /**

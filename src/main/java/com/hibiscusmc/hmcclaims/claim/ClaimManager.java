@@ -95,7 +95,6 @@ public class ClaimManager {
             claimRepository.saveClaim(newClaim);
         }
 
-
         return newClaim;
     }
 
