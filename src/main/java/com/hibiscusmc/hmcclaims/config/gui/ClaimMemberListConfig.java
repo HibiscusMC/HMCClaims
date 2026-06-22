@@ -62,9 +62,7 @@ public class ClaimMemberListConfig extends GuiTemplate {
     ), 8);
 
     @Setting("search-icon")
-    private SimpleIcon searchIcon = new SimpleIcon(
-            ItemUtil.build(Material.SPYGLASS, "Search", List.of("", "<white>Left-Click <gray>to search members")), 35
-    );
+    private SearchIcon searchIcon = new SearchIcon();
 
     @Setting("add-member")
     private SimpleIcon addMemberIcon = new SimpleIcon(ItemUtil.build(
@@ -97,6 +95,28 @@ public class ClaimMemberListConfig extends GuiTemplate {
                     Material.STONE_BUTTON, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 3)
     );
+
+    @Getter
+    @ToString
+    @ConfigSerializable
+    public static class SearchIcon {
+
+        private ItemStack item = ItemStack.of(Material.SPYGLASS);
+
+        private int slot = 35;
+
+        private String name = "Search";
+
+        private List<String> lore = List.of(
+                "",
+                "<gray>Current query: <white><query>",
+                "",
+                "<white>Left-Click <gray>to search members"
+        );
+
+        @Setting("no-query")
+        private String noQuery = "<i>Nothing";
+    }
 
     @Getter
     @ToString

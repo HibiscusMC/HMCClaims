@@ -67,7 +67,7 @@ public class ClaimMemberListGui implements BaseGui {
     private GuiTemplate.DynamicIcon memberIcon;
 
     private ClaimMemberListConfig.FilterIcon filterIcon;
-    private GuiTemplate.SimpleIcon searchIcon;
+    private ClaimMemberListConfig.SearchIcon searchIcon;
     private GuiTemplate.SimpleIcon addMemberIcon;
 
     private GuiTemplate.SimpleIcon backIcon;
@@ -161,24 +161,7 @@ public class ClaimMemberListGui implements BaseGui {
         AtomicReference<String> searchQuery = new AtomicReference<>(null);
         AtomicReference<String> filterQuery = new AtomicReference<>(null);
 
-        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog()
-                .create(messagesHolder.get().dialogs())
-                .onSubmit(view -> {
-                    String query = view.getText("query");
-
-                    searchQuery.set(query);
-                    updateMembers(gui, player, claim, searchQuery, filterQuery);
-
-                    gui.update();
-                })
-                .onCancel(() -> {
-                    searchQuery.set(null);
-
-                    updateMembers(gui, player, claim, searchQuery, filterQuery);
-                    gui.update();
-                })
-                .show(player)));
-
+        handleSearch(gui, player, claim, searchQuery, filterQuery);
         handleFilter(gui, player, claim, searchQuery, filterQuery);
 
         gui.setItem(membersTab.slot(), new GuiItem(membersTab.item()));
@@ -247,8 +230,37 @@ public class ClaimMemberListGui implements BaseGui {
         }
     }
 
+    private void handleSearch(@NotNull PaginatedGui gui, @NotNull Player player, @NotNull Claim claim, @NotNull AtomicReference<String> searchQuery, @NotNull AtomicReference<String> filterQuery) {
+        Runnable updateGui = () -> {
+            handleSearch(gui, player, claim, searchQuery, filterQuery);
+            updateMembers(gui, player, claim, searchQuery, filterQuery);
+
+            gui.update();
+        };
+
+        gui.setItem(searchIcon.slot(), new GuiItem(buildSearchIcon(searchQuery), action -> new SearchDialog()
+                .create(messagesHolder.get().dialogs())
+                .onSubmit(view -> {
+                    String query = view.getText("query");
+
+                    searchQuery.set(query);
+
+                    updateGui.run();
+                })
+                .onCancel(() -> {
+                    searchQuery.set(null);
+
+                    updateGui.run();
+                })
+                .show(player)));
+    }
+
     private void handleFilter(@NotNull PaginatedGui gui, @NotNull Player player, @NotNull Claim claim, @NotNull AtomicReference<String> searchQuery, @NotNull AtomicReference<String> filterQuery) {
-        List<ClaimRole> roles = claim.roleRegistry().allRoles();
+        List<ClaimRole> roles = claim.roleRegistry()
+                .allRoles()
+                .stream()
+                .filter(role -> role.id().equals(claim.roleRegistry().everyoneRole().id()))
+                .toList();
 
         ItemStack item = buildFilterIcon(filterQuery, roles);
 
@@ -281,6 +293,23 @@ public class ClaimMemberListGui implements BaseGui {
 
             gui.update();
         }));
+    }
+
+    @NotNull
+    private ItemStack buildSearchIcon(@NotNull AtomicReference<String> searchQuery) {
+        ItemStack item = searchIcon.item();
+        item.editMeta(meta -> {
+            String query = searchQuery.get();
+            if (query == null || query.isEmpty()) {
+                query = searchIcon.noQuery();
+            }
+
+            meta.lore(TextUtil.parseItemLore(searchIcon.lore(), Map.of(
+                    "query", query
+            )));
+        });
+
+        return item;
     }
 
     @NotNull
