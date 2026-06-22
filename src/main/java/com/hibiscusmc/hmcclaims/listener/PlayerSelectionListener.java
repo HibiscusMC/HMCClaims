@@ -175,7 +175,7 @@ public class PlayerSelectionListener implements Listener {
 
                     Claim claim = getClaimAndUpdate(player, selection, region, resizingClaim, storage);
 
-                    text.send(player, messages.claims().created(), Map.of(
+                    text.send(player, resizingClaim == null ? messages.claims().created() : messages.claims().resized(), Map.of(
                             "name", claim.name(),
                             "price", diff + ""
                     ));
