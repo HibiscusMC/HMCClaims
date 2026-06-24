@@ -29,7 +29,7 @@ public class RegistryUtil {
     }
 
     /**
-     * Creates a new {@link Key} using the plugin's default namespace.
+     * Creates a new {@link Key} using either the specified namespace or the plugin's default namespace.
      *
      * @param value The key identifier (must be lowercase and follow [a-z0-9._-]).
      * @return A newly constructed {@link Key}.
@@ -37,6 +37,10 @@ public class RegistryUtil {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static Key key(@NotNull @Subst("id") String value) {
+        if (value.contains(":")) {
+            return Key.key(value);
+        }
+
         return Key.key(PLUGIN_NAMESPACE, value);
     }
 
