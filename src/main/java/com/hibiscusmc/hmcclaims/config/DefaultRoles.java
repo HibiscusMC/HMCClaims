@@ -19,8 +19,8 @@ public class DefaultRoles {
 
     @Setting("default-roles")
     private List<ClaimRole> defaultRoles = List.of(
-            new ClaimRole("owner", "Owner", new HashSet<>(PermissionRegistry.getAllPermissions())),
-            new ClaimRole("member", "Member", Set.of(
+            new ClaimRole(null, "Owner", new HashSet<>(PermissionRegistry.getAllPermissions())),
+            new ClaimRole(null, "Member", Set.of(
                     Permission.USE_ITEM,
                     Permission.USE_CONTAINER,
                     Permission.PICKUP_ITEM,
@@ -31,7 +31,7 @@ public class DefaultRoles {
                     Permission.INTERACT_BLOCK,
                     Permission.INTERACT_ENTITY
             )),
-            new ClaimRole("everyone", "Everyone", Set.of(
+            new ClaimRole(null, "Everyone", Set.of(
                     Permission.USE_ITEM,
                     Permission.DROP_ITEM,
                     Permission.PICKUP_ITEM

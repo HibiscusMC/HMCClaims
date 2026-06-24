@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Manages the ordered role hierarchy of a claim.
@@ -48,6 +49,12 @@ public class ClaimRoleRegistry {
             throw new IllegalArgumentException("Registry requires at least an Owner role, a Default role and an Everyone role.");
         }
 
+        roles.forEach(role -> {
+            if (role.id() == null) {
+                role.id(UUID.randomUUID());
+            }
+        });
+
         this.ownerRole = roles.getFirst();
         this.defaultRole = roles.get(roles.size() - 2);
         this.everyoneRole = roles.getLast();
@@ -77,7 +84,7 @@ public class ClaimRoleRegistry {
      * @return an {@link Optional} containing the matching {@link ClaimRole},
      * or an empty Optional if no match is found.
      */
-    public @NotNull Optional<ClaimRole> find(@NotNull String id) {
+    public @NotNull Optional<ClaimRole> find(@NotNull UUID id) {
         if (ownerRole.id().equals(id)) return Optional.of(ownerRole);
         if (defaultRole.id().equals(id)) return Optional.of(defaultRole);
         if (everyoneRole.id().equals(id)) return Optional.of(everyoneRole);

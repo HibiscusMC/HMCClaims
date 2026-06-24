@@ -49,19 +49,20 @@ public class SQLClaimRepository implements ClaimRepository {
     private final String getClaimQuery;
     private final String getMembersQuery;
     private final String getMemberPermissionsQuery;
-
     private final String getRolesQuery;
     private final String getRolePermissionsQuery;
 
     private final String saveClaimQuery;
     private final String saveClaimChunkQuery;
     private final String saveMemberQuery;
-    private final String saveSettingQuery;
-    private final String savePermissionQuery;
+    private final String saveMemberPermissionQuery;
     private final String saveRoleQuery;
+    private final String saveRolePermissionQuery;
+    private final String saveSettingQuery;
 
     private final String deleteClaimQuery;
     private final String deleteMemberQuery;
+    private final String deleteRolePermissionsQuery;
 
     public SQLClaimRepository(Settings.Storage settings, HikariStorage storage, ExecutorService executor) {
         this.storage = storage;
@@ -83,11 +84,10 @@ public class SQLClaimRepository implements ClaimRepository {
                 "INNER JOIN " + prefix + "users u " +
                 "ON m.player_uuid = u.uuid " +
                 "WHERE m.claim_uuid = ?;";
-        this.getMemberPermissionsQuery = "SELECT * FROM " + prefix + "permissions " +
+        this.getMemberPermissionsQuery = "SELECT * FROM " + prefix + "member_permissions " +
                 "WHERE claim_uuid = ? AND player_uuid = ?;";
-
         this.getRolesQuery = "SELECT * FROM " + prefix + "claim_roles WHERE claim_uuid = ?;";
-        this.getRolePermissionsQuery = "SELECT * FROM " + prefix + "role_permissions WHERE claim_uuid = ? AND role_id = ?;";
+        this.getRolePermissionsQuery = "SELECT * FROM " + prefix + "role_permissions WHERE role_uuid = ?;";
 
         this.saveClaimQuery = "INSERT INTO " + prefix + "claims (uuid, owner, name, world_name, region, parent_uuid, locked, claimed_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
@@ -96,21 +96,24 @@ public class SQLClaimRepository implements ClaimRepository {
         this.saveClaimChunkQuery = "INSERT INTO " + prefix + "claim_chunks (claim_uuid, chunk_key) " +
                 "VALUES (?, ?) ON DUPLICATE KEY UPDATE " +
                 "claim_uuid = VALUES(claim_uuid), chunk_key = VALUES(chunk_key);";
-        this.saveMemberQuery = "INSERT INTO " + prefix + "members (claim_uuid, player_uuid, role, banned, joined_at) " +
+        this.saveMemberQuery = "INSERT INTO " + prefix + "members (claim_uuid, player_uuid, role_uuid, banned, joined_at) " +
                 "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
-                "role = VALUES(role), banned = VALUES(banned);";
-        this.saveSettingQuery = "INSERT INTO " + prefix + "claim_settings (claim_uuid, setting_key, setting_value) " +
-                "VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE " +
-                "setting_value = VALUES(setting_value);";
-        this.savePermissionQuery = "INSERT INTO " + prefix + "permissions (claim_uuid, player_uuid, permission, value) " +
+                "role_uuid = VALUES(role_uuid), banned = VALUES(banned);";
+        this.saveMemberPermissionQuery = "INSERT INTO " + prefix + "member_permissions (claim_uuid, player_uuid, permission, value) " +
                 "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                 "value = VALUES(value);";
-        this.saveRoleQuery = "INSERT INTO " + prefix + "claim_roles (claim_uuid, role_id, name, position) " +
+        this.saveRoleQuery = "INSERT INTO " + prefix + "claim_roles (claim_uuid, role_uuid, name, position) " +
                 "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                 "name = VALUES(name), position = VALUES(position);";
+        this.saveRolePermissionQuery = "INSERT IGNORE INTO " + prefix + "role_permissions (role_uuid, permission) " +
+                "VALUES (?, ?);";
+        this.saveSettingQuery = "INSERT IGNORE INTO " + prefix + "claim_settings (claim_uuid, setting_key, setting_value) " +
+                "VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE " +
+                "setting_value = VALUES(setting_value);";
 
         this.deleteClaimQuery = "DELETE FROM " + prefix + "claims WHERE uuid = ?;";
         this.deleteMemberQuery = "DELETE FROM " + prefix + "members WHERE claim_uuid = ? AND player_uuid = ?;";
+        this.deleteRolePermissionsQuery = "DELETE FROM " + prefix + "role_permissions WHERE role_uuid = ?;";
     }
 
     @Override
@@ -324,7 +327,7 @@ public class SQLClaimRepository implements ClaimRepository {
                     for (ClaimMember member : members) {
                         ps.setBytes(1, claimIdBytes);
                         ps.setBytes(2, SQLUtil.UUIDtoBytes(member.uuid()));
-                        ps.setString(3, member.role().id());
+                        ps.setBytes(3, SQLUtil.UUIDtoBytes(member.role().id()));
                         ps.setBoolean(4, member.banned());
                         ps.setTimestamp(5, Timestamp.from(member.joinedTimestamp()));
 
@@ -340,7 +343,7 @@ public class SQLClaimRepository implements ClaimRepository {
             }
 
             for (ClaimMember member : members) {
-                savePermissions(claimId, member.uuid(), member.permissions());
+                saveMemberPermissions(claimId, member.uuid(), member.permissions());
             }
         }, executor);
     }
@@ -352,7 +355,7 @@ public class SQLClaimRepository implements ClaimRepository {
                  PreparedStatement ps = con.prepareStatement(this.saveMemberQuery)) {
                 ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
                 ps.setBytes(2, SQLUtil.UUIDtoBytes(member.uuid()));
-                ps.setString(3, member.role().id());
+                ps.setBytes(3, SQLUtil.UUIDtoBytes(member.role().id()));
                 ps.setBoolean(4, member.banned());
                 ps.setTimestamp(5, Timestamp.from(member.joinedTimestamp()));
 
@@ -361,48 +364,19 @@ public class SQLClaimRepository implements ClaimRepository {
                 throw new RuntimeException("Failed to save member " + member.uuid() + " for claim " + claimId, e);
             }
 
-            savePermissions(claimId, member.uuid(), member.permissions());
+            saveMemberPermissions(claimId, member.uuid(), member.permissions());
         }, executor);
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> saveSettings(@NotNull UUID claimId, @NotNull Map<String, SettingHolder<?>> settings) {
-        return CompletableFuture.runAsync(() -> {
-            if (settings.isEmpty()) return;
-
-            try (Connection con = storage.getConnection()) {
-                con.setAutoCommit(false);
-
-                try (PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
-                    byte[] claimIdBytes = SQLUtil.UUIDtoBytes(claimId);
-
-                    for (Map.Entry<String, SettingHolder<?>> entry : settings.entrySet()) {
-                        ps.setBytes(1, claimIdBytes);
-                        ps.setString(2, entry.getKey());
-                        ps.setString(3, entry.getValue().value().toString());
-
-                        ps.addBatch();
-                    }
-
-                    ps.executeBatch();
-                }
-
-                con.commit();
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to save settings for claim " + claimId, e);
-            }
-        }, executor);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<Void> savePermissions(@NotNull UUID claimId, @NotNull UUID playerId, @NotNull Set<PermissionHolder> permissions) {
+    public @NotNull CompletableFuture<Void> saveMemberPermissions(@NotNull UUID claimId, @NotNull UUID playerId, @NotNull Set<PermissionHolder> permissions) {
         return CompletableFuture.runAsync(() -> {
             if (permissions.isEmpty()) return;
 
             try (Connection con = storage.getConnection()) {
                 con.setAutoCommit(false);
 
-                try (PreparedStatement ps = con.prepareStatement(this.savePermissionQuery)) {
+                try (PreparedStatement ps = con.prepareStatement(this.saveMemberPermissionQuery)) {
                     byte[] claimIdBytes = SQLUtil.UUIDtoBytes(claimId);
                     byte[] playerIdBytes = SQLUtil.UUIDtoBytes(playerId);
 
@@ -438,7 +412,7 @@ public class SQLClaimRepository implements ClaimRepository {
 
                     for (ClaimRole role : roles) {
                         ps.setBytes(1, claimIdBytes);
-                        ps.setString(2, role.id());
+                        ps.setBytes(2, SQLUtil.UUIDtoBytes(role.id()));
                         ps.setString(3, role.name());
                         ps.setInt(4, roles.indexOf(role));
 
@@ -449,8 +423,74 @@ public class SQLClaimRepository implements ClaimRepository {
                 }
 
                 con.commit();
+
+                for (ClaimRole role : roles) {
+                    saveRolePermissions(role.id(), role.permissions());
+                }
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save roles for claim " + claimId, e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveRolePermissions(@NotNull UUID roleId, @NotNull Set<Permission> permissions) {
+        return CompletableFuture.runAsync(() -> {
+            if (permissions.isEmpty()) return;
+
+            try (Connection con = storage.getConnection()) {
+                con.setAutoCommit(false);
+
+                try (PreparedStatement deleteStmt = con.prepareStatement(deleteRolePermissionsQuery)) {
+                    deleteStmt.setBytes(1, SQLUtil.UUIDtoBytes(roleId));
+                    deleteStmt.executeUpdate();
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveRolePermissionQuery)) {
+                    byte[] roleIdBytes = SQLUtil.UUIDtoBytes(roleId);
+
+                    for (Permission permission : permissions) {
+                        ps.setBytes(1, roleIdBytes);
+                        ps.setString(2, permission.key().asString());
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                }
+
+                con.commit();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to save permissions for role " + roleId, e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveSettings(@NotNull UUID claimId, @NotNull Map<String, SettingHolder<?>> settings) {
+        return CompletableFuture.runAsync(() -> {
+            if (settings.isEmpty()) return;
+
+            try (Connection con = storage.getConnection()) {
+                con.setAutoCommit(false);
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
+                    byte[] claimIdBytes = SQLUtil.UUIDtoBytes(claimId);
+
+                    for (Map.Entry<String, SettingHolder<?>> entry : settings.entrySet()) {
+                        ps.setBytes(1, claimIdBytes);
+                        ps.setString(2, entry.getKey());
+                        ps.setString(3, entry.getValue().value().toString());
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                }
+
+                con.commit();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to save settings for claim " + claimId, e);
             }
         }, executor);
     }
@@ -485,13 +525,12 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @NotNull
-    private Set<Permission> getClaimRolePermissions(UUID claimId, String roleId) {
+    private Set<Permission> getClaimRolePermissions(UUID roleId) {
         Set<Permission> permissions = new HashSet<>();
 
         try (Connection con = storage.getConnection();
              PreparedStatement ps = con.prepareStatement(this.getRolePermissionsQuery)) {
-            ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
-            ps.setString(2, roleId);
+            ps.setBytes(1, SQLUtil.UUIDtoBytes(roleId));
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -501,7 +540,7 @@ public class SQLClaimRepository implements ClaimRepository {
                 return permissions;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to load permissions for role " + roleId + " in claim " + claimId, e);
+            throw new RuntimeException("Failed to load permissions for role " + roleId, e);
         }
     }
 
@@ -514,8 +553,8 @@ public class SQLClaimRepository implements ClaimRepository {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    String roleId = rs.getString("role_id");
-                    Set<Permission> permissions = getClaimRolePermissions(claimId, roleId);
+                    UUID roleId = SQLUtil.bytesToUUID(rs.getBytes("role_uuid"));
+                    Set<Permission> permissions = getClaimRolePermissions(roleId);
 
                     ClaimRole role = new ClaimRole(
                             roleId,
@@ -547,7 +586,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID playerId = SQLUtil.bytesToUUID(rs.getBytes("player_uuid"));
         String lastKnownName = rs.getString("last_known_name");
 
-        String roleName = rs.getString("role");
+        UUID roleName = SQLUtil.bytesToUUID(rs.getBytes("role_uuid"));
         Optional<ClaimRole> role = claim.roleRegistry()
                 .find(roleName);
 

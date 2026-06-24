@@ -15,7 +15,6 @@ import java.util.Set;
 
 public class ClaimRoleSerializer implements TypeSerializer<ClaimRole> {
 
-    private final static String ID = "id";
     private final static String NAME = "name";
     private final static String PERMISSIONS = "permissions";
 
@@ -26,13 +25,8 @@ public class ClaimRoleSerializer implements TypeSerializer<ClaimRole> {
 
     @Override
     public ClaimRole deserialize(Type type, ConfigurationNode node) throws SerializationException {
-        ConfigurationNode idNode = node.node(ID);
         ConfigurationNode nameNode = node.node(NAME);
         ConfigurationNode permissionsNode = node.node(PERMISSIONS);
-
-        if (idNode.virtual()) {
-            return null;
-        }
 
         if (nameNode.virtual()) {
             return null;
@@ -42,11 +36,10 @@ public class ClaimRoleSerializer implements TypeSerializer<ClaimRole> {
             return null;
         }
 
-        String id = idNode.getString();
         String name = nameNode.getString();
         List<Permission> permissions = permissionsNode.getList(Permission.class);
 
-        return new ClaimRole(id, name, permissions == null ? Set.of() : new HashSet<>(permissions));
+        return new ClaimRole(null, name, permissions == null ? Set.of() : new HashSet<>(permissions));
     }
 
     @Override
@@ -56,7 +49,6 @@ public class ClaimRoleSerializer implements TypeSerializer<ClaimRole> {
             throw new SerializationException("Claim role is null");
         }
 
-        node.node(ID).set(role.id());
         node.node(NAME).set(role.name());
         node.node(PERMISSIONS).setList(Permission.class, new ArrayList<>(role.permissions()));
     }

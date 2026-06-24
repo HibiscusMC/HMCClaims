@@ -4,6 +4,8 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.gui.SubClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.storage.Storage;
+import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.GuiItem;
@@ -15,11 +17,13 @@ import team.unnamed.inject.Singleton;
 import java.util.Map;
 
 @Singleton
-@SuppressWarnings({"UnstableApiUsage"})
 public class SubClaimManageGui extends ClaimManageGui {
 
     @Inject
     private ConfigHolder<SubClaimManageConfig> configHolder;
+
+    @Inject
+    private StorageHolder storageHolder;
 
     private GuiTemplate.SimpleIcon inheritPermissionsIcon;
     private GuiTemplate.SimpleIcon inheritPermissionsSuccessIcon;
@@ -60,8 +64,12 @@ public class SubClaimManageGui extends ClaimManageGui {
         buildIcons(player, gui, claim);
 
         gui.setItem(inheritPermissionsIcon.slot(), new GuiItem(inheritPermissionsIcon.item(), action -> {
-            System.out.println("perms inherited");
             claim.inheritPermissions();
+
+            Storage storage = storageHolder.get();
+            if (storage != null) {
+                storage.claims().saveClaim(claim);
+            }
 
             gui.updateItem(inheritPermissionsSuccessIcon.slot(), new GuiItem(inheritPermissionsSuccessIcon.item()));
         }));

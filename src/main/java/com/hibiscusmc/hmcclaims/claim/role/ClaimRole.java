@@ -4,10 +4,13 @@ import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Represents a role within a claim.
@@ -18,16 +21,18 @@ import java.util.Set;
  * <p>Equality is based solely on the role's unique id.
  */
 @Getter
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = {"name", "id"})
 public class ClaimRole {
 
-    private final String id;
-    private final Set<Permission> permissions;
-
+    @MonotonicNonNull
+    @Setter
+    private UUID id;
     private String name;
 
+    private final Set<Permission> permissions;
+
     @Setter
-    private transient int position = -1;
+    private int position = -1;
 
     /**
      * Creates a new immutable claim role.
@@ -37,8 +42,8 @@ public class ClaimRole {
      * @param permissions the permissions granted to this role
      * @throws NullPointerException if any argument is null
      */
-    public ClaimRole(String id, String name, Set<Permission> permissions) {
-        this.id = Objects.requireNonNull(id, "id cannot be null");
+    public ClaimRole(@Nullable UUID id, String name, Set<Permission> permissions) {
+        this.id = id;
         this.name = Objects.requireNonNull(name, "name cannot be null");
 
         this.permissions = permissions;

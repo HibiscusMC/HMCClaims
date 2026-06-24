@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.storage.repository;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
@@ -74,22 +75,28 @@ public interface ClaimRepository {
     CompletableFuture<Void> saveMember(@NotNull UUID claimUuid, @NotNull ClaimMember member);
 
     /**
-     * Updates the custom settings (key-value pairs) for a specific claim.
-     */
-    @NotNull
-    CompletableFuture<Void> saveSettings(@NotNull UUID claimUuid, @NotNull Map<String, SettingHolder<?>> settings);
-
-    /**
      * Syncs the permission overrides for a specific player within a claim.
      */
     @NotNull
-    CompletableFuture<Void> savePermissions(@NotNull UUID claimUuid, @NotNull UUID playerUuid, @NotNull Set<PermissionHolder> permissions);
+    CompletableFuture<Void> saveMemberPermissions(@NotNull UUID claimUuid, @NotNull UUID playerUuid, @NotNull Set<PermissionHolder> permissions);
 
     /**
      * Persists the custom roles defined within a specific claim.
      */
     @NotNull
     CompletableFuture<Void> saveRoles(@NotNull UUID claimUuid, @NotNull List<ClaimRole> roles);
+
+    /**
+     * Syncs the permission for a specific role within a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> saveRolePermissions(@NotNull UUID playerUuid, @NotNull Set<Permission> permissions);
+
+    /**
+     * Updates the custom settings (key-value pairs) for a specific claim.
+     */
+    @NotNull
+    CompletableFuture<Void> saveSettings(@NotNull UUID claimUuid, @NotNull Map<String, SettingHolder<?>> settings);
 
     /**
      * Deletes a claim.

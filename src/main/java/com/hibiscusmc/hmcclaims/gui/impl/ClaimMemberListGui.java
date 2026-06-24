@@ -204,7 +204,7 @@ public class ClaimMemberListGui implements BaseGui {
             }
 
             if (filterQuery.get() != null) {
-                if (!member.role().id().equals(filterQuery.get())) {
+                if (!member.role().id().toString().equals(filterQuery.get())) {
                     continue;
                 }
             }
@@ -274,9 +274,9 @@ public class ClaimMemberListGui implements BaseGui {
 
             String filter = filterQuery.get();
             if (filter == null) {
-                filterQuery.set((isNext ? roles.getFirst() : roles.getLast()).id());
+                filterQuery.set((isNext ? roles.getFirst() : roles.getLast()).id().toString());
             } else {
-                ClaimRole currentRole = roles.stream().filter(role -> role.id().equals(filter))
+                ClaimRole currentRole = roles.stream().filter(role -> role.id().toString().equals(filter))
                         .findFirst()
                         .orElse(null);
 
@@ -288,7 +288,7 @@ public class ClaimMemberListGui implements BaseGui {
                     if (isNext ? (current + 1) >= roles.size() : (current - 1) < 0) {
                         filterQuery.set(null);
                     } else {
-                        filterQuery.set(roles.get(isNext ? current + 1 : current - 1).id());
+                        filterQuery.set(roles.get(isNext ? current + 1 : current - 1).id().toString());
                     }
                 }
             }
@@ -332,7 +332,7 @@ public class ClaimMemberListGui implements BaseGui {
                     List<FilterType> list = new ArrayList<>();
                     list.add(new FilterType("ALL", allName));
                     list.addAll(roles.stream().map(role ->
-                            new FilterType(role.id(), roleName.replace("<role>", role.name()))
+                            new FilterType(role.id().toString(), roleName.replace("<role>", role.name()))
                     ).toList());
 
                     String filter = filterQuery.get();
@@ -347,6 +347,7 @@ public class ClaimMemberListGui implements BaseGui {
                                 "name", name
                         )));
                     }
+
                     continue;
                 }
 
