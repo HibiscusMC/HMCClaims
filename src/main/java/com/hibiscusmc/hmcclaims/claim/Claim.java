@@ -1,7 +1,5 @@
 package com.hibiscusmc.hmcclaims.claim;
 
-import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
-import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
@@ -114,10 +112,7 @@ public class Claim {
                 this,
                 owner.name(),
                 roleRegistry.ownerRole(),
-                PermissionRegistry.getAllPermissions()
-                        .stream()
-                        .map(permission -> new PermissionHolder(permission, true))
-                        .collect(Collectors.toUnmodifiableSet())
+                new HashSet<>()
         );
         addMember(this.owner);
 
@@ -192,16 +187,12 @@ public class Claim {
 
         ClaimMember oldOwner = members.get(owner.uuid());
         ClaimMember member;
-        Set<PermissionHolder> allPermissions = PermissionRegistry.getAllPermissions()
-                .stream()
-                .map(permission -> new PermissionHolder(permission, true))
-                .collect(Collectors.toUnmodifiableSet());
 
         if (members.containsKey(id)) {
             member = members.get(id);
 
             member.role(roleRegistry.ownerRole());
-            member.permissions(allPermissions);
+            member.permissions(new HashSet<>());
 
             if (member.banned()) {
                 member.banned(false);
@@ -212,7 +203,7 @@ public class Claim {
                     this,
                     name,
                     roleRegistry.ownerRole(),
-                    allPermissions
+                    new HashSet<>()
             );
 
             members.put(id, member);
@@ -220,9 +211,7 @@ public class Claim {
 
         owner = member;
         oldOwner.role(roleRegistry.defaultRole());
-        oldOwner.permissions(roleRegistry.defaultRole().permissions()
-                .stream().map(permission -> new PermissionHolder(permission, true))
-                .collect(Collectors.toUnmodifiableSet()));
+        oldOwner.permissions(new HashSet<>());
 
         if (!subClaims.isEmpty()) {
             subClaims.forEach(subClaim -> subClaim.transfer(newOwner));
@@ -282,13 +271,13 @@ public class Claim {
      *
      * @param member The {@link ClaimMember} to add
      */
-    public boolean addMember(@NotNull ClaimMember member) {
+    public ClaimMember addMember(@NotNull ClaimMember member) {
         if (members.containsKey(member.uuid())) {
-            return false;
+            return null;
         }
 
         members.put(member.uuid(), member);
-        return true;
+        return member;
     }
 
     /**
@@ -296,15 +285,13 @@ public class Claim {
      *
      * @param data The {@link NameAndId} of the player to add
      */
-    public boolean addMember(@NotNull NameAndId data) {
+    public ClaimMember addMember(@NotNull NameAndId data) {
         ClaimMember member = new ClaimMember(
                 data.id(),
                 this,
                 data.name(),
                 roleRegistry.defaultRole(),
-                roleRegistry.defaultRole().permissions()
-                        .stream().map(permission -> new PermissionHolder(permission, true))
-                        .collect(Collectors.toUnmodifiableSet())
+                new HashSet<>()
         );
 
         return addMember(member);
