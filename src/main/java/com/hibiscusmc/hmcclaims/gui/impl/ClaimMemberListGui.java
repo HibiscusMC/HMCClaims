@@ -13,6 +13,8 @@ import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
+import com.hibiscusmc.hmcclaims.storage.Storage;
+import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
@@ -45,6 +47,9 @@ public class ClaimMemberListGui implements BaseGui {
     private ConfigHolder<ClaimMemberListConfig> configHolder;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private StorageHolder storageHolder;
 
     @Inject
     private GuiRegistry guis;
@@ -378,9 +383,15 @@ public class ClaimMemberListGui implements BaseGui {
                             player.openInventory(inv);
                         })
                         .onSubmit((member) -> {
-                            boolean added = claim.addMember(member);
+                            ClaimMember added = claim.addMember(member);
 
-                            if (added) {
+                            if (added != null) {
+                                Storage storage = storageHolder.get();
+                                if (storage != null) {
+                                    storage.claims()
+                                            .saveMember(claim.claimId(), added);
+                                }
+
                                 text.send(player, messagesHolder.get().claims().memberAdded(), Map.of(
                                         "name", member.name(),
                                         "player_head", "<head:" + member.name() + ">",

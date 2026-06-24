@@ -50,8 +50,6 @@ public class SQLClaimRepository implements ClaimRepository {
     private final String getMembersQuery;
     private final String getMemberPermissionsQuery;
 
-    private final String deleteClaimQuery;
-
     private final String getRolesQuery;
     private final String getRolePermissionsQuery;
 
@@ -61,6 +59,9 @@ public class SQLClaimRepository implements ClaimRepository {
     private final String saveSettingQuery;
     private final String savePermissionQuery;
     private final String saveRoleQuery;
+
+    private final String deleteClaimQuery;
+    private final String deleteMemberQuery;
 
     public SQLClaimRepository(Settings.Storage settings, HikariStorage storage, ExecutorService executor) {
         this.storage = storage;
@@ -85,8 +86,6 @@ public class SQLClaimRepository implements ClaimRepository {
         this.getMemberPermissionsQuery = "SELECT * FROM " + prefix + "permissions " +
                 "WHERE claim_uuid = ? AND player_uuid = ?;";
 
-        this.deleteClaimQuery = "DELETE FROM " + prefix + "claims WHERE uuid = ?;";
-
         this.getRolesQuery = "SELECT * FROM " + prefix + "claim_roles WHERE claim_uuid = ?;";
         this.getRolePermissionsQuery = "SELECT * FROM " + prefix + "role_permissions WHERE claim_uuid = ? AND role_id = ?;";
 
@@ -109,6 +108,9 @@ public class SQLClaimRepository implements ClaimRepository {
         this.saveRoleQuery = "INSERT INTO " + prefix + "claim_roles (claim_uuid, role_id, name, position) " +
                 "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
                 "name = VALUES(name), position = VALUES(position);";
+
+        this.deleteClaimQuery = "DELETE FROM " + prefix + "claims WHERE uuid = ?;";
+        this.deleteMemberQuery = "DELETE FROM " + prefix + "members WHERE claim_uuid = ? AND player_uuid = ?;";
     }
 
     @Override
@@ -247,21 +249,6 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> deleteClaim(@NotNull UUID claimId) {
-        return CompletableFuture.runAsync(() -> {
-            try (Connection con = storage.getConnection();
-                 PreparedStatement ps = con.prepareStatement(this.deleteClaimQuery)) {
-
-                ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
-                ps.executeUpdate();
-
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to delete claim " + claimId, e);
-            }
-        }, executor);
-    }
-
-    @Override
     public @NotNull CompletableFuture<Void> saveClaim(@NotNull Claim claim) {
         CompletableFuture<Void> claimFuture = CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
@@ -351,6 +338,30 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save members for claim " + claimId, e);
             }
+
+            for (ClaimMember member : members) {
+                savePermissions(claimId, member.uuid(), member.permissions());
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveMember(@NotNull UUID claimId, @NotNull ClaimMember member) {
+        return CompletableFuture.runAsync(() -> {
+            try (Connection con = storage.getConnection();
+                 PreparedStatement ps = con.prepareStatement(this.saveMemberQuery)) {
+                ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
+                ps.setBytes(2, SQLUtil.UUIDtoBytes(member.uuid()));
+                ps.setString(3, member.role().id());
+                ps.setBoolean(4, member.banned());
+                ps.setTimestamp(5, Timestamp.from(member.joinedTimestamp()));
+
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to save member " + member.uuid() + " for claim " + claimId, e);
+            }
+
+            savePermissions(claimId, member.uuid(), member.permissions());
         }, executor);
     }
 
@@ -384,7 +395,7 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> savePermissions(@NotNull UUID claimId, @NotNull UUID playerId, @NotNull Map<String, Boolean> permissions) {
+    public @NotNull CompletableFuture<Void> savePermissions(@NotNull UUID claimId, @NotNull UUID playerId, @NotNull Set<PermissionHolder> permissions) {
         return CompletableFuture.runAsync(() -> {
             if (permissions.isEmpty()) return;
 
@@ -395,11 +406,11 @@ public class SQLClaimRepository implements ClaimRepository {
                     byte[] claimIdBytes = SQLUtil.UUIDtoBytes(claimId);
                     byte[] playerIdBytes = SQLUtil.UUIDtoBytes(playerId);
 
-                    for (Map.Entry<String, Boolean> entry : permissions.entrySet()) {
+                    for (PermissionHolder holder : permissions) {
                         ps.setBytes(1, claimIdBytes);
                         ps.setBytes(2, playerIdBytes);
-                        ps.setString(3, entry.getKey());
-                        ps.setBoolean(4, entry.getValue());
+                        ps.setString(3, holder.permission().key().asString());
+                        ps.setBoolean(4, holder.status());
 
                         ps.addBatch();
                     }
@@ -444,7 +455,37 @@ public class SQLClaimRepository implements ClaimRepository {
         }, executor);
     }
 
-    private @NotNull Set<Permission> getClaimRolePermissions(UUID claimId, String roleId) {
+    @Override
+    public @NotNull CompletableFuture<Void> deleteClaim(@NotNull UUID claimId) {
+        return CompletableFuture.runAsync(() -> {
+            try (Connection con = storage.getConnection();
+                 PreparedStatement ps = con.prepareStatement(this.deleteClaimQuery)) {
+                ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
+
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to delete claim " + claimId, e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> deleteMember(@NotNull UUID claimId, @NotNull UUID playerId) {
+        return CompletableFuture.runAsync(() -> {
+            try (Connection con = storage.getConnection();
+                 PreparedStatement ps = con.prepareStatement(this.deleteMemberQuery)) {
+                ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
+                ps.setBytes(2, SQLUtil.UUIDtoBytes(playerId));
+
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to delete claim " + claimId, e);
+            }
+        }, executor);
+    }
+
+    @NotNull
+    private Set<Permission> getClaimRolePermissions(UUID claimId, String roleId) {
         Set<Permission> permissions = new HashSet<>();
 
         try (Connection con = storage.getConnection();

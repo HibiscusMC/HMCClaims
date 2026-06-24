@@ -50,12 +50,6 @@ public interface ClaimRepository {
     CompletableFuture<Set<PermissionHolder>> getClaimMemberPermissions(@NotNull UUID claimId, @NotNull UUID playerId);
 
     /**
-     * Deletes a claim.
-     */
-    @NotNull
-    CompletableFuture<Void> deleteClaim(@NotNull UUID claimUuid);
-
-    /**
      * Persists the core claim data to the {@code claims} table.
      */
     @NotNull
@@ -74,6 +68,12 @@ public interface ClaimRepository {
     CompletableFuture<Void> saveMembers(@NotNull UUID claimUuid, @NotNull Collection<ClaimMember> members);
 
     /**
+     * Syncs a member of a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> saveMember(@NotNull UUID claimUuid, @NotNull ClaimMember member);
+
+    /**
      * Updates the custom settings (key-value pairs) for a specific claim.
      */
     @NotNull
@@ -83,11 +83,23 @@ public interface ClaimRepository {
      * Syncs the permission overrides for a specific player within a claim.
      */
     @NotNull
-    CompletableFuture<Void> savePermissions(@NotNull UUID claimUuid, @NotNull UUID playerUuid, @NotNull Map<String, Boolean> permissions);
+    CompletableFuture<Void> savePermissions(@NotNull UUID claimUuid, @NotNull UUID playerUuid, @NotNull Set<PermissionHolder> permissions);
 
     /**
      * Persists the custom roles defined within a specific claim.
      */
     @NotNull
     CompletableFuture<Void> saveRoles(@NotNull UUID claimUuid, @NotNull List<ClaimRole> roles);
+
+    /**
+     * Deletes a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> deleteClaim(@NotNull UUID claimUuid);
+
+    /**
+     * Deletes a member from a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> deleteMember(@NotNull UUID claimUuid, @NotNull UUID memberUuid);
 }

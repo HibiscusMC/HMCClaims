@@ -8,6 +8,8 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
+import com.hibiscusmc.hmcclaims.storage.Storage;
+import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.OfflinePlayer;
@@ -31,6 +33,9 @@ public class ClaimCommand implements CommandClass {
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private StorageHolder storageHolder;
 
     @Inject
     private GuiRegistry guis;
@@ -128,10 +133,16 @@ public class ClaimCommand implements CommandClass {
         }
 
         String playerName = Objects.requireNonNull(player.getName(), "playerName should never be null");
-        boolean added = claim.addMember(new NameAndId(player.getUniqueId(), playerName));
-        if (!added) {
+        com.hibiscusmc.hmcclaims.claim.ClaimMember added = claim.addMember(new NameAndId(player.getUniqueId(), playerName));
+        if (added == null) {
             text.send(sender, messages.claims().memberAlreadyAdded());
             return;
+        }
+
+        Storage storage = storageHolder.get();
+        if (storage != null) {
+            storage.claims()
+                    .saveMember(claim.claimId(), added);
         }
 
         text.send(sender, messages.claims().memberAdded(), Map.of(
@@ -165,10 +176,16 @@ public class ClaimCommand implements CommandClass {
         }
 
         String playerName = Objects.requireNonNull(player.getName(), "playerName should never be null");
-        boolean added = claim.removeMember(player.getUniqueId());
-        if (!added) {
+        boolean removed = claim.removeMember(player.getUniqueId());
+        if (!removed) {
             text.send(sender, messages.claims().playerNotMember());
             return;
+        }
+
+        Storage storage = storageHolder.get();
+        if (storage != null) {
+            storage.claims()
+                    .deleteMember(claim.claimId(), player.getUniqueId());
         }
 
         text.send(sender, messages.claims().memberRemoved(), Map.of(
