@@ -16,7 +16,6 @@ import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
-import lombok.extern.java.Log;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import team.unnamed.inject.Binder;
@@ -26,9 +25,7 @@ import team.unnamed.inject.Module;
 
 import java.util.Set;
 
-@Log(topic = "HMCClaims")
 public final class HMCClaims extends JavaPlugin implements Module {
-
     @Inject
     private Set<Service> services;
 

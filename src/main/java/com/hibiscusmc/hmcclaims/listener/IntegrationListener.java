@@ -2,8 +2,8 @@ package com.hibiscusmc.hmcclaims.listener;
 
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
-import lombok.extern.java.Log;
 import me.lojosho.hibiscuscommons.api.events.HibiscusHooksAllActiveEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,7 +13,6 @@ import team.unnamed.inject.Inject;
  * Handles external plugin integrations and the synchronization of
  * configuration-dependent resources like GUIs.
  */
-@Log(topic = "HMCClaims")
 public class IntegrationListener implements Listener {
 
     @Inject
@@ -30,8 +29,7 @@ public class IntegrationListener implements Listener {
                     ConfigFactory.reload(clazz);
                 }
             } catch (Exception ex) {
-                log.severe("Failed to reload GUI configs");
-                ex.printStackTrace();
+                Logger.error("Failed to reload GUI configs", ex);
             }
 
             guis.load();

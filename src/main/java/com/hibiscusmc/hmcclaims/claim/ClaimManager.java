@@ -90,10 +90,8 @@ public class ClaimManager {
         addClaimToCache(newClaim);
 
         Storage storage = storageHolder.get();
-        if (storage != null) {
-            ClaimRepository claimRepository = storage.claims();
-            claimRepository.saveClaim(newClaim);
-        }
+        ClaimRepository claimRepository = storage.claims();
+        claimRepository.saveClaim(newClaim);
 
         return newClaim;
     }
@@ -240,9 +238,6 @@ public class ClaimManager {
         claims.remove(claim.claimId());
 
         Storage storage = storageHolder.get();
-        if (storage == null) {
-            return;
-        }
 
         ClaimRepository claimRepository = storage.claims();
         claimRepository.deleteClaim(claim.claimId());

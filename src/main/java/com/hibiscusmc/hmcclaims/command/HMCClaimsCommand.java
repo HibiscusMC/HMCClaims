@@ -44,7 +44,6 @@ public class HMCClaimsCommand implements CommandClass {
             text.send(sender, messages.get().pluginReload());
         } catch (Exception e) {
             sender.sendRichMessage("<red>Plugin reload failed! See console for more information.");
-            e.printStackTrace();
         }
     }
 }

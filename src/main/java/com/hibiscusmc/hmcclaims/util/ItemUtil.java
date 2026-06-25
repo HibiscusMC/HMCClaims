@@ -67,6 +67,7 @@ public class ItemUtil {
      *
      * @param playerName The name of the player whose head is being created.
      * @return A new {@link Material#PLAYER_HEAD} ItemStack.
+     * @noinspection UnstableApiUsage
      */
     @NotNull
     @Contract(value = "_ -> new", pure = true)

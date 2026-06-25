@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.config.gui;
 
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import lombok.Getter;
-import lombok.ToString;
 import org.bukkit.Material;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
@@ -10,9 +9,9 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 import java.util.List;
 import java.util.Map;
 
-@ToString
 @ConfigSerializable
 @Getter(onMethod_ = {@Override})
+@SuppressWarnings({"FieldMayBeFinal"})
 public class MainClaimManageConfig extends ClaimManageConfig {
 
     private String title = "<claim_name>";

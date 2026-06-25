@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.config;
 
 import lombok.Getter;
-import lombok.ToString;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
@@ -10,14 +9,13 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 import java.util.Map;
 
 @Getter
-@ToString
 @ConfigSerializable
+@SuppressWarnings({"FieldMayBeFinal"})
 public class Settings {
 
     private Storage storage = new Storage();
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Storage {
 
@@ -48,7 +46,6 @@ public class Settings {
         private Remote remote = new Remote();
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Remote {
 
@@ -65,7 +62,6 @@ public class Settings {
     private ClaimBlocks claimBlocks = new ClaimBlocks();
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class ClaimBlocks {
 
@@ -79,7 +75,6 @@ public class Settings {
     private Claiming claiming = new Claiming();
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Claiming {
 

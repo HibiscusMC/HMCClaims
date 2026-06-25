@@ -255,8 +255,7 @@ public class PlayerSelectionListener implements Listener {
      * @param region        The new {@link ClaimRegion} boundaries to apply to the claim.
      * @param resizingClaim The existing {@link Claim} currently being resized, or {@code null}
      *                      if a new claim should be created.
-     * @param storage       The {@link Storage} system used to persist claim data, or {@code null}
-     *                      to bypass database persistence.
+     * @param storage       The {@link Storage} system used to persist claim data.
      * @return The newly created or updated {@link Claim} instance.
      */
     private Claim getClaimAndUpdate(Player player, Selection selection, ClaimRegion region, Claim resizingClaim, Storage storage) {
@@ -265,10 +264,8 @@ public class PlayerSelectionListener implements Listener {
             resizingClaim.region(region);
             claimManager.addClaimToCache(claim);
 
-            if (storage != null) {
-                ClaimRepository claimRepository = storage.claims();
-                claimRepository.saveClaim(claim);
-            }
+            ClaimRepository claimRepository = storage.claims();
+            claimRepository.saveClaim(claim);
         }
 
         selectionManager.destroySelection(player);

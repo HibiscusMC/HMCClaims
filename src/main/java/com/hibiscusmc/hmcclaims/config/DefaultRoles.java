@@ -4,7 +4,6 @@ import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import lombok.Getter;
-import lombok.ToString;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 
 @Getter
-@ToString
 @ConfigSerializable
 public class DefaultRoles {
 

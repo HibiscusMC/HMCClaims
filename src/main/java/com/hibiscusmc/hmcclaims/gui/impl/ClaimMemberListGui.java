@@ -388,10 +388,8 @@ public class ClaimMemberListGui implements BaseGui {
 
                             if (added != null) {
                                 Storage storage = storageHolder.get();
-                                if (storage != null) {
-                                    storage.claims()
-                                            .saveMember(claim.claimId(), added);
-                                }
+                                storage.claims()
+                                        .saveMember(claim.claimId(), added);
 
                                 text.send(player, messagesHolder.get().claims().memberAdded(), Map.of(
                                         "name", member.name(),

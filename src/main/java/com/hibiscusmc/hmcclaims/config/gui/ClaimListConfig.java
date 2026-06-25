@@ -3,7 +3,6 @@ package com.hibiscusmc.hmcclaims.config.gui;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import lombok.Getter;
-import lombok.ToString;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
@@ -13,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-@ToString
 @ConfigSerializable
+@SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimListConfig extends GuiTemplate {
 
     private String title = "Your claims";
@@ -56,7 +55,6 @@ public class ClaimListConfig extends GuiTemplate {
     );
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class ClaimsIcon {
 
@@ -99,7 +97,6 @@ public class ClaimListConfig extends GuiTemplate {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class SubClaimsIcon extends ClaimsIcon {
 
@@ -129,7 +126,6 @@ public class ClaimListConfig extends GuiTemplate {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class FilterIcon {
 

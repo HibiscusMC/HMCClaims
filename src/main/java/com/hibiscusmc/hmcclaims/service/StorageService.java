@@ -1,15 +1,14 @@
 package com.hibiscusmc.hmcclaims.service;
 
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.impl.remote.MariaDBStorage;
-import lombok.extern.java.Log;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Injector;
 
-@Log(topic = "HMCClaims")
 public class StorageService implements Service {
 
     @Inject
@@ -27,19 +26,11 @@ public class StorageService implements Service {
         Storage impl;
         switch (storage.method()) {
             case MARIADB -> impl = injector.getInstance(MariaDBStorage.class);
-            default -> {
-                if (!storage.method().name().equalsIgnoreCase("H2")) {
-                    log.warning("Unsupported storage method: " + storage.method());
-                    log.warning("Defaulting to H2");
-                }
-
-                // TODO: implement flatfile
-                impl = null;
-            }
+            default -> throw new IllegalArgumentException("Unsupported storage method: " + storage.method());
         }
 
         holder.update(impl);
-        log.info("Using " + storage.method().methodName() + " for storage.");
+        Logger.log("Using " + storage.method().methodName() + " for storage.");
 
         holder.initialize(storage);
     }
@@ -51,10 +42,12 @@ public class StorageService implements Service {
 
     @Override
     public void stop() {
-        if (holder.get() == null) {
-            return;
-        }
+        try {
+            // noinspection ResultOfMethodCallIgnored
+            holder.get();
 
-        holder.close();
+            holder.close();
+        } catch (IllegalStateException ignored) {
+        }
     }
 }

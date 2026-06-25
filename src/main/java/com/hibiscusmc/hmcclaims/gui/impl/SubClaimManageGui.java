@@ -67,9 +67,7 @@ public class SubClaimManageGui extends ClaimManageGui {
             claim.inheritPermissions();
 
             Storage storage = storageHolder.get();
-            if (storage != null) {
-                storage.claims().saveClaim(claim);
-            }
+            storage.claims().saveClaim(claim);
 
             gui.updateItem(inheritPermissionsSuccessIcon.slot(), new GuiItem(inheritPermissionsSuccessIcon.item()));
         }));

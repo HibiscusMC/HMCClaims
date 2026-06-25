@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,8 +41,10 @@ public class PlayerDataListener implements Listener {
         String playerName = event.getName();
         UUID uuid = event.getUniqueId();
 
-        Storage storage = holder.get();
-        if (storage == null) {
+        Storage storage;
+        try {
+            storage = holder.get();
+        } catch (IllegalStateException e) {
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
                     TextUtil.parse("<red>The claims storage was not initialized properly."));
             return;
@@ -61,10 +64,10 @@ public class PlayerDataListener implements Listener {
                 manager.cacheUser(user);
             }).join();
         } catch (Exception ex) {
-            ex.printStackTrace();
-
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
                     TextUtil.parse("<red>Failed to load your player data. Please try again later."));
+
+            Logger.error("Couldn't load player data.", ex);
         }
     }
 
@@ -79,14 +82,11 @@ public class PlayerDataListener implements Listener {
         UUID uuid = player.getUniqueId();
 
         Storage storage = holder.get();
-        if (storage == null) {
-            throw new IllegalStateException("Claims storage was not initialized properly.");
-        }
 
         manager.getUser(uuid).ifPresent(user ->
                 storage.users().saveUser(user).whenComplete((value, ex) -> {
                     if (ex != null) {
-                        ex.printStackTrace();
+                        Logger.error("Couldn't save player data.", ex);
 
                         return;
                     }

@@ -31,10 +31,6 @@ public class WorldListener implements Listener {
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent event) {
         Storage storage = storageHolder.get();
-        if (storage == null) {
-            return;
-        }
-
         ClaimRepository claimRepository = storage.claims();
 
         World world = event.getWorld();

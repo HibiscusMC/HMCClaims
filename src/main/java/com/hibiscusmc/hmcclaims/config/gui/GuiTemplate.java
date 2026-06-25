@@ -3,7 +3,6 @@ package com.hibiscusmc.hmcclaims.config.gui;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import lombok.Getter;
-import lombok.ToString;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
@@ -12,12 +11,11 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 import java.util.List;
 
 @Getter
-@ToString
 @ConfigSerializable
+@SuppressWarnings({"FieldMayBeFinal"})
 public class GuiTemplate {
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class DynamicIcon {
 
@@ -35,7 +33,6 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class SimpleIcon {
 
@@ -53,7 +50,6 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Icon {
 

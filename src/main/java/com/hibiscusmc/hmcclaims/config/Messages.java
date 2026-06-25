@@ -1,15 +1,14 @@
 package com.hibiscusmc.hmcclaims.config;
 
 import lombok.Getter;
-import lombok.ToString;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.Map;
 
 @Getter
-@ToString
 @ConfigSerializable
+@SuppressWarnings({"FieldMayBeFinal"})
 public class Messages {
 
     private String prefix = "<b><gradient:#49fc4f:#3ffcb4:#49fc4f>HMCClaims</gradient> <dark_gray>|</dark_gray></b> ";
@@ -26,7 +25,6 @@ public class Messages {
     private Inputs inputs = new Inputs();
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Claims {
 
@@ -78,7 +76,6 @@ public class Messages {
         private Resizing resizing = new Resizing();
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Selecting {
 
@@ -123,7 +120,6 @@ public class Messages {
         }
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Resizing {
 
@@ -142,7 +138,6 @@ public class Messages {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Commands {
 
@@ -176,7 +171,6 @@ public class Messages {
         private ClaimBlocks claimBlocks = new ClaimBlocks();
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class ClaimBlocks {
 
@@ -193,7 +187,6 @@ public class Messages {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Dialogs {
 
@@ -202,7 +195,6 @@ public class Messages {
         private Rename rename = new Rename();
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Search {
 
@@ -231,7 +223,6 @@ public class Messages {
         }
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Rename {
 
@@ -250,7 +241,6 @@ public class Messages {
         }
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Button {
 
@@ -259,7 +249,6 @@ public class Messages {
             private String tooltip = "Button Tooltip";
 
             public Button() {
-
             }
 
             public Button(String label, String tooltip) {
@@ -271,7 +260,6 @@ public class Messages {
     }
 
     @Getter
-    @ToString
     @ConfigSerializable
     public static class Inputs {
 
@@ -283,7 +271,6 @@ public class Messages {
         private ActionBar actionBar = new ActionBar();
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class Title {
 
@@ -295,7 +282,6 @@ public class Messages {
         }
 
         @Getter
-        @ToString
         @ConfigSerializable
         public static class ActionBar {
 

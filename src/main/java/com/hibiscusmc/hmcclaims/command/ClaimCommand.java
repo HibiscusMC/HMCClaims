@@ -140,10 +140,8 @@ public class ClaimCommand implements CommandClass {
         }
 
         Storage storage = storageHolder.get();
-        if (storage != null) {
-            storage.claims()
-                    .saveMember(claim.claimId(), added);
-        }
+        storage.claims()
+                .saveMember(claim.claimId(), added);
 
         text.send(sender, messages.claims().memberAdded(), Map.of(
                 "player_head", "<head:" + playerName + ">",
@@ -183,10 +181,8 @@ public class ClaimCommand implements CommandClass {
         }
 
         Storage storage = storageHolder.get();
-        if (storage != null) {
-            storage.claims()
-                    .deleteMember(claim.claimId(), player.getUniqueId());
-        }
+        storage.claims()
+                .deleteMember(claim.claimId(), player.getUniqueId());
 
         text.send(sender, messages.claims().memberRemoved(), Map.of(
                 "player_head", "<head:" + playerName + ">",
