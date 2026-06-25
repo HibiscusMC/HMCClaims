@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.service.Service;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.command.CommandSender;
 import team.unnamed.commandflow.annotated.CommandClass;
@@ -44,6 +45,7 @@ public class HMCClaimsCommand implements CommandClass {
             text.send(sender, messages.get().pluginReload());
         } catch (Exception e) {
             sender.sendRichMessage("<red>Plugin reload failed! See console for more information.");
+            Logger.error("Plugin reload failed!", e);
         }
     }
 }
