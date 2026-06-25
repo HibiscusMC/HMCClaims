@@ -1,17 +1,15 @@
 package com.hibiscusmc.hmcclaims.storage;
 
 import com.hibiscusmc.hmcclaims.config.Settings;
-import lombok.extern.java.Log;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Singleton;
 
 /**
  * A thread-safe wrapper and lifecycle manager for the plugin's data storage implementation.
  */
-@Log(topic = "HMCClaims")
 @Singleton
 public class StorageHolder {
 
@@ -22,10 +20,15 @@ public class StorageHolder {
      * Gets the currently active storage implementation.
      *
      * @return The {@link Storage} instance, or {@code null} if not yet set.
+     * @throws IllegalStateException if the storage has not been initialized
      */
-    @Nullable
+    @NotNull
     @Contract(pure = true)
     public Storage get() {
+        if (implementation == null) {
+            throw new IllegalStateException("Storage has not been initialized yet.");
+        }
+
         return implementation;
     }
 
@@ -55,7 +58,7 @@ public class StorageHolder {
         try {
             implementation.initialize(config);
         } catch (Exception ex) {
-            log.severe("Couldn't initialize " + implementation.name() + " storage. Shutting down...");
+            Logger.error("Couldn't initialize " + implementation.name() + " storage. Shutting down...");
             throw new RuntimeException(ex);
         }
     }
@@ -74,7 +77,7 @@ public class StorageHolder {
         try {
             implementation.close();
         } catch (Exception ex) {
-            log.severe("Couldn't close " + implementation.name() + " storage");
+            Logger.error("Couldn't close " + implementation.name() + " storage");
             throw new RuntimeException(ex);
         }
     }
