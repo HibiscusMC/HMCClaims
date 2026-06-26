@@ -7,7 +7,9 @@ import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.impl.remote.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
@@ -51,6 +53,7 @@ public class SQLClaimRepository implements ClaimRepository {
     private final String getMemberPermissionsQuery;
     private final String getRolesQuery;
     private final String getRolePermissionsQuery;
+    private final String getSettingsQuery;
 
     private final String saveClaimQuery;
     private final String saveClaimChunkQuery;
@@ -88,6 +91,7 @@ public class SQLClaimRepository implements ClaimRepository {
                 "WHERE claim_uuid = ? AND player_uuid = ?;";
         this.getRolesQuery = "SELECT * FROM " + prefix + "claim_roles WHERE claim_uuid = ?;";
         this.getRolePermissionsQuery = "SELECT * FROM " + prefix + "role_permissions WHERE role_uuid = ?;";
+        this.getSettingsQuery = "SELECT * FROM " + prefix + "claim_settings WHERE claim_uuid = ?;";
 
         this.saveClaimQuery = "INSERT INTO " + prefix + "claims (uuid, owner, name, world_name, region, parent_uuid, locked, claimed_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +
@@ -467,7 +471,7 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> saveSettings(@NotNull UUID claimId, @NotNull Map<String, SettingHolder<?>> settings) {
+    public @NotNull CompletableFuture<Void> saveSettings(@NotNull UUID claimId, @NotNull Map<Setting<?>, SettingHolder<?>> settings) {
         return CompletableFuture.runAsync(() -> {
             if (settings.isEmpty()) return;
 
@@ -477,9 +481,9 @@ public class SQLClaimRepository implements ClaimRepository {
                 try (PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
                     byte[] claimIdBytes = SQLUtil.UUIDtoBytes(claimId);
 
-                    for (Map.Entry<String, SettingHolder<?>> entry : settings.entrySet()) {
+                    for (Map.Entry<Setting<?>, SettingHolder<?>> entry : settings.entrySet()) {
                         ps.setBytes(1, claimIdBytes);
-                        ps.setString(2, entry.getKey());
+                        ps.setString(2, entry.getKey().key().asString());
                         ps.setString(3, entry.getValue().value().toString());
 
                         ps.addBatch();
@@ -524,26 +528,6 @@ public class SQLClaimRepository implements ClaimRepository {
         }, executor);
     }
 
-    @NotNull
-    private Set<Permission> getClaimRolePermissions(UUID roleId) {
-        Set<Permission> permissions = new HashSet<>();
-
-        try (Connection con = storage.getConnection();
-             PreparedStatement ps = con.prepareStatement(this.getRolePermissionsQuery)) {
-            ps.setBytes(1, SQLUtil.UUIDtoBytes(roleId));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    permissions.add(PermissionRegistry.getPermission(rs.getString("permission")));
-                }
-
-                return permissions;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to load permissions for role " + roleId, e);
-        }
-    }
-
     private @NotNull List<ClaimRole> getClaimRoles(UUID claimId) {
         List<ClaimRole> roles = new ArrayList<>();
 
@@ -571,6 +555,57 @@ public class SQLClaimRepository implements ClaimRepository {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to load roles for claim " + claimId, e);
+        }
+    }
+
+    @NotNull
+    private Set<Permission> getClaimRolePermissions(UUID roleId) {
+        Set<Permission> permissions = new HashSet<>();
+
+        try (Connection con = storage.getConnection();
+             PreparedStatement ps = con.prepareStatement(this.getRolePermissionsQuery)) {
+            ps.setBytes(1, SQLUtil.UUIDtoBytes(roleId));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    permissions.add(PermissionRegistry.getPermission(rs.getString("permission")));
+                }
+
+                return permissions;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load permissions for role " + roleId, e);
+        }
+    }
+
+    @NotNull
+    private Set<SettingHolder<?>> getClaimSettings(@NotNull UUID claimId) {
+        Set<SettingHolder<?>> settings = new HashSet<>();
+
+        try (Connection con = storage.getConnection();
+             PreparedStatement ps = con.prepareStatement(this.getSettingsQuery)) {
+            ps.setBytes(1, SQLUtil.UUIDtoBytes(claimId));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String rawSetting = rs.getString("setting_key");
+                    Setting<Object> setting = SettingRegistry.getSetting(rawSetting);
+                    if (setting == null) {
+                        throw new IllegalArgumentException("No setting found for key " + rawSetting);
+                    }
+
+                    SettingHolder<Object> holder = SettingHolder.from(setting);
+
+                    String rawValue = rs.getString("setting_value");
+                    holder.value(setting.parser().apply(rawValue));
+
+                    settings.add(holder);
+                }
+
+                return settings;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load settings for claim " + claimId, e);
         }
     }
 
@@ -644,6 +679,11 @@ public class SQLClaimRepository implements ClaimRepository {
                 region, roles, rs.getTimestamp("claimed_at").toInstant()
         );
         claim.locked(rs.getBoolean("locked"));
+
+        Set<SettingHolder<?>> settings = getClaimSettings(claim.claimId());
+        for (SettingHolder<?> holder : settings) {
+            claim.settings().put(holder.setting(), holder);
+        }
 
         List<ClaimMember> members = getClaimMembers(claim)
                 .join();

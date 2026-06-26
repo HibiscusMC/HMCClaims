@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.claim;
 
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
+import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.AccessLevel;
@@ -62,7 +63,7 @@ public class Claim {
      */
     private ClaimRoleRegistry roleRegistry;
 
-    private final Map<String, SettingHolder<?>> settings = new HashMap<>();
+    private final Map<Setting<?>, SettingHolder<?>> settings = new HashMap<>();
 
     @Getter(AccessLevel.NONE)
     private final Map<UUID, ClaimMember> members = new HashMap<>();

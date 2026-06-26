@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import org.jetbrains.annotations.NotNull;
 
@@ -96,7 +97,7 @@ public interface ClaimRepository {
      * Updates the custom settings (key-value pairs) for a specific claim.
      */
     @NotNull
-    CompletableFuture<Void> saveSettings(@NotNull UUID claimUuid, @NotNull Map<String, SettingHolder<?>> settings);
+    CompletableFuture<Void> saveSettings(@NotNull UUID claimUuid, @NotNull Map<Setting<?>, SettingHolder<?>> settings);
 
     /**
      * Deletes a claim.
