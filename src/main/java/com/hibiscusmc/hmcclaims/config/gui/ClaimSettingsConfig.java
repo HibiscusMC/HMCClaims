@@ -105,7 +105,6 @@ public class ClaimSettingsConfig extends GuiTemplate {
             return cloned;
         }
 
-        @ConfigSerializable
         public abstract static class BaseSettingIcon {
         }
 

@@ -3,11 +3,13 @@ package com.hibiscusmc.hmcclaims.config.internal;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.ActionSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.ClaimRoleSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.CustomItemSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.PermissionSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.RangeSerializer;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.SettingIconSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.SettingSerializer;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
@@ -99,6 +101,7 @@ public class ConfigFactory {
                                 .register(Action.class, ActionSerializer.INSTANCE)
                                 .register(RangeUtil.class, RangeSerializer.INSTANCE)
                                 .register(Setting.class, SettingSerializer.INSTANCE)
+                                .register(ClaimSettingsConfig.SettingIcon.BaseSettingIcon.class, SettingIconSerializer.INSTANCE)
                         )
                 )
                 .indent(2)
