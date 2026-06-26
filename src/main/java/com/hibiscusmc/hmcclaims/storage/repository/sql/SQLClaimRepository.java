@@ -66,6 +66,7 @@ public class SQLClaimRepository implements ClaimRepository {
     private final String deleteClaimQuery;
     private final String deleteMemberQuery;
     private final String deleteRolePermissionsQuery;
+    private final String deleteAllRolePermissionsQuery;
 
     public SQLClaimRepository(Settings.Storage settings, HikariStorage storage, ExecutorService executor) {
         this.storage = storage;
@@ -118,6 +119,7 @@ public class SQLClaimRepository implements ClaimRepository {
         this.deleteClaimQuery = "DELETE FROM " + prefix + "claims WHERE uuid = ?;";
         this.deleteMemberQuery = "DELETE FROM " + prefix + "members WHERE claim_uuid = ? AND player_uuid = ?;";
         this.deleteRolePermissionsQuery = "DELETE FROM " + prefix + "role_permissions WHERE role_uuid = ?;";
+        this.deleteAllRolePermissionsQuery = "DELETE FROM " + prefix + "role_permissions WHERE role_uuid IN (:uuids);";
     }
 
     @Override
@@ -257,37 +259,138 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaim(@NotNull Claim claim) {
-        CompletableFuture<Void> claimFuture = CompletableFuture.runAsync(() -> {
-            try (Connection con = storage.getConnection();
-                 PreparedStatement ps = con.prepareStatement(this.saveClaimQuery)) {
-                ps.setBytes(1, SQLUtil.UUIDtoBytes(claim.claimId()));
-                ps.setBytes(2, SQLUtil.UUIDtoBytes(claim.owner().uuid()));
-                ps.setString(3, claim.name());
-                ps.setString(4, claim.region().worldName());
-                ps.setString(5, claim.region().toString());
+        return CompletableFuture.runAsync(() -> {
+            try (Connection con = storage.getConnection()) {
+                con.setAutoCommit(false);
 
-                if (claim.main() != null) {
-                    ps.setBytes(6, SQLUtil.UUIDtoBytes(claim.main().claimId()));
-                } else {
-                    ps.setNull(6, Types.BINARY);
+                byte[] claimIdBytes = SQLUtil.UUIDtoBytes(claim.claimId());
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveClaimQuery)) {
+                    ps.setBytes(1, claimIdBytes);
+                    ps.setBytes(2, SQLUtil.UUIDtoBytes(claim.owner().uuid()));
+                    ps.setString(3, claim.name());
+                    ps.setString(4, claim.region().worldName());
+                    ps.setString(5, claim.region().toString());
+
+                    if (claim.main() != null) {
+                        ps.setBytes(6, SQLUtil.UUIDtoBytes(claim.main().claimId()));
+                    } else {
+                        ps.setNull(6, Types.BINARY);
+                    }
+
+                    ps.setBoolean(7, claim.locked());
+                    ps.setTimestamp(8, Timestamp.from(claim.claimedTimestamp()));
+
+                    ps.executeUpdate();
                 }
 
-                ps.setBoolean(7, claim.locked());
-                ps.setTimestamp(8, Timestamp.from(claim.claimedTimestamp()));
+                if (!claim.chunks().isEmpty()) {
+                    try (PreparedStatement ps = con.prepareStatement(this.saveClaimChunkQuery)) {
+                        LongSet chunks = claim.chunks();
 
-                ps.executeUpdate();
+                        for (Long chunk : chunks) {
+                            ps.setBytes(1, claimIdBytes);
+                            ps.setLong(2, chunk);
+
+                            ps.addBatch();
+                        }
+
+                        ps.executeBatch();
+                    }
+                }
+
+                List<ClaimRole> roles = claim.roleRegistry().allRoles();
+                try (PreparedStatement ps = con.prepareStatement(this.saveRoleQuery)) {
+                    for (ClaimRole role : roles) {
+                        ps.setBytes(1, claimIdBytes);
+                        ps.setBytes(2, SQLUtil.UUIDtoBytes(role.id()));
+                        ps.setString(3, role.name());
+                        ps.setInt(4, role.position());
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                }
+
+                String placeholders = String.join(",", Collections.nCopies(roles.size(), "?"));
+                try (PreparedStatement ps = con.prepareStatement(deleteAllRolePermissionsQuery.replace(":uuids", placeholders))) {
+                    int i = 0;
+                    for (ClaimRole role : roles) {
+                        ps.setBytes(++i, SQLUtil.UUIDtoBytes(role.id()));
+                    }
+
+                    ps.executeUpdate();
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveRolePermissionQuery)) {
+                    for (ClaimRole role : roles) {
+                        byte[] roleIdBytes = SQLUtil.UUIDtoBytes(role.id());
+
+                        for (Permission permission : role.permissions()) {
+                            ps.setBytes(1, roleIdBytes);
+                            ps.setString(2, permission.key().asString());
+
+                            ps.addBatch();
+                        }
+                    }
+
+                    ps.executeBatch();
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveMemberQuery)) {
+                    for (ClaimMember member : claim.members()) {
+                        ps.setBytes(1, claimIdBytes);
+                        ps.setBytes(2, SQLUtil.UUIDtoBytes(member.uuid()));
+                        ps.setBytes(3, SQLUtil.UUIDtoBytes(member.role().id()));
+                        ps.setBoolean(4, member.banned());
+                        ps.setTimestamp(5, Timestamp.from(member.joinedTimestamp()));
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                }
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveMemberPermissionQuery)) {
+                    for (ClaimMember member : claim.members()) {
+                        if (member.permissions().isEmpty()) {
+                            continue;
+                        }
+
+                        byte[] playerIdBytes = SQLUtil.UUIDtoBytes(member.uuid());
+
+                        for (PermissionHolder holder : member.permissions()) {
+                            ps.setBytes(1, claimIdBytes);
+                            ps.setBytes(2, playerIdBytes);
+                            ps.setString(3, holder.permission().key().asString());
+                            ps.setBoolean(4, holder.status());
+
+                            ps.addBatch();
+                        }
+                    }
+
+                    ps.executeBatch();
+                }
+
+
+                try (PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
+                    for (Map.Entry<Setting<?>, SettingHolder<?>> entry : claim.settings().entrySet()) {
+                        ps.setBytes(1, claimIdBytes);
+                        ps.setString(2, entry.getKey().key().asString());
+                        ps.setString(3, entry.getValue().value().toString());
+
+                        ps.addBatch();
+                    }
+
+                    ps.executeBatch();
+                }
+
+                con.commit();
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save claim " + claim.claimId(), e);
             }
         }, executor);
-
-        return CompletableFuture.allOf(
-                claimFuture,
-                saveClaimChunks(claim),
-                saveMembers(claim.claimId(), claim.members()),
-                saveSettings(claim.claimId(), claim.settings()),
-                saveRoles(claim.claimId(), claim.roleRegistry().allRoles())
-        );
     }
 
     @Override

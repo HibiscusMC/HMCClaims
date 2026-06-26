@@ -171,7 +171,8 @@ public class ClaimMemberListGui implements BaseGui {
 
         gui.setItem(membersTab.slot(), new GuiItem(membersTab.item()));
         gui.setItem(rolesTab.slot(), new GuiItem(rolesTab.item(), action -> player.sendRichMessage("<green>viewing roles")));
-        gui.setItem(settingsTab.slot(), new GuiItem(settingsTab.item(), action -> player.sendRichMessage("<green>viewing settings")));
+        gui.setItem(settingsTab.slot(), new GuiItem(settingsTab.item(), action -> guis.get(ClaimSettingsGui.class)
+                .open(player, claim)));
         gui.setItem(manageTab.slot(), new GuiItem(manageTab.item(), action -> {
             BaseGui tab = claim.main() == null ? guis.get(ClaimManageGui.class) : guis.get(SubClaimManageGui.class);
 

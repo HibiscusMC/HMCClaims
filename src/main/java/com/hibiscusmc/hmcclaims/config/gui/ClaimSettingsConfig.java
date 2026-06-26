@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.config.gui;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import lombok.Getter;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
@@ -18,7 +19,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     private String title = "Claim Setting";
 
-    private int rows = 5;
+    private int rows = 6;
 
     @Setting("delete-icon")
     private SimpleIcon deleteIcon = new SimpleIcon(ItemUtil.build(
@@ -69,10 +70,13 @@ public class ClaimSettingsConfig extends GuiTemplate {
         @Setting("modify-icon")
         private BaseSettingIcon modifyIcon;
 
-        public SettingIcon(com.hibiscusmc.hmcclaims.claim.setting.Setting<T> setting, int slot) {
+        public SettingIcon() {
+        }
+
+        protected SettingIcon(com.hibiscusmc.hmcclaims.claim.setting.Setting<T> setting, int slot) {
             this.setting = setting;
 
-            List<String> lore = Arrays.stream(setting.description().split("\n")).toList();
+            List<String> lore = Arrays.stream(("<gray>" + setting.description()).split("\n")).toList();
 
             this.icon = new SimpleIcon(
                     ItemUtil.build(Material.BOOK, setting.displayName(), lore),
@@ -83,12 +87,14 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
             if (setting.defaultValue() instanceof Boolean) {
                 modifyIcon = new BooleanSettingIcon(
-                        new SimpleIcon(ItemUtil.build(Material.GREEN_DYE, setting.displayName(), buildLore(lore, "Enabled")), nextSlot),
-                        new SimpleIcon(ItemUtil.build(Material.GRAY_DYE, setting.displayName(), buildLore(lore, "Disabled")), nextSlot)
+                        nextSlot,
+                        new DynamicIconWithStack(ItemStack.of(Material.LIME_DYE), setting.displayName(), buildLore(lore, "<green>Enabled")),
+                        new DynamicIconWithStack(ItemStack.of(Material.GRAY_DYE), setting.displayName(), buildLore(lore, "<red>Disabled"))
                 );
             } else {
                 modifyIcon = new InputSettingIcon(
-                        new SimpleIcon(ItemUtil.build(Material.PAPER, "Input", buildLore(lore, setting.defaultValue().toString())), nextSlot));
+                        nextSlot,
+                        new DynamicIconWithStack(ItemStack.of(Material.FEATHER), "Input", buildLore(lore, "<setting_value>")));
             }
         }
 
@@ -97,9 +103,9 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
             cloned.addAll(List.of(
                     "",
-                    "Current Status: " + defaultValue,
+                    "<gray>Current Status: <white>" + defaultValue,
                     "",
-                    "Click to change value"
+                    " <green><u>Click to change value"
             ));
 
             return cloned;
@@ -112,10 +118,15 @@ public class ClaimSettingsConfig extends GuiTemplate {
         @ConfigSerializable
         public static class BooleanSettingIcon extends BaseSettingIcon {
 
-            private SimpleIcon enabled;
-            private SimpleIcon disabled;
+            private int slot;
+            private DynamicIconWithStack enabled;
+            private DynamicIconWithStack disabled;
 
-            public BooleanSettingIcon(SimpleIcon enabled, SimpleIcon disabled) {
+            public BooleanSettingIcon() {
+            }
+
+            protected BooleanSettingIcon(int slot, DynamicIconWithStack enabled, DynamicIconWithStack disabled) {
+                this.slot = slot;
                 this.enabled = enabled;
                 this.disabled = disabled;
             }
@@ -125,9 +136,14 @@ public class ClaimSettingsConfig extends GuiTemplate {
         @ConfigSerializable
         public static class InputSettingIcon extends BaseSettingIcon {
 
-            private SimpleIcon input;
+            private int slot;
+            private DynamicIconWithStack input;
 
-            public InputSettingIcon(SimpleIcon input) {
+            public InputSettingIcon() {
+            }
+
+            protected InputSettingIcon(int slot, DynamicIconWithStack input) {
+                this.slot = slot;
                 this.input = input;
             }
         }

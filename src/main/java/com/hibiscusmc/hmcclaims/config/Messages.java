@@ -194,6 +194,8 @@ public class Messages {
 
         private Rename rename = new Rename();
 
+        private ClaimSetting setting = new ClaimSetting();
+
         @Getter
         @ConfigSerializable
         public static class Search {
@@ -233,6 +235,24 @@ public class Messages {
             private Map<String, Button> buttons = Map.of(
                     "submit", new Button(
                             "Confirm", "Click to rename your claim"
+                    ),
+                    "cancel", new Button(
+                            "Cancel", "Click to cancel"
+                    )
+            );
+        }
+
+        @Getter
+        @ConfigSerializable
+        public static class ClaimSetting {
+
+            private String title = "Change Setting | <claim_name>";
+
+            private String input = "<setting_name>";
+
+            private Map<String, Button> buttons = Map.of(
+                    "submit", new Button(
+                            "Confirm", "Click to change setting"
                     ),
                     "cancel", new Button(
                             "Cancel", "Click to cancel"

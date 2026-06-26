@@ -30,7 +30,6 @@ public class PlaceholderUtil {
 
     private final static DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy").withZone(ZoneId.systemDefault());
 
-
     @Inject
     private UserManager userManager;
 

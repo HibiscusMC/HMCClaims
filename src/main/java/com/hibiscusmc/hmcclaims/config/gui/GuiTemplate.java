@@ -34,6 +34,26 @@ public class GuiTemplate {
 
     @Getter
     @ConfigSerializable
+    public static class DynamicIconWithStack {
+
+        private ItemStack stack;
+
+        private String name;
+
+        private List<String> lore;
+
+        public DynamicIconWithStack() {
+        }
+
+        protected DynamicIconWithStack(ItemStack stack, String name, List<String> lore) {
+            this.stack = stack;
+            this.name = name;
+            this.lore = lore;
+        }
+    }
+
+    @Getter
+    @ConfigSerializable
     public static class SimpleIcon {
 
         private ItemStack item = ItemStack.of(Material.STONE);
