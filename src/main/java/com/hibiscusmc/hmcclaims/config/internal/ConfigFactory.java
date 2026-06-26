@@ -2,11 +2,13 @@ package com.hibiscusmc.hmcclaims.config.internal;
 
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.ActionSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.ClaimRoleSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.CustomItemSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.PermissionSerializer;
 import com.hibiscusmc.hmcclaims.config.internal.serializer.RangeSerializer;
+import com.hibiscusmc.hmcclaims.config.internal.serializer.SettingSerializer;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import org.bukkit.inventory.ItemStack;
@@ -96,6 +98,7 @@ public class ConfigFactory {
                                 .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
                                 .register(Action.class, ActionSerializer.INSTANCE)
                                 .register(RangeUtil.class, RangeSerializer.INSTANCE)
+                                .register(Setting.class, SettingSerializer.INSTANCE)
                         )
                 )
                 .indent(2)

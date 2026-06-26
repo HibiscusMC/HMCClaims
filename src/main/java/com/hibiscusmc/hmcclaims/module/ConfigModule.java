@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.MainClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.SubClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
@@ -35,6 +36,8 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), ClaimListConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "member-list.yml")), ClaimMemberListConfig.class, true);
 
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-settings.yml")), ClaimSettingsConfig.class, true);
+
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "manage-main-claim.yml")), MainClaimManageConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "manage-sub-claim.yml")), SubClaimManageConfig.class, true);
         } catch (Exception e) {
@@ -55,6 +58,9 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<ClaimMemberListConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimMemberListConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimSettingsConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimSettingsConfig.class));
 
         bind(new TypeReference<ConfigHolder<MainClaimManageConfig>>() {
         }).toInstance(ConfigFactory.getHolder(MainClaimManageConfig.class));

@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
+import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
@@ -62,6 +63,7 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.install(new ConfigModule(this));
 
         binder.bind(PermissionRegistry.class).to(PermissionRegistry.class);
+        binder.bind(SettingRegistry.class).to(SettingRegistry.class);
         binder.bind(GuiRegistry.class).to(GuiRegistry.class);
 
         binder.bind(StorageHolder.class).to(StorageHolder.class);
