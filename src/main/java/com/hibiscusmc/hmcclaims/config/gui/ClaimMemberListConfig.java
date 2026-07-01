@@ -65,33 +65,33 @@ public class ClaimMemberListConfig extends GuiTemplate {
 
     @Setting("add-member")
     private SimpleIcon addMemberIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Add Member", List.of("", "<white>Left-Click <gray>to add member")
-    ), 40);
+            Material.WRITABLE_BOOK, "Add Member", List.of("", "<white>Left-Click <gray>to add member")
+    ), 41);
 
     private Map<String, SimpleIcon> pages = Map.of(
             "back", new SimpleIcon(ItemUtil.build(
-                    Material.BARRIER, "Back", List.of("", "<white>Left-Click <gray>to go back")
+                    Material.BOOK, "Back", List.of("", "<white>Left-Click <gray>to go back")
             ), 45),
             "previous-page", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
+                    Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
             ), 18),
             "next-page", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
+                    Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
             ), 26)
     );
 
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Members", List.of("", "<red>You're here!")
+                    Material.LIME_STAINED_GLASS_PANE, "Members", List.of("", "<red>You're here!")
             ), 0),
             "roles-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
             "settings-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 2),
             "manage-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 3)
     );
 
@@ -113,7 +113,7 @@ public class ClaimMemberListConfig extends GuiTemplate {
         );
 
         @Setting("no-query")
-        private String noQuery = "<i>Nothing";
+        private String noQuery = "<i>Nothing...";
     }
 
     @Getter

@@ -30,58 +30,58 @@ public class SubClaimManageConfig extends ClaimManageConfig {
 
     @Setting("rename-icon")
     private SimpleIcon renameIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Rename claim", List.of("", "<white>Left-Click <gray>to rename claim")
+            Material.FEATHER, "Rename claim", List.of("", "<white>Left-Click <gray>to rename claim")
     ), 18);
 
     @Setting("lock-icon")
     private SimpleIcon lockIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Lock claim", List.of("", "<white>Left-Click <gray>to make your claim private")
+            Material.CHEST, "Lock claim", List.of("", "<white>Left-Click <gray>to make your claim private")
     ), 20);
 
     @Setting("unlock-icon")
     private SimpleIcon unlockIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Unlock claim", List.of("", "<white>Left-Click <gray>to make your claim public")
+            Material.ENDER_CHEST, "Unlock claim", List.of("", "<white>Left-Click <gray>to make your claim public")
     ), 20);
 
     @Setting("banned-icon")
     private SimpleIcon bannedIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Banned members", List.of("", "<white>Left-Click <gray>to show the list of banned members")
+            Material.BARRIER, "Banned members", List.of("", "<white>Left-Click <gray>to show the list of banned members")
     ), 22);
 
     @Getter
     @Setting("inherit-icon")
     private SimpleIcon inheritPermissionsIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Inherit Permissions", List.of("", "<white>Left-Click <gray>to inherit the permissions of the", "<gray>main claim. This will add every member, role and permission", "<gray>from the main claim to this claim.")
+            Material.REDSTONE, "Inherit Permissions", List.of("", "<white>Left-Click <gray>to inherit the permissions of the", "<gray>main claim. This will add every member, role and permission", "<gray>from the main claim to this claim.")
     ), 24);
 
     @Getter
     @Setting("inherit-success-icon")
     private SimpleIcon inheritPermissionsSucesssIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Inherit Permissions", List.of("", "<green>Permissions inherited successfully!")
+            Material.REDSTONE_BLOCK, "Inherit Permissions", List.of("", "<green>Permissions inherited successfully!")
     ), 24);
 
     @Setting("resize-icon")
     private SimpleIcon resizeIcon = new SimpleIcon(ItemUtil.build(
-            Material.OAK_BUTTON, "Resize claim", List.of("", "<white>Left-Click <gray>to resize claim borders")
+            Material.GOLDEN_HOE, "Resize claim", List.of("", "<white>Left-Click <gray>to resize claim borders")
     ), 26);
 
     @Setting("back-icon")
     private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
-            Material.BARRIER, "Back", List.of("", "<white>Left-Click <gray>to go back")
+            Material.BOOK, "Back", List.of("", "<white>Left-Click <gray>to go back")
     ), 45);
 
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 0),
             "roles-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
             "settings-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 2),
             "manage-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Manage", List.of("", "<red>You're here!")
+                    Material.LIME_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<red>You're here!")
             ), 3)
     );
 }

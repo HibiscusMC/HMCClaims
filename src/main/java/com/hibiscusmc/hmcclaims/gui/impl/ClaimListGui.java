@@ -85,19 +85,19 @@ public class ClaimListGui implements BaseGui {
             throw new NullPointerException("Config is not initialized yet!");
         }
 
-        this.title = TextUtil.parse(config.title());
-        this.rows = config.rows();
+        title = TextUtil.parse(config.title());
+        rows = config.rows();
 
-        this.claimsIcon = config.claimsIcon();
-        this.subClaimsIcon = config.subClaimsIcon();
+        claimsIcon = config.claimsIcon();
+        subClaimsIcon = config.subClaimsIcon();
 
-        this.searchIcon = config.searchIcon();
-        this.filterIcon = config.filterIcon();
+        searchIcon = config.searchIcon();
+        filterIcon = config.filterIcon();
 
-        this.previousPage = config.pages().get("previous-page");
-        this.nextPage = config.pages().get("next-page");
+        previousPage = config.pages().get("previous-page");
+        nextPage = config.pages().get("next-page");
 
-        this.icons = config.extraIcons().values().stream().toList();
+        icons = config.extraIcons().values().stream().toList();
 
         slots.clear();
         for (RangeUtil range : config.validSlots()) {

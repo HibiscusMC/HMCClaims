@@ -41,16 +41,16 @@ public class ClaimListConfig extends GuiTemplate {
     );
 
     @Setting("extra-icons")
-    private Map<String, GuiTemplate.Icon> extraIcons = Map.of(
-            "example-icon", new GuiTemplate.Icon()
+    private Map<String, Icon> extraIcons = Map.of(
+            "example-icon", new Icon()
     );
 
-    private Map<String, GuiTemplate.SimpleIcon> pages = Map.of(
-            "previous-page", new GuiTemplate.SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
+    private Map<String, SimpleIcon> pages = Map.of(
+            "previous-page", new SimpleIcon(ItemUtil.build(
+                    Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
             ), 39),
-            "next-page", new GuiTemplate.SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
+            "next-page", new SimpleIcon(ItemUtil.build(
+                    Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
             ), 41)
     );
 

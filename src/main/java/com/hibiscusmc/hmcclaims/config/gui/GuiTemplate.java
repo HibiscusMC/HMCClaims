@@ -73,7 +73,7 @@ public class GuiTemplate {
     @ConfigSerializable
     public static class Icon {
 
-        private ItemStack item = ItemUtil.build(Material.PAPER, "<aqua>Example Icon", List.of(
+        private ItemStack item = ItemUtil.build(Material.OAK_SIGN, "<aqua>Example Icon", List.of(
                 "",
                 "<gray>This is an example icon!"
         ));
