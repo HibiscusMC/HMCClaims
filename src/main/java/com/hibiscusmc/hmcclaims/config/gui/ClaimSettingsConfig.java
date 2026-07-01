@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
+import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import lombok.Getter;
 import org.bukkit.Material;
@@ -9,6 +10,7 @@ import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +19,7 @@ import java.util.Map;
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimSettingsConfig extends GuiTemplate {
 
-    private String title = "Claim Setting";
+    private String title = "<claim_name>";
 
     private int rows = 6;
 
@@ -28,7 +30,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     @Setting("back-icon")
     private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
-            Material.BARRIER, "Back", List.of("", "<white>Left-Click <gray>to go back")
+            Material.BOOK, "Back", List.of("", "<white>Left-Click <gray>to go back")
     ), 45);
 
     @Setting("extra-icons")
@@ -38,24 +40,56 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 0),
             "roles-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
             "settings-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Settings", List.of("", "<red>You're here!")
+                    Material.LIME_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<red>You're here!")
             ), 2),
             "manage-tab", new SimpleIcon(ItemUtil.build(
-                    Material.STONE_BUTTON, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 3)
     );
 
-    private List<SettingIcon<?>> settings = List.of(
-            new SettingIcon<>(com.hibiscusmc.hmcclaims.claim.setting.Setting.MOB_EXPLOSIONS, 19),
-            new SettingIcon<>(com.hibiscusmc.hmcclaims.claim.setting.Setting.BLOCK_EXPLOSIONS, 21),
-            new SettingIcon<>(com.hibiscusmc.hmcclaims.claim.setting.Setting.JOIN_MESSAGE, 23)
+    @Setting("setting-pages")
+    private Map<Integer, List<SettingIcon<?>>> settingPages = buildSettingPages();
+
+    private Map<String, SimpleIcon> pages = Map.of(
+            "previous-page", new SimpleIcon(ItemUtil.build(
+                    Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
+            ), 39),
+            "next-page", new SimpleIcon(ItemUtil.build(
+                    Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
+            ), 41)
     );
+
+    private Map<Integer, List<SettingIcon<?>>> buildSettingPages() {
+        int startSlot = 19;
+        int currentPage = 1;
+
+        List<SettingIcon<?>> settings = new ArrayList<>();
+        Map<Integer, List<SettingIcon<?>>> pages = new HashMap<>();
+
+        for (com.hibiscusmc.hmcclaims.claim.setting.Setting<?> setting : SettingRegistry.getAllSettings()) {
+            settings.add(new SettingIcon<>(setting, startSlot++));
+
+            if (startSlot > 25) {
+                pages.put(currentPage, settings);
+                settings = new ArrayList<>();
+
+                currentPage++;
+                startSlot = 19;
+            }
+        }
+
+        if (!settings.isEmpty()) {
+            pages.put(currentPage, settings);
+        }
+
+        return pages;
+    }
 
     @Getter
     @ConfigSerializable

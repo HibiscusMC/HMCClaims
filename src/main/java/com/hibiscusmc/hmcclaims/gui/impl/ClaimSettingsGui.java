@@ -58,7 +58,10 @@ public class ClaimSettingsGui implements BaseGui {
 
     private List<GuiTemplate.Icon> icons;
 
-    private List<ClaimSettingsConfig.SettingIcon<?>> settingIcons;
+    private GuiTemplate.SimpleIcon previousPage;
+    private GuiTemplate.SimpleIcon nextPage;
+
+    private Map<Integer, List<ClaimSettingsConfig.SettingIcon<?>>> settingPages;
 
     @Override
     public void loadConfig() {
@@ -80,12 +83,16 @@ public class ClaimSettingsGui implements BaseGui {
 
         icons = config.extraIcons().values().stream().toList();
 
-        settingIcons = config.settings();
+        previousPage = config.pages().get("previous-page");
+        nextPage = config.pages().get("next-page");
+
+        settingPages = config.settingPages();
     }
 
     @Override
     public void open(@NotNull Player player, Object... args) {
         Claim claim = (Claim) args[0];
+        int currentPage = args.length > 1 ? (int) args[1] : 1;
 
         Gui gui = Gui.gui()
                 .title(TextUtil.parse(title, Map.of(
@@ -102,13 +109,13 @@ public class ClaimSettingsGui implements BaseGui {
         });
 
         scheduler.scheduleAsync(() -> {
-            buildIcons(player, gui, claim);
+            buildIcons(player, gui, claim, currentPage);
 
             scheduler.schedule(() -> gui.open(player));
         });
     }
 
-    private void buildIcons(@NotNull Player player, @NotNull Gui gui, @NotNull Claim claim) {
+    private void buildIcons(@NotNull Player player, @NotNull Gui gui, @NotNull Claim claim, int currentPage) {
         for (GuiTemplate.Icon icon : icons) {
             gui.setItem(icon.slot(), new GuiItem(icon.item(), action -> {
                 for (Action iconAction : action.isLeftClick() ? icon.leftClickActions() : icon.rightClickActions()) {
@@ -133,9 +140,21 @@ public class ClaimSettingsGui implements BaseGui {
                 guis.get(ClaimListGui.class).open(player)
         ));
 
-        for (ClaimSettingsConfig.SettingIcon<?> settingIcon : settingIcons) {
+        for (ClaimSettingsConfig.SettingIcon<?> settingIcon : settingPages.getOrDefault(currentPage, List.of())) {
             buildSetting(player, gui, claim, settingIcon);
         }
+
+        gui.setItem(previousPage.slot(), new GuiItem(previousPage.item(), action -> {
+            if (currentPage > 1) {
+                open(player, claim, currentPage - 1);
+            }
+        }));
+
+        gui.setItem(nextPage.slot(), new GuiItem(nextPage.item(), action -> {
+            if (currentPage < settingPages.size()) {
+                open(player, claim, currentPage + 1);
+            }
+        }));
     }
 
     private void buildSetting(@NotNull Player player, @NotNull Gui gui, @NotNull Claim claim, @NotNull ClaimSettingsConfig.SettingIcon<?> settingIcon) {
