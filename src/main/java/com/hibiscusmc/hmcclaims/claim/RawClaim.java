@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.claim;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.server.players.NameAndId;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,6 +23,19 @@ public record RawClaim(
         byte[] rolesBytes, byte[] membersBytes, byte[] settingsBytes,
         boolean locked, Instant claimedTimestamp
 ) {
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RawClaim that = (RawClaim) o;
+        return claimId.equals(that.claimId);
+    }
+
+    @Override
+    public int hashCode() {
+        return claimId.hashCode();
+    }
 
     /**
      * Inflates this raw database snapshot into a {@link Claim} instance.
@@ -51,5 +65,11 @@ public record RawClaim(
         inflatedSubClaims.forEach(claim::addSubClaim);
 
         return claim;
+    }
+
+    public record CacheHolder(
+            Long2ObjectMap<Set<RawClaim>> chunks,
+            Map<UUID, Set<RawClaim>> players
+    ) {
     }
 }

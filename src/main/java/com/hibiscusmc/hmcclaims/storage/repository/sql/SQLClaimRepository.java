@@ -82,9 +82,10 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<Long2ObjectMap<Set<RawClaim>>> getAllClaims(String worldName) {
+    public @NotNull CompletableFuture<RawClaim.CacheHolder> getAllClaims(String worldName) {
         return CompletableFuture.supplyAsync(() -> {
             Long2ObjectMap<Set<RawClaim>> chunks = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+            Map<UUID, Set<RawClaim>> players = new ConcurrentHashMap<>();
 
             try (Connection con = storage.getConnection()) {
                 Map<UUID, Set<RawClaim>> subClaims = new HashMap<>();
@@ -119,6 +120,9 @@ public class SQLClaimRepository implements ClaimRepository {
 
                             RawClaim claim = buildRawClaim(rs, subClaims.getOrDefault(claimId, Set.of()));
 
+                            players.computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet())
+                                    .add(claim);
+
                             for (int cx = minChunkX; cx <= maxChunkX; cx++) {
                                 for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
                                     long chunkKey = ChunkUtil.getChunkKey(cx, cz);
@@ -131,7 +135,7 @@ public class SQLClaimRepository implements ClaimRepository {
                     }
                 }
 
-                return chunks;
+                return new RawClaim.CacheHolder(chunks, players);
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to load all claims", e);
             }

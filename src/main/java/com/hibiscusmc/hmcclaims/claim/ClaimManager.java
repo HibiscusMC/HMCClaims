@@ -153,7 +153,7 @@ public class ClaimManager {
         String world = region.worldName();
 
         playerClaims.computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet()).add(claim);
-        worldClaims.computeIfAbsent(world, k -> ConcurrentHashMap.newKeySet());
+        worldClaims.computeIfAbsent(world, k -> ConcurrentHashMap.newKeySet()).add(claim);
         claims.put(claim.claimId(), claim);
 
         Long2ObjectMap<Set<Claim>> chunkMap = worldChunkMaps.computeIfAbsent(world, k ->

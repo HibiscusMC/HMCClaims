@@ -2,11 +2,9 @@ package com.hibiscusmc.hmcclaims.storage.repository;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.RawClaim;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -20,7 +18,7 @@ public interface ClaimRepository {
      * Loads all claims from the database.
      */
     @NotNull
-    CompletableFuture<Long2ObjectMap<Set<RawClaim>>> getAllClaims(String worldName);
+    CompletableFuture<RawClaim.CacheHolder> getAllClaims(String worldName);
 
     /**
      * Retrieves multiple claims with all its relational data (members, roles, etc.).
