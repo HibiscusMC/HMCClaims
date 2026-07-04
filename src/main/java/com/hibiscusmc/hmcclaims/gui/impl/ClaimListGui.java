@@ -308,9 +308,8 @@ public class ClaimListGui implements BaseGui {
 
         for (String line : icon.lore()) {
             if (line.toLowerCase().contains("<member_list>")) {
-                ClaimMember owner = claim.owner();
                 for (ClaimMember member : sortedList) {
-                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(owner.uuid())))));
+                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(claim.owner())))));
                 }
 
                 if (totalMembers > sortedList.size()) {

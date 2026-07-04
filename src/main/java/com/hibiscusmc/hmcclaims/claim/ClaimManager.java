@@ -6,6 +6,9 @@ import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.Getter;
@@ -18,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -38,7 +42,14 @@ public class ClaimManager {
      * Spatial index: World Name -> Chunk Key (Long) -> List of Claims in that chunk.
      */
     @Getter
-    private final Map<String, Map<Long, Set<Claim>>> worldChunkMaps
+    private final Map<String, Long2ObjectMap<Set<Claim>>> worldChunkMaps
+            = new ConcurrentHashMap<>();
+
+    /**
+     * Maps claims inside a world
+     */
+    @Getter
+    private final Map<String, Set<Claim>> worldClaims
             = new ConcurrentHashMap<>();
 
     /**
@@ -50,14 +61,50 @@ public class ClaimManager {
     /**
      * Maps claim UUIDs for quick claim lookups.
      */
+    @Getter
     private final Map<UUID, Claim> claims
             = new ConcurrentHashMap<>();
+
+    /**
+     * Set of claims that are still loading and players shouldn't be able to
+     * interact in.
+     */
+    private final Set<UUID> pendingClaims
+            = ConcurrentHashMap.newKeySet();
 
     @Inject
     private ConfigHolder<DefaultRoles> rolesHolder;
 
     @Inject
     private StorageHolder storageHolder;
+
+    /**
+     * Checks if the claim is still loading..
+     *
+     * @param claimId The id of the claim to check.
+     * @return {@code true} if the claim is still loading, {@code false} otherwise.
+     */
+    public boolean isClaimLoading(UUID claimId) {
+        return pendingClaims.contains(claimId);
+    }
+
+    /**
+     * Adds a claim to the pending set.
+     *
+     * @param claimId The id of the claim to check.
+     */
+    public void addPendingClaim(UUID claimId) {
+        pendingClaims.add(claimId);
+    }
+
+    /**
+     * Removes a claim from the pending set.
+     *
+     * @param claimId The id of the claim to check.
+     */
+    public void removePendingClaim(UUID claimId) {
+        pendingClaims.remove(claimId);
+    }
 
     /**
      * Creates a new claim, registers it in the cache, and updates user claim blocks.
@@ -79,7 +126,7 @@ public class ClaimManager {
                 main,
                 new NameAndId(player.getUniqueId(), player.getName()),
                 region,
-                rolesHolder.get().defaultRoles(),
+                new ArrayList<>(rolesHolder.get().defaultRoles()),
                 (int) totalMainClaims + 1
         );
 
@@ -102,13 +149,16 @@ public class ClaimManager {
      * @param claim The claim to cache.
      */
     public void addClaimToCache(@NotNull Claim claim) {
-        playerClaims.computeIfAbsent(claim.owner().uuid(), k -> ConcurrentHashMap.newKeySet()).add(claim);
-        claims.put(claim.claimId(), claim);
-
         ClaimRegion region = claim.region();
         String world = region.worldName();
 
-        Map<Long, Set<Claim>> chunkMap = worldChunkMaps.computeIfAbsent(world, k -> new ConcurrentHashMap<>());
+        playerClaims.computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet()).add(claim);
+        worldClaims.computeIfAbsent(world, k -> ConcurrentHashMap.newKeySet());
+        claims.put(claim.claimId(), claim);
+
+        Long2ObjectMap<Set<Claim>> chunkMap = worldChunkMaps.computeIfAbsent(world, k ->
+                Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>())
+        );
 
         int minX = region.minX() >> 4;
         int maxX = region.maxX() >> 4;
@@ -128,6 +178,66 @@ public class ClaimManager {
         }
 
         claim.chunks(chunks);
+    }
+
+    /**
+     * Removes a claim from both the player-lookup and spatial-lookup caches.
+     *
+     * @param claim The claim to remove from cache.
+     */
+    public void removeClaimFromCache(@NotNull Claim claim) {
+        ClaimRegion region = claim.region();
+        String world = region.worldName();
+
+        Set<Claim> userClaims = playerClaims.get(claim.owner());
+        if (userClaims != null) {
+            userClaims.remove(claim);
+
+            if (userClaims.isEmpty()) {
+                playerClaims.remove(claim.owner());
+            }
+        }
+
+        Set<Claim> wordClaimSet = worldClaims.get(world);
+        if (wordClaimSet != null) {
+            wordClaimSet.remove(claim);
+
+            if (wordClaimSet.isEmpty()) {
+                worldClaims.remove(world);
+            }
+        }
+
+        claims.remove(claim.claimId());
+
+        Long2ObjectMap<Set<Claim>> chunkMap = worldChunkMaps.get(world);
+
+        if (chunkMap != null) {
+            int minX = region.minX() >> 4;
+            int maxX = region.maxX() >> 4;
+            int minZ = region.minZ() >> 4;
+            int maxZ = region.maxZ() >> 4;
+
+            for (int cx = minX; cx <= maxX; cx++) {
+                for (int cz = minZ; cz <= maxZ; cz++) {
+                    long key = ChunkUtil.getChunkKey(cx, cz);
+
+                    Set<Claim> claimsInChunk = chunkMap.get(key);
+                    if (claimsInChunk != null) {
+                        claimsInChunk.remove(claim);
+
+                        if (claimsInChunk.isEmpty()) {
+                            chunkMap.remove(key);
+                        }
+                    }
+                }
+            }
+
+            if (chunkMap.isEmpty()) {
+                worldChunkMaps.remove(world);
+            }
+        }
+
+        claim.chunks(new LongArraySet());
     }
 
     /**
@@ -200,42 +310,12 @@ public class ClaimManager {
     }
 
     /**
-     * Deletes a claim.
+     * Deletes a claim and removes it from cache
      *
      * @param claim the claim to delete
      */
     public void deleteClaim(@NotNull Claim claim) {
-        Set<Claim> playerClaims = this.playerClaims.get(claim.owner().uuid());
-        if (playerClaims != null) {
-            playerClaims.remove(claim);
-
-            if (playerClaims.isEmpty()) {
-                this.playerClaims.remove(claim.owner().uuid());
-            }
-        }
-
-        Map<Long, Set<Claim>> chunkMap = worldChunkMaps.get(claim.region().worldName());
-        if (chunkMap == null) {
-            return;
-        }
-
-        ClaimRegion region = claim.region();
-        for (int cx = region.minX() >> 4; cx <= region.maxX() >> 4; cx++) {
-            for (int cz = region.minZ() >> 4; cz <= region.maxZ() >> 4; cz++) {
-                long key = ChunkUtil.getChunkKey(cx, cz);
-                Set<Claim> list = chunkMap.get(key);
-
-                if (list != null) {
-                    list.remove(claim);
-
-                    if (list.isEmpty()) {
-                        chunkMap.remove(key);
-                    }
-                }
-            }
-        }
-
-        claims.remove(claim.claimId());
+        removeClaimFromCache(claim);
 
         Storage storage = storageHolder.get();
 
@@ -323,7 +403,7 @@ public class ClaimManager {
                         }
                     }
 
-                    if (checkForSub && existingClaim.owner().uuid().equals(playerId) && existingClaim.main() == null) {
+                    if (checkForSub && existingClaim.owner().equals(playerId) && existingClaim.main() == null) {
                         continue;
                     }
 

@@ -1,17 +1,11 @@
 package com.hibiscusmc.hmcclaims.storage.repository;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimMember;
-import com.hibiscusmc.hmcclaims.claim.permission.Permission;
-import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
-import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
-import com.hibiscusmc.hmcclaims.claim.setting.Setting;
-import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import com.hibiscusmc.hmcclaims.claim.RawClaim;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -20,36 +14,25 @@ import java.util.concurrent.CompletableFuture;
  * Handles complex persistence and relational data mapping for Claims.
  */
 public interface ClaimRepository {
+    int SCHEMA_VERSION = 1;
 
     /**
      * Loads all claims from the database.
      */
     @NotNull
-    CompletableFuture<List<Claim>> getAllClaims(long chunkKey);
+    CompletableFuture<Long2ObjectMap<Set<RawClaim>>> getAllClaims(String worldName);
 
     /**
-     * Loads all sub-claims from the database.
+     * Retrieves multiple claims with all its relational data (members, roles, etc.).
      */
     @NotNull
-    CompletableFuture<List<Claim>> getAllSubClaims(@NotNull Claim mainClaim);
+    CompletableFuture<List<RawClaim>> getClaims(@NotNull List<UUID> claimIds);
 
     /**
      * Retrieves a single claim with all its relational data (members, roles, etc.).
      */
     @NotNull
-    CompletableFuture<Claim> getClaim(@NotNull UUID claimUuid);
-
-    /**
-     * Retrieves the members of the specified claim.
-     */
-    @NotNull
-    CompletableFuture<List<ClaimMember>> getClaimMembers(@NotNull Claim claim);
-
-    /**
-     * Retrieves the permissions of the specified member
-     */
-    @NotNull
-    CompletableFuture<Set<PermissionHolder>> getClaimMemberPermissions(@NotNull UUID claimId, @NotNull UUID playerId);
+    CompletableFuture<RawClaim> getClaim(@NotNull UUID claimId);
 
     /**
      * Persists the core claim data to the {@code claims} table.
@@ -58,56 +41,26 @@ public interface ClaimRepository {
     CompletableFuture<Void> saveClaim(@NotNull Claim claim);
 
     /**
-     * Persists the claim chunks to the {@code claims} table.
+     * Syncs all members of a claim.
      */
     @NotNull
-    CompletableFuture<Void> saveClaimChunks(@NotNull Claim claim);
+    CompletableFuture<Void> saveMembers(@NotNull Claim claim);
 
     /**
-     * Syncs the members of a claim.
+     * Syncs all roles of a claim.
      */
     @NotNull
-    CompletableFuture<Void> saveMembers(@NotNull UUID claimUuid, @NotNull Collection<ClaimMember> members);
-
-    /**
-     * Syncs a member of a claim.
-     */
-    @NotNull
-    CompletableFuture<Void> saveMember(@NotNull UUID claimUuid, @NotNull ClaimMember member);
-
-    /**
-     * Syncs the permission overrides for a specific player within a claim.
-     */
-    @NotNull
-    CompletableFuture<Void> saveMemberPermissions(@NotNull UUID claimUuid, @NotNull UUID playerUuid, @NotNull Set<PermissionHolder> permissions);
-
-    /**
-     * Persists the custom roles defined within a specific claim.
-     */
-    @NotNull
-    CompletableFuture<Void> saveRoles(@NotNull UUID claimUuid, @NotNull List<ClaimRole> roles);
-
-    /**
-     * Syncs the permission for a specific role within a claim.
-     */
-    @NotNull
-    CompletableFuture<Void> saveRolePermissions(@NotNull UUID playerUuid, @NotNull Set<Permission> permissions);
+    CompletableFuture<Void> saveRoles(@NotNull Claim claim);
 
     /**
      * Updates the custom settings (key-value pairs) for a specific claim.
      */
     @NotNull
-    CompletableFuture<Void> saveSettings(@NotNull UUID claimUuid, @NotNull Map<Setting<?>, SettingHolder<?>> settings);
+    CompletableFuture<Void> saveSettings(@NotNull Claim claim);
 
     /**
      * Deletes a claim.
      */
     @NotNull
-    CompletableFuture<Void> deleteClaim(@NotNull UUID claimUuid);
-
-    /**
-     * Deletes a member from a claim.
-     */
-    @NotNull
-    CompletableFuture<Void> deleteMember(@NotNull UUID claimUuid, @NotNull UUID memberUuid);
+    CompletableFuture<Void> deleteClaim(@NotNull UUID claimId);
 }

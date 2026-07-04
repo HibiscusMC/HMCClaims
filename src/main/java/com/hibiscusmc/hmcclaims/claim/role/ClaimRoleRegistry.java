@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,18 +50,28 @@ public class ClaimRoleRegistry {
             throw new IllegalArgumentException("Registry requires at least an Owner role, a Default role and an Everyone role.");
         }
 
-        roles.forEach(role -> {
-            if (role.id() == null) {
-                role.id(UUID.randomUUID());
-            }
-        });
+        List<ClaimRole> clonedRoles = new ArrayList<>(roles)
+                .stream()
+                .map(role -> {
+                    ClaimRole mappedRole = role;
 
-        this.ownerRole = roles.getFirst();
-        this.defaultRole = roles.get(roles.size() - 2);
-        this.everyoneRole = roles.getLast();
+                    if (mappedRole.id() == null) {
+                        mappedRole = new ClaimRole(UUID.randomUUID(), role.name(), role.permissions());
+                    }
+
+                    mappedRole.position(roles.indexOf(role));
+
+                    return mappedRole;
+                })
+                .sorted(Comparator.comparingInt(ClaimRole::position))
+                .toList();
+
+        this.ownerRole = clonedRoles.getFirst();
+        this.defaultRole = clonedRoles.get(clonedRoles.size() - 2);
+        this.everyoneRole = clonedRoles.getLast();
 
         // Adds all roles between the first and last elements
-        this.roles.addAll(roles.subList(1, roles.size() - 2));
+        this.roles.addAll(clonedRoles.subList(1, clonedRoles.size() - 2));
     }
 
     /**

@@ -105,14 +105,14 @@ public class PlayerSelectionListener implements Listener {
 
                 for (Claim claim : claims) {
                     if (claims.size() == 1 || claim.main() != null) {
-                        Player owner = Bukkit.getPlayer(claim.owner().uuid());
+                        Player owner = Bukkit.getPlayer(claim.owner());
                         text.send(player, messages.claims().ownedBy(), Map.of(
                                 "name", claim.name(),
                                 "owner", owner == null ? "unknown" : owner.getName()
                         ));
                     }
 
-                    if (claim.owner().uuid().equals(player.getUniqueId())) {
+                    if (claim.owner().equals(player.getUniqueId())) {
                         marker.mark(player, claim.region().getLCornerBlocks(), claim.main() != null ? MarkType.INSPECT_SUB : MarkType.INSPECT, TimeUnit.SECONDS.toMillis(5));
                     } else {
                         marker.mark(player, claim.region().getLCornerBlocks(), claim.main() != null ? MarkType.INSPECT_SUB_OTHER : MarkType.INSPECT_OTHER, TimeUnit.SECONDS.toMillis(5));

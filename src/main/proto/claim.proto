@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package claim;
+
+option java_multiple_files = true;
+option java_package = "com.hibiscusmc.hmcclaims.proto";
+
+message RolesMessage {
+  map<string, RoleData> roles = 1;
+}
+
+message RoleData {
+  optional string name = 1;
+  optional int32 position = 2;
+
+  repeated string permissions = 3;
+}
+
+message MembersMessage {
+  map<string, MemberData> members = 1;
+}
+
+message MemberData {
+  optional bytes role_id = 1;
+  optional bool banned = 2;
+  optional int64 join_date = 3;
+
+  map<string, bool> permissions = 4;
+}
+
+message SettingsMessage {
+  map<string, string> settings = 1;
+}

@@ -105,7 +105,7 @@ public class ClaimSettingsGui implements BaseGui {
         gui.setCloseGuiAction(action -> {
             Storage storage = storageHolder.get();
 
-            storage.claims().saveSettings(claim.claimId(), claim.settings());
+            storage.claims().saveSettings(claim);
         });
 
         scheduler.scheduleAsync(() -> {

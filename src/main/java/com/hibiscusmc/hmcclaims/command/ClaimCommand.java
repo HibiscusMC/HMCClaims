@@ -55,7 +55,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+        if (!sender.getUniqueId().equals(claim.owner())) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -93,7 +93,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+        if (!sender.getUniqueId().equals(claim.owner())) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -122,7 +122,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+        if (!sender.getUniqueId().equals(claim.owner())) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -141,7 +141,7 @@ public class ClaimCommand implements CommandClass {
 
         Storage storage = storageHolder.get();
         storage.claims()
-                .saveMember(claim.claimId(), added);
+                .saveMembers(claim);
 
         text.send(sender, messages.claims().memberAdded(), Map.of(
                 "player_head", "<head:" + playerName + ">",
@@ -163,7 +163,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner().uuid())) {
+        if (!sender.getUniqueId().equals(claim.owner())) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -182,7 +182,7 @@ public class ClaimCommand implements CommandClass {
 
         Storage storage = storageHolder.get();
         storage.claims()
-                .deleteMember(claim.claimId(), player.getUniqueId());
+                .saveMembers(claim);
 
         text.send(sender, messages.claims().memberRemoved(), Map.of(
                 "player_head", "<head:" + playerName + ">",

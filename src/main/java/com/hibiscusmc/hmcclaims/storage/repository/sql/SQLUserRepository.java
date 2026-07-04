@@ -4,7 +4,7 @@ import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.impl.remote.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 import com.hibiscusmc.hmcclaims.user.User;
-import com.hibiscusmc.hmcclaims.util.SQLUtil;
+import com.hibiscusmc.hmcclaims.util.ByteUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -57,7 +57,7 @@ public class SQLUserRepository implements UserRepository {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.getUserQuery)) {
-                ps.setBytes(1, SQLUtil.UUIDtoBytes(uuid));
+                ps.setBytes(1, ByteUtil.UUIDtoBytes(uuid));
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
@@ -97,7 +97,7 @@ public class SQLUserRepository implements UserRepository {
         return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveUserQuery)) {
-                ps.setBytes(1, SQLUtil.UUIDtoBytes(user.uuid()));
+                ps.setBytes(1, ByteUtil.UUIDtoBytes(user.uuid()));
                 ps.setString(2, user.lastKnownName());
                 ps.setLong(3, user.claimBlocks());
                 ps.setTimestamp(4, Timestamp.from(user.lastOnline()));
@@ -119,7 +119,7 @@ public class SQLUserRepository implements UserRepository {
 
                 try (PreparedStatement ps = con.prepareStatement(this.saveUserQuery)) {
                     for (User user : users) {
-                        ps.setBytes(1, SQLUtil.UUIDtoBytes(user.uuid()));
+                        ps.setBytes(1, ByteUtil.UUIDtoBytes(user.uuid()));
                         ps.setString(2, user.lastKnownName());
                         ps.setLong(3, user.claimBlocks());
                         ps.setTimestamp(4, Timestamp.from(user.lastOnline()));
@@ -145,7 +145,7 @@ public class SQLUserRepository implements UserRepository {
      * @throws SQLException If a required column is missing or data conversion fails.
      */
     private User buildUser(ResultSet rs) throws SQLException {
-        UUID uuid = SQLUtil.bytesToUUID(rs.getBytes("uuid"));
+        UUID uuid = ByteUtil.bytesToUUID(rs.getBytes("uuid"));
         User user = new User(
                 uuid,
                 rs.getString("last_known_name"),

@@ -14,4 +14,21 @@ public class ChunkUtil {
     public static long getChunkKey(int cx, int cz) {
         return ((long) cx << 32) | (cz & 0xFFFFFFFFL);
     }
+
+    /**
+     * Unpacks a 64-bit {@link Long} chunk key back into its original 32-bit x and z coordinates.
+     *
+     * @param key the packed 64-bit chunk key
+     * @return a {@link ChunkHolder} containing the original chunk coordinates
+     */
+    @Contract(pure = true)
+    public static ChunkHolder fromChunkKey(long key) {
+        int cx = (int) (key >> 32);
+        int cz = (int) key;
+
+        return new ChunkHolder(cx, cz);
+    }
+
+    public record ChunkHolder(int x, int z) {
+    }
 }

@@ -149,7 +149,7 @@ public class ClaimManageGui implements BaseGui {
 
             AtomicReference<Runnable> inputRunnable = new AtomicReference<>();
             InventoryView inv = player.getOpenInventory();
-            UUID oldOwnerId = claim.owner().uuid();
+            UUID oldOwnerId = claim.owner();
 
             inputRunnable.set(() -> {
                 Input<NameAndId> input = inputManager.create(player, NameAndId.class);
@@ -272,7 +272,7 @@ public class ClaimManageGui implements BaseGui {
                             ClaimMember claimMember = claim.getMember(member.id())
                                     .orElse(null);
 
-                            if (claimMember != null && !claimMember.uuid().equals(claim.owner().uuid()) && !claimMember.banned()) {
+                            if (claimMember != null && !claimMember.uuid().equals(claim.owner()) && !claimMember.banned()) {
                                 text.send(player, messages.claims().memberBanned(), Map.of(
                                         "name", member.name(),
                                         "player_head", "<head:" + member.name() + ">",

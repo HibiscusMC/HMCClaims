@@ -83,7 +83,7 @@ public class SelectionManager {
                     text.send(player, messages.claims().selecting().resizingWrongClaim());
                     return;
                 }
-            } else if (!claim.owner().uuid().equals(player.getUniqueId())) {
+            } else if (!claim.owner().equals(player.getUniqueId())) {
                 text.send(player, messages.claims().selecting().landAlreadyClaimed());
                 return;
             }

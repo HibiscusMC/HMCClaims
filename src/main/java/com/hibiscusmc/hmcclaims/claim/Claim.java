@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.players.NameAndId;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +42,9 @@ public class Claim {
      */
     private final UUID claimId;
 
+    @Setter
+    private String name;
+
     /**
      * The spatial bounds defining where this claim exists in the world.
      */
@@ -54,13 +58,16 @@ public class Claim {
     private LongSet chunks;
 
     /**
-     * The current owner of the claim.
+     * The id of the current owner of the claim.
      */
-    private ClaimMember owner;
+    @Setter
+    private UUID owner;
 
     /**
      * The local authority for managing roles and permissions within this claim.
      */
+    @Setter
+    @MonotonicNonNull
     private ClaimRoleRegistry roleRegistry;
 
     private final Map<Setting<?>, SettingHolder<?>> settings = new HashMap<>();
@@ -78,17 +85,14 @@ public class Claim {
     @Nullable
     private final Claim main;
 
-    private final Instant claimedTimestamp;
-
-    @Setter
-    private String name;
-
     /**
      * If {@code true}, players without bypass permissions cannot interact
      * regardless of their individual roles.
      */
     @Setter
     private boolean locked;
+
+    private final Instant claimedTimestamp;
 
     /**
      * Creates a new Claim and initializes the owner with full permissions.
@@ -99,23 +103,27 @@ public class Claim {
      * @param region  The physical boundaries of the claim.
      * @param roles   The initial role hierarchy (passed to {@link ClaimRoleRegistry}).
      */
-    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @NotNull List<ClaimRole> roles, @Nullable Instant claimedTimestamp) {
+    public Claim(@NotNull UUID claimId, @NotNull String name, @Nullable Claim main, @NotNull NameAndId owner, @NotNull ClaimRegion region, @Nullable List<ClaimRole> roles, @Nullable Instant claimedTimestamp) {
         this.claimId = claimId;
         this.region = region;
         this.main = main;
-        this.roleRegistry = new ClaimRoleRegistry(roles);
 
         this.name = name;
+        this.owner = owner.id();
 
-        UUID uuid = owner.id();
-        this.owner = new ClaimMember(
-                uuid,
-                this,
-                owner.name(),
-                roleRegistry.ownerRole(),
-                new HashSet<>()
-        );
-        addMember(this.owner);
+        if (roles != null) {
+            this.roleRegistry = new ClaimRoleRegistry(roles);
+
+            if (!owner.name().isEmpty()) {
+                addMember(new ClaimMember(
+                        owner.id(),
+                        this,
+                        owner.name(),
+                        roleRegistry.ownerRole(),
+                        new HashSet<>()
+                ));
+            }
+        }
 
         this.locked = false;
 
@@ -124,8 +132,6 @@ public class Claim {
         } else {
             this.claimedTimestamp = Instant.now();
         }
-
-
     }
 
     /**
@@ -182,11 +188,11 @@ public class Claim {
         String name = newOwner.name();
         UUID id = newOwner.id();
 
-        if (id.equals(owner.uuid())) {
+        if (id.equals(owner)) {
             return false;
         }
 
-        ClaimMember oldOwner = members.get(owner.uuid());
+        ClaimMember oldOwner = members.get(owner);
         ClaimMember member;
 
         if (members.containsKey(id)) {
@@ -210,7 +216,7 @@ public class Claim {
             members.put(id, member);
         }
 
-        owner = member;
+        owner = member.uuid();
         oldOwner.role(roleRegistry.defaultRole());
         oldOwner.permissions(new HashSet<>());
 
@@ -265,6 +271,14 @@ public class Claim {
         return members.values().stream()
                 .filter(ClaimMember::banned)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * @return An unmodifiable view of both banned and non banned members.
+     */
+    @NotNull
+    public Set<ClaimMember> allMembers() {
+        return Set.copyOf(members.values());
     }
 
     /**
@@ -354,5 +368,36 @@ public class Claim {
      */
     public void removeSubClaim(@NotNull Claim claim) {
         subClaims.remove(claim);
+    }
+
+    /**
+     * Deflates this {@link Claim} instance into a lightweight, data-only {@link RawClaim} snapshot.
+     *
+     * @return A compiled {@link RawClaim} payload capturing the current data state.
+     */
+    @NotNull
+    public RawClaim deflate() {
+        byte[] serializedRoles = ClaimSerializer.serialize(roleRegistry);
+        byte[] serializedMembers = ClaimSerializer.serialize(allMembers());
+        byte[] serializedSettings = ClaimSerializer.serialize(settings);
+
+        String worldName = this.region.worldName();
+        int minX = this.region.minX();
+        int maxX = this.region.maxX();
+        int minZ = this.region.minZ();
+        int maxZ = this.region.maxZ();
+
+        UUID parentId = this.main != null ? this.main.claimId() : null;
+        Set<RawClaim> deflatedSubClaims = new HashSet<>();
+        for (Claim subClaim : subClaims) {
+            deflatedSubClaims.add(subClaim.deflate());
+        }
+
+        return new RawClaim(
+                this.claimId, this.owner, this.name, parentId, deflatedSubClaims,
+                worldName, minX, maxX, minZ, maxZ,
+                serializedRoles, serializedMembers, serializedSettings,
+                this.locked, this.claimedTimestamp
+        );
     }
 }

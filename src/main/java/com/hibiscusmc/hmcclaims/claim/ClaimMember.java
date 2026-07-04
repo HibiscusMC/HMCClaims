@@ -102,7 +102,7 @@ public class ClaimMember {
      * @return {@code true} if this member has the permission
      */
     public boolean hasPermission(Permission permission) {
-        if (claim.owner().uuid.equals(this.uuid)) {
+        if (claim.owner().equals(this.uuid)) {
             return true;
         }
 

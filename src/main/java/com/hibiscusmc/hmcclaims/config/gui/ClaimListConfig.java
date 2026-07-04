@@ -22,8 +22,7 @@ public class ClaimListConfig extends GuiTemplate {
 
     @Setting("valid-slots")
     private List<RangeUtil> validSlots = List.of(
-            new RangeUtil(0, 0),
-            new RangeUtil(9, rows * 9)
+            new RangeUtil(0, 35)
     );
 
     @Setting("claims-icon")
@@ -80,7 +79,7 @@ public class ClaimListConfig extends GuiTemplate {
                 "<white>Right-Click <gray>to quick-rename your claim"
         );
 
-        private String owner = "<b><name></b> <sprite:blocks:item/nether_star>";
+        private String owner = "<b><name></b> <sprite:\"minecraft:items\":item/nether_star>";
 
         private String member = "<name>";
 

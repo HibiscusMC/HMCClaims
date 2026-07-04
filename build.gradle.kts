@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("com.gradleup.shadow") version "9.1.0"
+    id("com.google.protobuf") version "0.10.0"
     id("xyz.jpenilla.run-paper") version "3.0.2"
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
@@ -22,6 +23,9 @@ repositories {
 dependencies {
     // PaperMC
     paperweight.paperDevBundle("$serverVersion.$serverSnapshot")
+
+    // Protobuf
+    implementation("com.google.protobuf:protobuf-java:4.35.1")
 
     // Inject
     implementation("team.unnamed:inject:2.0.1")
@@ -60,6 +64,31 @@ java {
     targetCompatibility = JavaVersion.VERSION_25
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.35.1"
+    }
+
+    generateProtoTasks {
+        all().forEach {
+            it.builtins {
+                java {}
+            }
+        }
+    }
+}
+
+tasks.named("extractIncludeProto") { enabled = false }
+tasks.named("extractProto") { enabled = false }
+
+sourceSets {
+    main {
+        java {
+            srcDirs("build/generated/source/proto/main/java")
+        }
+    }
+}
+
 tasks {
     shadowJar {
         archiveClassifier.set(fetchCommit())
@@ -68,6 +97,7 @@ tasks {
 
         relocate("dev.triumphteam.gui", "$main.gui")
         relocate("team.unnamed.inject", "$main.inject")
+        relocate("com.google.protobuf", "$main.protobuf")
         relocate("team.unnamed.commandflow", "$main.commandflow")
 
         archiveFileName.set("HMCClaims-${version}.jar")
