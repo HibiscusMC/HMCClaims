@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ClaimLifecycleListener implements Listener {
@@ -76,12 +77,16 @@ public class ClaimLifecycleListener implements Listener {
                 while (iterator.hasNext() && checked++ < BATCH_SIZE) {
                     Claim claim = iterator.next();
 
+                    if (System.currentTimeMillis() - claim.ttl() < TimeUnit.MINUTES.toMillis(1)) {
+                        continue;
+                    }
+
                     if (claimsUnloading.contains(claim.claimId())) {
                         continue;
                     }
 
-                    OfflinePlayer owner = Bukkit.getOfflinePlayer(claim.owner());
-                    if (owner.isOnline()) {
+                    Player owner = Bukkit.getPlayer(claim.owner());
+                    if (owner != null) {
                         continue;
                     }
 
