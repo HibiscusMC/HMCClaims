@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.claim.role;
 
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import lombok.Getter;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +43,7 @@ public class ClaimRoleRegistry {
      *
      * @param roles the list of roles to initialize the registry with;
      *              must contain at least 3 elements (Owner, Default and Everyone).
-     * @throws IllegalArgumentException if the roles list has fewer than 2 elements.
+     * @throws IllegalArgumentException if the roles list has fewer than 3 elements.
      * @throws NullPointerException     if the roles list is null.
      */
     public ClaimRoleRegistry(@NotNull List<ClaimRole> roles) {
@@ -144,6 +145,43 @@ public class ClaimRoleRegistry {
         }
 
         Collections.swap(roles, indexA, indexB);
+    }
+
+    /**
+     * Retrieves a list of claim roles that a specific role is permitted to manage.
+     * <p>
+     * The hierarchy dictates that a role can only manage roles positioned hierarchically
+     * above it (which corresponds to a higher index in the internal roles tracking, i.e.,
+     * closer to the default/everyone tiers). The {@link #ownerRole} bypasses authority checks
+     * and can manage all intermediate roles, while the {@link #defaultRole} and {@link #everyoneRole}
+     * are unauthorized to manage any roles.
+     * </p>
+     *
+     * @param role the {@link ClaimRole} whose management capabilities are being evaluated
+     * @return an unmodifiable {@link List} of {@link ClaimRole}s that the given role can manage;
+     * an empty list if the role lacks permission, is a static lowest-tier role, or no higher
+     * manageable roles exist.
+     */
+    @Contract(pure = true)
+    public List<ClaimRole> manageableRoles(ClaimRole role) {
+        if (role.equals(ownerRole)) {
+            return Collections.unmodifiableList(roles);
+        }
+
+        if (role.equals(defaultRole) || role.equals(everyoneRole) || !role.hasPermission(Permission.MANAGE_MEMBER_ROLES)) {
+            return Collections.emptyList();
+        }
+
+        int roleIndex = roles.indexOf(role);
+        if (roleIndex == -1) {
+            return Collections.emptyList();
+        }
+
+        // order (from lowest to highest)
+        // owner -> [middle roles] -> default -> everyone
+        return roles.stream()
+                .filter(other -> roles.indexOf(other) > roleIndex)
+                .toList();
     }
 
     /**
