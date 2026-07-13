@@ -102,7 +102,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
         private boolean hasModifyIcon = true;
 
         @Setting("modify-icon")
-        private BaseSettingIcon modifyIcon;
+        private BooleanSettingIcon modifyIcon;
 
         public SettingIcon() {
         }
@@ -119,17 +119,11 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
             int nextSlot = slot + 9;
 
-            if (setting.defaultValue() instanceof Boolean) {
-                modifyIcon = new BooleanSettingIcon(
-                        nextSlot,
-                        new DynamicIconWithStack(ItemStack.of(Material.LIME_DYE), setting.displayName(), buildLore(lore, "<green>Enabled")),
-                        new DynamicIconWithStack(ItemStack.of(Material.GRAY_DYE), setting.displayName(), buildLore(lore, "<red>Disabled"))
-                );
-            } else {
-                modifyIcon = new InputSettingIcon(
-                        nextSlot,
-                        new DynamicIconWithStack(ItemStack.of(Material.FEATHER), "Input", buildLore(lore, "<setting_value>")));
-            }
+            modifyIcon = new BooleanSettingIcon(
+                    nextSlot,
+                    new DynamicIconWithStack(ItemStack.of(Material.LIME_DYE), setting.displayName(), buildLore(lore, setting.defaultValue() instanceof Boolean ? "<green>Enabled" : "<white><setting_value>")),
+                    new DynamicIconWithStack(ItemStack.of(Material.GRAY_DYE), setting.displayName(), buildLore(lore, "<red>Disabled"))
+            );
         }
 
         private List<String> buildLore(List<String> baseLore, String defaultValue) {
@@ -137,7 +131,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
             cloned.addAll(List.of(
                     "",
-                    "<gray>Current Status: <white>" + defaultValue,
+                    "<gray>Current Value: " + defaultValue,
                     "",
                     " <green><u>Click to change value"
             ));
@@ -145,16 +139,17 @@ public class ClaimSettingsConfig extends GuiTemplate {
             return cloned;
         }
 
-        public abstract static class BaseSettingIcon {
-        }
-
         @Getter
         @ConfigSerializable
-        public static class BooleanSettingIcon extends BaseSettingIcon {
+        public static class BooleanSettingIcon {
 
             private int slot;
+
             private DynamicIconWithStack enabled;
             private DynamicIconWithStack disabled;
+
+            @Setting("not-set")
+            private String notSet = "Not Set";
 
             public BooleanSettingIcon() {
             }
@@ -163,22 +158,6 @@ public class ClaimSettingsConfig extends GuiTemplate {
                 this.slot = slot;
                 this.enabled = enabled;
                 this.disabled = disabled;
-            }
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class InputSettingIcon extends BaseSettingIcon {
-
-            private int slot;
-            private DynamicIconWithStack input;
-
-            public InputSettingIcon() {
-            }
-
-            protected InputSettingIcon(int slot, DynamicIconWithStack input) {
-                this.slot = slot;
-                this.input = input;
             }
         }
     }

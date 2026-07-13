@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.claim.setting;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A generic container class that associates a configuration {@link Setting} with its
@@ -16,6 +17,7 @@ public class SettingHolder<T> {
     private final Setting<T> setting;
 
     @Setter
+    @Nullable
     private T value;
 
     /**

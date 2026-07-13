@@ -164,10 +164,19 @@ public class ClaimSettingsGui implements BaseGui {
             SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings()
                     .computeIfAbsent(setting, (k) -> SettingHolder.from(setting));
 
-            if (holder.value() instanceof Boolean value) {
-                holder.value(!value);
-                buildSetting(player, gui, claim, settingIcon);
+            boolean shouldUpdate = false;
 
+            Object holderValue = holder.value();
+            if (holderValue instanceof Boolean value) {
+                holder.value(!value);
+                shouldUpdate = true;
+            } else if (holderValue != null) {
+                holder.value(null);
+                shouldUpdate = true;
+            }
+
+            if (shouldUpdate) {
+                buildSetting(player, gui, claim, settingIcon);
                 gui.update();
                 return;
             }
@@ -182,7 +191,7 @@ public class ClaimSettingsGui implements BaseGui {
             }
 
             new SettingDialog()
-                    .create(messagesHolder.get().dialogs(), claim.name(), settingName, holder.value().toString())
+                    .create(messagesHolder.get().dialogs(), claim.name(), settingName, holder.value() != null ? holder.value() : holder.setting().defaultValue())
                     .onSubmit(view -> {
                         String newValue = view.getText("input");
                         if (newValue == null) {
@@ -207,28 +216,25 @@ public class ClaimSettingsGui implements BaseGui {
 
             //noinspection unchecked
             SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings().getOrDefault(setting, SettingHolder.from(setting));
+            Object value = holder.value();
 
-            if (settingIcon.modifyIcon() instanceof ClaimSettingsConfig.SettingIcon.InputSettingIcon modifyIcon) {
-                gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.input()), event -> action.run()));
-            } else if (settingIcon.modifyIcon() instanceof ClaimSettingsConfig.SettingIcon.BooleanSettingIcon modifyIcon) {
-                Boolean value = (Boolean) holder.value();
+            ClaimSettingsConfig.SettingIcon.BooleanSettingIcon modifyIcon = settingIcon.modifyIcon();
 
-                if (value) {
-                    gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.enabled()), event -> action.run()));
-                } else {
-                    gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.disabled()), event -> action.run()));
-                }
+            if (value instanceof Boolean ? (Boolean) value : value != null) {
+                gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.enabled(), modifyIcon.notSet()), event -> action.run()));
+            } else {
+                gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.disabled(), modifyIcon.notSet()), event -> action.run()));
             }
         }
     }
 
-    private ItemStack buildSettingModifyIcon(@NotNull SettingHolder<?> holder, @NotNull GuiTemplate.DynamicIconWithStack icon) {
+    private ItemStack buildSettingModifyIcon(@NotNull SettingHolder<?> holder, @NotNull GuiTemplate.DynamicIconWithStack icon, String notSetArg) {
         ItemStack stack = icon.stack();
         stack.editMeta(meta -> {
             meta.itemName(TextUtil.parse(icon.name()));
 
             meta.lore(TextUtil.parseItemLore(icon.lore(), Map.of(
-                    "setting_value", holder.value().toString()
+                    "setting_value", holder.value() != null ? holder.value().toString() : notSetArg
             )));
         });
 
