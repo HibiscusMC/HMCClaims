@@ -9,6 +9,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @ConfigSerializable
@@ -78,7 +79,7 @@ public class GuiTemplate {
                 "<gray>This is an example icon!"
         ));
 
-        private int slot = 40;
+        private int slot;
 
         @Setting("left-click-actions")
         protected List<Action> leftClickActions = List.of(
@@ -90,5 +91,80 @@ public class GuiTemplate {
                 Action.parse("console: say %player_name% says hello!"),
                 Action.parse("message: <green>saying hello on your behalf, <white>%player_name%</white>!")
         );
+
+        protected Icon(int slot) {
+            this.slot = slot;
+        }
+
+        public Icon() {
+        }
+    }
+
+    @Getter
+    @ConfigSerializable
+    public static class FilterIcon {
+
+        private ItemStack item = ItemStack.of(Material.HOPPER);
+
+        private int slot;
+
+        private String name = "Filter";
+
+        private List<String> lore = List.of(
+                "",
+                "<gray>- <filter_list>",
+                "",
+                "<white>Left-Click <gray>to select the next filter",
+                "<white>Right-Click <gray>to select the previous filter"
+        );
+
+        @Setting("filter-names")
+        private Map<String, String> filterNames;
+
+        private String selected = "<white><u><name></u> <green><b>←</b></green>";
+
+        private String unselected = "<#c2c2c2><name>";
+
+        protected FilterIcon(Map<String, String> filterNames, int slot) {
+            this.slot = slot;
+
+            this.filterNames = filterNames;
+        }
+
+        public FilterIcon() {
+        }
+    }
+
+    @Getter
+    @ConfigSerializable
+    public static class SearchIcon {
+
+        private ItemStack item = ItemStack.of(Material.SPYGLASS);
+
+        private int slot;
+
+        private String name = "Search";
+
+        private List<String> lore = List.of(
+                "",
+                "<gray>Current query: <white><query>",
+                "",
+                "<white>Left-Click <gray>to search"
+        );
+
+        @Setting("no-query")
+        private String noQuery = "<i>Nothing...";
+
+        protected SearchIcon(int slot) {
+            this.slot = slot;
+        }
+
+        public SearchIcon() {
+        }
+    }
+
+    public enum GuiScreenType {
+        FULL,
+        NORMAL
     }
 }

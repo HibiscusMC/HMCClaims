@@ -35,7 +35,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     @Setting("extra-icons")
     private Map<String, Icon> extraIcons = Map.of(
-            "example-icon", new Icon()
+            "example-icon", new Icon(40)
     );
 
     private Map<String, SimpleIcon> tabs = Map.of(

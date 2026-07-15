@@ -10,7 +10,6 @@ import com.hibiscusmc.hmcclaims.config.gui.MainClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
-import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
@@ -37,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 @SuppressWarnings({"UnstableApiUsage"})
-public class ClaimManageGui implements BaseGui {
+public class ClaimManageGui extends ClaimListLowerGui {
 
     @Inject
     private ConfigHolder<MainClaimManageConfig> configHolder;

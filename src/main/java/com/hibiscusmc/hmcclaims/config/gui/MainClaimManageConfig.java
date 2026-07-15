@@ -20,7 +20,7 @@ public class MainClaimManageConfig extends ClaimManageConfig {
 
     @Setting("extra-icons")
     private Map<String, Icon> extraIcons = Map.of(
-            "example-icon", new Icon()
+            "example-icon", new Icon(40)
     );
 
     @Setting("delete-icon")

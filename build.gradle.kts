@@ -18,6 +18,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.hibiscusmc.com/releases/")
+    maven("https://repo.xenondevs.xyz/releases")
 }
 
 dependencies {
@@ -39,6 +40,8 @@ dependencies {
         exclude("net.kyori")
         exclude("com.google.gson")
     }
+    // InvUI
+    implementation("xyz.xenondevs.invui:invui:2.0.0")
 
     // HibiscusCommons
     compileOnly("me.lojosho:HibiscusCommons:0.9.1")
@@ -96,6 +99,7 @@ tasks {
         val main = "${rootProject.group}.libs"
 
         relocate("dev.triumphteam.gui", "$main.gui")
+        relocate("xyz.xenondevs.invui", "$main.invui")
         relocate("team.unnamed.inject", "$main.inject")
         relocate("com.google.protobuf", "$main.protobuf")
         relocate("team.unnamed.commandflow", "$main.commandflow")

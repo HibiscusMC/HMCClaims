@@ -69,8 +69,8 @@ public class ClaimListGui implements BaseGui {
     private ClaimListConfig.ClaimsIcon claimsIcon;
     private ClaimListConfig.SubClaimsIcon subClaimsIcon;
 
-    private GuiTemplate.SimpleIcon searchIcon;
-    private ClaimListConfig.FilterIcon filterIcon;
+    private GuiTemplate.SearchIcon searchIcon;
+    private GuiTemplate.FilterIcon filterIcon;
 
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;

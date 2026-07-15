@@ -4,7 +4,6 @@ import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
@@ -20,11 +19,14 @@ public class ClaimMemberListConfig extends GuiTemplate {
 
     private int rows = 6;
 
+    @Setting("screen-type")
+    private GuiScreenType screenType = GuiScreenType.FULL;
+
     @Setting("valid-slots")
     private List<RangeUtil> validSlots = List.of(
-            new RangeUtil(10, 16),
             new RangeUtil(19, 25),
-            new RangeUtil(28, 34)
+            new RangeUtil(28, 34),
+            new RangeUtil(37, 43)
     );
 
     @Setting("not-manageable-member-icon")
@@ -49,99 +51,47 @@ public class ClaimMemberListConfig extends GuiTemplate {
 
     @Setting("extra-icons")
     private Map<String, Icon> extraIcons = Map.of(
-            "example-icon", new Icon()
+            "example-icon", new Icon(53)
     );
 
     @Setting("filter-icon")
-    private FilterIcon filterIcon = new FilterIcon();
-
-    @Setting("delete-icon")
-    private SimpleIcon deleteIcon = new SimpleIcon(ItemUtil.build(
-            Material.BARRIER, "Delete claim", List.of("", "<white>Left-Click <gray>to delete claim")
-    ), 8);
+    private FilterIcon filterIcon = new FilterIcon(Map.of(
+            "ALL", "All",
+            "ROLE", "<role> Role"
+    ), 46);
 
     @Setting("search-icon")
-    private SearchIcon searchIcon = new SearchIcon();
+    private SearchIcon searchIcon = new SearchIcon(52);
 
     @Setting("add-member")
     private SimpleIcon addMemberIcon = new SimpleIcon(ItemUtil.build(
             Material.WRITABLE_BOOK, "Add Member", List.of("", "<white>Left-Click <gray>to add member")
-    ), 41);
+    ), 49);
 
     private Map<String, SimpleIcon> pages = Map.of(
-            "back", new SimpleIcon(ItemUtil.build(
-                    Material.BOOK, "Back", List.of("", "<white>Left-Click <gray>to go back")
-            ), 45),
             "previous-page", new SimpleIcon(ItemUtil.build(
                     Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
-            ), 18),
+            ), 48),
             "next-page", new SimpleIcon(ItemUtil.build(
                     Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
-            ), 26)
+            ), 50)
     );
 
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
                     Material.LIME_STAINED_GLASS_PANE, "Members", List.of("", "<red>You're here!")
-            ), 0),
+            ), 1),
             "roles-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 1),
+            ), 3),
             "settings-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 2),
+            ), 5),
             "manage-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 3)
+            ), 7)
     );
 
-    @Getter
-    @ConfigSerializable
-    public static class SearchIcon {
-
-        private ItemStack item = ItemStack.of(Material.SPYGLASS);
-
-        private int slot = 35;
-
-        private String name = "Search";
-
-        private List<String> lore = List.of(
-                "",
-                "<gray>Current query: <white><query>",
-                "",
-                "<white>Left-Click <gray>to search members"
-        );
-
-        @Setting("no-query")
-        private String noQuery = "<i>Nothing...";
-    }
-
-    @Getter
-    @ConfigSerializable
-    public static class FilterIcon {
-
-        private ItemStack item = ItemStack.of(Material.HOPPER);
-
-        private int slot = 27;
-
-        private String name = "Filter Members";
-
-        private List<String> lore = List.of(
-                "",
-                "<gray>- <filter_list>",
-                "",
-                "<white>Left-Click <gray>to select the next filter",
-                "<white>Right-Click <gray>to select the previous filter"
-        );
-
-        @Setting("filter-names")
-        private Map<String, String> filterNames = Map.of(
-                "ALL", "All",
-                "ROLE", "<role> Role"
-        );
-
-        private String selected = "<white><u><name></u> <green><b>←</b></green>";
-
-        private String unselected = "<#c2c2c2><name>";
-    }
+    @Setting("lower-gui")
+    private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
 }
