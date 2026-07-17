@@ -1,5 +1,7 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
+import org.bukkit.inventory.ItemStack;
+
 import java.util.Map;
 
 public abstract class ClaimManageConfig extends GuiTemplate {
@@ -7,6 +9,8 @@ public abstract class ClaimManageConfig extends GuiTemplate {
     public abstract String title();
 
     public abstract int rows();
+
+    public abstract GuiScreenType screenType();
 
     public abstract Map<String, Icon> extraIcons();
 
@@ -16,7 +20,7 @@ public abstract class ClaimManageConfig extends GuiTemplate {
 
     public abstract SimpleIcon lockIcon();
 
-    public abstract SimpleIcon unlockIcon();
+    public abstract ItemStack unlockIcon();
 
     public abstract SimpleIcon bannedIcon();
 
@@ -25,4 +29,6 @@ public abstract class ClaimManageConfig extends GuiTemplate {
     public abstract SimpleIcon backIcon();
 
     public abstract Map<String, SimpleIcon> tabs();
+
+    public abstract BaseListGuiConfig lowerGui();
 }

@@ -37,7 +37,7 @@ public class GuiTemplate {
     @ConfigSerializable
     public static class DynamicIconWithStack {
 
-        private ItemStack stack;
+        private ItemStack item;
 
         private String name;
 
@@ -46,8 +46,8 @@ public class GuiTemplate {
         public DynamicIconWithStack() {
         }
 
-        protected DynamicIconWithStack(ItemStack stack, String name, List<String> lore) {
-            this.stack = stack;
+        protected DynamicIconWithStack(ItemStack item, String name, List<String> lore) {
+            this.item = item;
             this.name = name;
             this.lore = lore;
         }

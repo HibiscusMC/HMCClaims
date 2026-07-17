@@ -229,7 +229,7 @@ public class ClaimSettingsGui implements BaseGui {
     }
 
     private ItemStack buildSettingModifyIcon(@NotNull SettingHolder<?> holder, @NotNull GuiTemplate.DynamicIconWithStack icon, String notSetArg) {
-        ItemStack stack = icon.stack();
+        ItemStack stack = icon.item();
         stack.editMeta(meta -> {
             meta.itemName(TextUtil.parse(icon.name()));
 

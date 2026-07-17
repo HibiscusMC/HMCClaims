@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.config.gui;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import lombok.Getter;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
@@ -17,6 +18,9 @@ public class MainClaimManageConfig extends ClaimManageConfig {
     private String title = "<claim_name>";
 
     private int rows = 6;
+
+    @Setting("screen-type")
+    private GuiScreenType screenType = GuiScreenType.FULL;
 
     @Setting("extra-icons")
     private Map<String, Icon> extraIcons = Map.of(
@@ -39,9 +43,9 @@ public class MainClaimManageConfig extends ClaimManageConfig {
     ), 20);
 
     @Setting("unlock-icon")
-    private SimpleIcon unlockIcon = new SimpleIcon(ItemUtil.build(
+    private ItemStack unlockIcon = ItemUtil.build(
             Material.ENDER_CHEST, "Unlock claim", List.of("", "<white>Left-Click <gray>to make your claim public")
-    ), 20);
+    );
 
     @Setting("banned-icon")
     private SimpleIcon bannedIcon = new SimpleIcon(ItemUtil.build(
@@ -78,4 +82,7 @@ public class MainClaimManageConfig extends ClaimManageConfig {
                     Material.LIME_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<red>You're here!")
             ), 3)
     );
+
+    @Setting("lower-gui")
+    private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
 }

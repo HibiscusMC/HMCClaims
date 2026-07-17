@@ -9,6 +9,7 @@ import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
+import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
@@ -215,7 +216,11 @@ public class ClaimMemberListGui extends ClaimListLowerGui {
 
             pagedGui.addIngredient((char) 4, Item.builder()
                     .setItemProvider(manageTab.item())
-                    .addClickHandler(click -> guis.get(ClaimManageGui.class).open(player, claim))
+                    .addClickHandler(click -> {
+                        BaseGui gui = claim.main() == null ? guis.get(ClaimManageGui.class) : guis.get(SubClaimManageGui.class);
+
+                        gui.open(player, claim);
+                    })
                     .build());
 
             pagedGui.addIngredient('+', buildAddMemberIcon(player, claim));
