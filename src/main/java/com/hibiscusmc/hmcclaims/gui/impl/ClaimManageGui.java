@@ -65,7 +65,7 @@ public class ClaimManageGui extends ClaimListGui {
     @Inject
     protected TextUtil text;
 
-    protected String title;
+    protected GuiTemplate.GuiTitle title;
     protected int rows = 1;
 
     protected GuiTemplate.GuiScreenType screenType;
@@ -153,8 +153,8 @@ public class ClaimManageGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title, Map.of(
-                                "claim_name", claim.name()
+                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                                "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui);
 

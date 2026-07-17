@@ -1,15 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui;
 
-import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import dev.triumphteam.gui.guis.GuiItem;
-import dev.triumphteam.gui.guis.PaginatedGui;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * The core interface for all GUIs within the plugin.
@@ -40,29 +32,17 @@ public interface BaseGui {
     }
 
     /**
-     * Builds the layout of a paginated gui adding air to the unused slots and adding the page icons
+     * Truncates the claim name to the title's maximum length, appending "..." if exceeded.
      *
-     * @param gui              The {@link PaginatedGui} instance of the gui to build
-     * @param slots            The list of slots available for use
-     * @param previousPageIcon The previous page icon
-     * @param nextPageIcon     The next page icon
+     * @param claimName the original claim name to parse
+     * @param maxLength the maximum allowed length for the claim name
+     * @return the potentially truncated claim name, or the original if within limits
      */
-    default void buildPageLayout(@NotNull PaginatedGui gui, @NotNull List<Integer> slots, @Nullable GuiTemplate.SimpleIcon previousPageIcon, @Nullable GuiTemplate.SimpleIcon nextPageIcon) {
-        GuiItem air = new GuiItem(ItemStack.of(Material.AIR));
-
-        for (int i = 0; i < gui.getRows() * 9; i++) {
-            if (!slots.contains(i)) {
-                gui.setItem(i, air);
-            }
+    default String parseName(@NotNull String claimName, int maxLength) {
+        if (maxLength < 0 || claimName.length() <= maxLength) {
+            return claimName;
         }
 
-        if (previousPageIcon != null) {
-            gui.setItem(previousPageIcon.slot(), new GuiItem(previousPageIcon.item(), action -> gui.previous()));
-        }
-
-        if (nextPageIcon != null) {
-            gui.setItem(nextPageIcon.slot(), new GuiItem(nextPageIcon.item(), action -> gui.next()));
-        }
+        return claimName.substring(0, maxLength) + "...";
     }
-
 }

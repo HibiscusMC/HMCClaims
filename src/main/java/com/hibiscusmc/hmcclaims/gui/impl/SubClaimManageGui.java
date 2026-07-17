@@ -73,8 +73,8 @@ public class SubClaimManageGui extends ClaimManageGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title, Map.of(
-                                "claim_name", claim.name()
+                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                                "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui);
 

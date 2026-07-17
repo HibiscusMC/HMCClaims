@@ -6,7 +6,7 @@ import java.util.Map;
 
 public abstract class ClaimManageConfig extends GuiTemplate {
 
-    public abstract String title();
+    public abstract GuiTitle title();
 
     public abstract int rows();
 

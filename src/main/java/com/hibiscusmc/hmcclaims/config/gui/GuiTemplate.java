@@ -18,6 +18,29 @@ public class GuiTemplate {
 
     @Getter
     @ConfigSerializable
+    public static class GuiTitle {
+
+        private String text;
+
+        @Setting("max-length")
+        private int maxLength;
+
+        protected GuiTitle(String text) {
+            this.text = text;
+            this.maxLength = 28;
+        }
+
+        protected GuiTitle(String text, int maxLength) {
+            this.text = text;
+            this.maxLength = maxLength;
+        }
+
+        public GuiTitle() {
+        }
+    }
+
+    @Getter
+    @ConfigSerializable
     public static class DynamicIcon {
 
         private String name;

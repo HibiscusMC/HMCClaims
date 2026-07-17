@@ -72,7 +72,7 @@ public class ClaimMemberListGui extends ClaimListGui {
     private TextUtil text;
 
     private final List<Integer> slots = new ArrayList<>();
-    private String title;
+    private GuiTemplate.GuiTitle title;
     private int rows = 1;
 
     private GuiTemplate.GuiScreenType screenType;
@@ -249,8 +249,8 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title, Map.of(
-                                "claim_name", claim.name()
+                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                                "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui);
 

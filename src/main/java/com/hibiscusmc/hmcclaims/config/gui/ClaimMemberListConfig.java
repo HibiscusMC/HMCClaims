@@ -15,7 +15,7 @@ import java.util.Map;
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimMemberListConfig extends GuiTemplate {
 
-    private String title = "<claim_name>";
+    private GuiTitle title = new GuiTitle("<claim_name>");
 
     private int rows = 6;
 

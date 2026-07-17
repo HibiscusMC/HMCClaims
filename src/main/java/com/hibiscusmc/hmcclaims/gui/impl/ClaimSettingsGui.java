@@ -45,7 +45,7 @@ public class ClaimSettingsGui implements BaseGui {
     @Inject
     private SchedulerUtil scheduler;
 
-    private String title;
+    private GuiTemplate.GuiTitle title;
     private int rows = 1;
 
     private GuiTemplate.SimpleIcon backIcon;
@@ -95,8 +95,8 @@ public class ClaimSettingsGui implements BaseGui {
         int currentPage = args.length > 1 ? (int) args[1] : 1;
 
         Gui gui = Gui.gui()
-                .title(TextUtil.parse(title, Map.of(
-                        "claim_name", claim.name()
+                .title(TextUtil.parse(title.text(), Map.of(
+                        "claim_name", parseName(claim.name(), title.maxLength())
                 )))
                 .rows(rows)
                 .disableAllInteractions()
