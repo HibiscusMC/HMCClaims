@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 
 @Singleton
 @SuppressWarnings({"UnstableApiUsage"})
-public class ClaimManageGui extends ClaimListLowerGui {
+public class ClaimManageGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<MainClaimManageConfig> configHolder;

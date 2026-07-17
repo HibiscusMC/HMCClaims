@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 @SuppressWarnings({"UnstableApiUsage"})
-public class ClaimMemberListGui extends ClaimListLowerGui {
+public class ClaimMemberListGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<ClaimMemberListConfig> configHolder;

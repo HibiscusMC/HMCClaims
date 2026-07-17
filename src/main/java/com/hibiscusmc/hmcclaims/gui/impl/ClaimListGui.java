@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.config.gui.BaseListGuiConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
@@ -17,9 +18,6 @@ import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
-import dev.triumphteam.gui.guis.Gui;
-import dev.triumphteam.gui.guis.GuiItem;
-import dev.triumphteam.gui.guis.PaginatedGui;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -30,21 +28,30 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
-import team.unnamed.inject.Singleton;
+import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.gui.Markers;
+import xyz.xenondevs.invui.gui.PagedGui;
+import xyz.xenondevs.invui.item.BoundItem;
+import xyz.xenondevs.invui.item.Item;
+import xyz.xenondevs.invui.item.ItemBuilder;
+import xyz.xenondevs.invui.item.ItemWrapper;
+import xyz.xenondevs.invui.window.Window;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-@Singleton
 @SuppressWarnings({"UnstableApiUsage"})
 public class ClaimListGui implements BaseGui {
+
+    protected final static int FIRST_SAFE_CHAR = 46; // "."
 
     @Inject
     private ConfigHolder<ClaimListConfig> configHolder;
@@ -64,10 +71,10 @@ public class ClaimListGui implements BaseGui {
 
     private final List<Integer> slots = new ArrayList<>();
     private Component title;
-    private int rows = 1;
+    private int rows = 4;
 
-    private ClaimListConfig.ClaimsIcon claimsIcon;
-    private ClaimListConfig.SubClaimsIcon subClaimsIcon;
+    private BaseListGuiConfig.ClaimsIcon claimsIcon;
+    private BaseListGuiConfig.SubClaimsIcon subClaimsIcon;
 
     private GuiTemplate.SearchIcon searchIcon;
     private GuiTemplate.FilterIcon filterIcon;
@@ -88,19 +95,23 @@ public class ClaimListGui implements BaseGui {
         title = TextUtil.parse(config.title());
         rows = config.rows();
 
-        claimsIcon = config.claimsIcon();
-        subClaimsIcon = config.subClaimsIcon();
+        loadConfig(config);
+    }
 
-        searchIcon = config.searchIcon();
-        filterIcon = config.filterIcon();
+    protected void loadConfig(BaseListGuiConfig lowerConfig) {
+        claimsIcon = lowerConfig.claimsIcon();
+        subClaimsIcon = lowerConfig.subClaimsIcon();
 
-        previousPage = config.pages().get("previous-page");
-        nextPage = config.pages().get("next-page");
+        searchIcon = lowerConfig.searchIcon();
+        filterIcon = lowerConfig.filterIcon();
 
-        icons = config.extraIcons().values().stream().toList();
+        previousPage = lowerConfig.pages().get("previous-page");
+        nextPage = lowerConfig.pages().get("next-page");
+
+        icons = lowerConfig.extraIcons().values().stream().toList();
 
         slots.clear();
-        for (RangeUtil range : config.validSlots()) {
+        for (RangeUtil range : lowerConfig.validSlots()) {
             for (int slot : range.all()) {
                 slots.add(slot);
             }
@@ -109,114 +120,195 @@ public class ClaimListGui implements BaseGui {
 
     @Override
     public void open(@NotNull Player player) {
-        PaginatedGui gui = Gui.paginated()
-                .title(title)
-                .rows(rows)
-                .pageSize(slots.size())
-                .disableAllInteractions()
-                .create();
-
         scheduler.scheduleAsync(() -> {
-            buildIcons(player, gui);
+            Window.Builder.Normal.Split window = Window.builder()
+                    .setTitle(title)
+                    .setUpperGui(buildLowerGui(player));
 
-            scheduler.schedule(() -> gui.open(player));
+            scheduler.schedule(() -> window.open(player));
         });
     }
 
-    private void buildIcons(@NotNull Player player, @NotNull PaginatedGui gui) {
-        buildPageLayout(gui, slots, previousPage, nextPage);
+    protected Gui buildLowerGui(@NotNull Player player) {
+        PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();
 
+        List<String> structure = new ArrayList<>(Collections.nCopies(rows * 9, "#"));
+        structure.set(previousPage.slot(), "(");
+        structure.set(nextPage.slot(), ")");
+
+        for (int slot : slots) {
+            structure.set(slot, "-");
+        }
+
+        structure.set(filterIcon.slot(), "%");
+        structure.set(searchIcon.slot(), "&");
+
+        Map<Integer, GuiTemplate.Icon> mappedIcons = new HashMap<>();
         for (GuiTemplate.Icon icon : icons) {
-            gui.setItem(icon.slot(), new GuiItem(icon.item(), action -> {
-                for (Action iconAction : action.isLeftClick() ? icon.leftClickActions() : icon.rightClickActions()) {
-                    iconAction.execute(player);
-                }
-            }));
+            int codePoint = FIRST_SAFE_CHAR + icons.indexOf(icon);
+
+            structure.set(icon.slot(), Character.toString(codePoint));
+            mappedIcons.put(codePoint, icon);
         }
 
-        UUID playerId = player.getUniqueId();
+        String[] structureArray = new String[rows];
+        for (int r = 0; r < rows; r++) {
+            List<String> rowList = structure.subList(r * 9, (r + 1) * 9);
 
-        AtomicReference<Filter> filter = new AtomicReference<>(Filter.ALL);
-        AtomicReference<Query> searchQuery = new AtomicReference<>(null);
-        Set<Claim> claims = claimManager.getPlayerClaims(playerId);
-
-        gui.setItem(searchIcon.slot(), new GuiItem(searchIcon.item(), action -> new SearchDialog(QueryType.all())
-                .create(messagesHolder.get().dialogs())
-                .onSubmit(view -> {
-                    String query = view.getText("query");
-                    String rawType = view.getText("option");
-                    assert rawType != null;
-
-                    QueryType type = QueryType.fromId(rawType);
-                    assert type != null;
-
-                    searchQuery.set(new Query(query, type));
-
-                    updateClaims(gui, claims, filter, searchQuery);
-                    gui.update();
-                })
-                .onCancel(() -> {
-                    searchQuery.set(null);
-
-                    updateClaims(gui, claims, filter, searchQuery);
-                    gui.update();
-                })
-                .show(player)));
-
-        updateClaims(gui, claims, filter, searchQuery);
-        updateFilter(gui, claims, filter, searchQuery);
-    }
-
-    private void updateFilter(@NotNull PaginatedGui gui, Set<Claim> claims, @NotNull AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
-        ItemStack stack = filterIcon.item();
-        ItemMeta meta = stack.getItemMeta();
-
-        List<Component> lore = new ArrayList<>();
-        Filter currentOption = filter.get();
-
-        for (String line : filterIcon.lore()) {
-            if (line.toLowerCase().contains("<filter_list>")) {
-                for (Filter option : Filter.values()) {
-                    String name = filterIcon.filterNames()
-                            .getOrDefault(option.name(), option.name());
-
-                    String parsedName = option.equals(currentOption) ? filterIcon.selected() : filterIcon.unselected();
-
-                    lore.add(TextUtil.parseItem(line.replace("<filter_list>", parsedName), Map.of(
-                            "name", name
-                    )));
-                }
-
-                continue;
-            }
-
-            lore.add(TextUtil.parseItem(line));
+            structureArray[r] = String.join("", rowList);
         }
 
-        meta.lore(lore);
-        meta.customName(TextUtil.parseItem(filterIcon.name()));
+        pagedGui.setStructure(structureArray);
 
-        stack.setItemMeta(meta);
+        for (Map.Entry<Integer, GuiTemplate.Icon> entry : mappedIcons.entrySet()) {
+            GuiTemplate.Icon icon = entry.getValue();
 
-        gui.setItem(filterIcon.slot(), new GuiItem(stack, action -> {
-            if (action.isLeftClick()) {
-                filter.updateAndGet(Filter::next);
-            } else {
-                filter.updateAndGet(Filter::previous);
-            }
+            pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
+                    .setItemProvider(icon.item())
+                    .addClickHandler(click -> {
+                        for (Action iconAction : click.clickType().isLeftClick() ?
+                                icon.leftClickActions() :
+                                icon.rightClickActions()) {
+                            iconAction.execute(player);
+                        }
+                    })
+                    .build());
+        }
 
-            updateClaims(gui, claims, filter, searchQuery);
-            updateFilter(gui, claims, filter, searchQuery);
+        pagedGui.addIngredient('(', BoundItem.pagedBuilder()
+                .setItemProvider(new ItemBuilder(previousPage.item()))
+                .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
+                .build());
+        pagedGui.addIngredient(')', BoundItem.pagedBuilder()
+                .setItemProvider(new ItemBuilder(nextPage.item()))
+                .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
+                .build());
 
-            gui.update();
-        }));
+        Metadata metadata = new Metadata(
+                new AtomicReference<>(Filter.ALL),
+                new AtomicReference<>(null)
+        );
+
+        AtomicReference<PagedGui<Item>> guiReference = new AtomicReference<>(null);
+
+        Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
+        Map<Claim, Item> parsedClaims = buildClaims(guiReference, claims, metadata);
+
+        Runnable updateClaims = () -> updateClaims(guiReference.get(), parsedClaims, metadata);
+        pagedGui.addIngredient('%', buildFilter(metadata, updateClaims));
+        pagedGui.addIngredient('&', buildSearch(metadata, updateClaims));
+
+        pagedGui.addIngredient('-', Markers.CONTENT_LIST_SLOT_HORIZONTAL);
+
+        PagedGui<Item> gui = pagedGui.build();
+        guiReference.set(gui);
+
+        updateClaims.run();
+
+        return gui;
     }
 
-    private void updateClaims(@NotNull PaginatedGui gui, @NotNull Set<Claim> claims, AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
-        gui.clearPageItems();
+    private Item buildSearch(@NotNull Metadata metadata, Runnable update) {
+        return Item.builder()
+                .setItemProvider(player -> {
+                    ItemStack item = searchIcon.item();
+                    item.editMeta(meta -> {
+                        Query searchQuery = metadata.searchQuery().get();
+                        String query = searchIcon.noQuery();
 
-        for (Claim claim : claims) {
-            switch (filter.get()) {
+                        if (searchQuery != null && !searchQuery.query().isEmpty()) {
+                            query = searchQuery.query();
+                        }
+
+                        meta.lore(TextUtil.parseItemLore(searchIcon.lore(), Map.of(
+                                "query", query
+                        )));
+                    });
+
+                    return new ItemWrapper(item);
+                })
+                .addClickHandler((it, click) -> new SearchDialog(QueryType.all())
+                        .create(messagesHolder.get().dialogs())
+                        .onSubmit(view -> {
+                            String query = view.getText("query");
+                            String rawType = view.getText("option");
+                            assert rawType != null;
+
+                            QueryType type = QueryType.fromId(rawType);
+                            assert type != null;
+
+                            metadata.searchQuery().set(new Query(query, type));
+
+                            it.notifyWindows();
+                            update.run();
+                        })
+                        .onCancel(() -> {
+                            metadata.searchQuery().set(null);
+
+                            it.notifyWindows();
+                            update.run();
+                        })
+                        .show(click.player())
+                )
+                .build();
+    }
+
+    private Item buildFilter(@NotNull Metadata metadata, Runnable update) {
+        return Item.builder()
+                .setItemProvider(player -> {
+                    ItemStack stack = filterIcon.item();
+                    ItemMeta meta = stack.getItemMeta();
+
+                    List<Component> lore = new ArrayList<>();
+                    Filter currentOption = metadata.filter().get();
+
+                    for (String line : filterIcon.lore()) {
+                        if (line.toLowerCase().contains("<filter_list>")) {
+                            for (Filter option : Filter.values()) {
+                                String name = filterIcon.filterNames()
+                                        .getOrDefault(option.name(), option.name());
+
+                                String parsedName = option.equals(currentOption) ? filterIcon.selected() : filterIcon.unselected();
+
+                                lore.add(TextUtil.parseItem(line.replace("<filter_list>", parsedName), Map.of(
+                                        "name", name
+                                )));
+                            }
+
+                            continue;
+                        }
+
+                        lore.add(TextUtil.parseItem(line));
+                    }
+
+                    meta.lore(lore);
+                    meta.customName(TextUtil.parseItem(filterIcon.name()));
+
+                    stack.setItemMeta(meta);
+
+                    return new ItemWrapper(stack);
+                })
+                .addClickHandler((it, click) -> {
+                    if (click.clickType().isLeftClick()) {
+                        metadata.filter().updateAndGet(Filter::next);
+                    } else {
+                        metadata.filter().updateAndGet(Filter::previous);
+                    }
+
+                    it.notifyWindows();
+                    update.run();
+                })
+                .build();
+    }
+
+    private void updateClaims(@NotNull PagedGui<Item> gui, @NotNull Map<Claim, Item> claims, @NotNull Metadata metadata) {
+        List<Item> items = new ArrayList<>();
+
+        for (Map.Entry<Claim, Item> entry : claims.entrySet()) {
+            Claim claim = entry.getKey();
+            Item item = entry.getValue();
+
+            switch (metadata.filter().get()) {
                 case MAIN -> {
                     if (claim.main() != null) {
                         continue;
@@ -229,7 +321,7 @@ public class ClaimListGui implements BaseGui {
                 }
             }
 
-            Query query = searchQuery.get();
+            Query query = metadata.searchQuery().get();
             if (query != null) {
                 switch (query.type()) {
                     case CLAIM_NAME -> {
@@ -258,32 +350,48 @@ public class ClaimListGui implements BaseGui {
                 }
             }
 
-            gui.addItem(new GuiItem(buildClaimIcon(claim), action -> {
-                Player player = (Player) action.getWhoClicked();
-
-                if (action.isRightClick()) {
-                    new RenameDialog()
-                            .create(messagesHolder.get().dialogs(), claim.name())
-                            .onSubmit(view -> {
-                                String newName = view.getText("input");
-                                if (newName == null) {
-                                    return;
-                                }
-
-                                claim.rename(newName);
-
-                                updateClaims(gui, claims, filter, searchQuery);
-                                gui.update();
-                            })
-                            .show(player);
-
-                    return;
-                }
-
-                guis.get(ClaimMemberListGui.class)
-                        .open(player, claim);
-            }));
+            items.add(item);
         }
+
+        gui.setContent(items);
+    }
+
+    @NotNull
+    private Map<Claim, Item> buildClaims(@NotNull AtomicReference<PagedGui<Item>> guiReference, @NotNull Set<Claim> claims, @NotNull Metadata metadata) {
+        Map<Claim, Item> parsedClaims = new HashMap<>();
+
+        for (Claim claim : claims) {
+            parsedClaims.put(claim, Item.builder()
+                    .setItemProvider(stack -> new ItemWrapper(buildClaimIcon(claim)))
+                    .addClickHandler((it, click) -> {
+                        Player player = click.player();
+
+                        if (click.clickType().isRightClick()) {
+                            new RenameDialog()
+                                    .create(messagesHolder.get().dialogs(), claim.name())
+                                    .onSubmit(view -> {
+                                        String newName = view.getText("input");
+                                        if (newName == null) {
+                                            return;
+                                        }
+
+                                        claim.rename(newName);
+
+                                        it.notifyWindows();
+                                        updateClaims(guiReference.get(), parsedClaims, metadata);
+                                    })
+                                    .show(player);
+
+                            return;
+                        }
+
+                        guis.get(ClaimMemberListGui.class)
+                                .open(player, claim);
+                    })
+                    .build());
+        }
+
+        return parsedClaims;
     }
 
     @NotNull
@@ -333,7 +441,7 @@ public class ClaimListGui implements BaseGui {
     }
 
     @NotNull
-    private String buildMemberRow(@NotNull ClaimListConfig.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
+    private String buildMemberRow(@NotNull BaseListGuiConfig.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
         OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(member.lastKnownName());
 
         String name;
@@ -359,6 +467,9 @@ public class ClaimListGui implements BaseGui {
         }
 
         return "<head:" + name + ">";
+    }
+
+    record Metadata(AtomicReference<Filter> filter, AtomicReference<Query> searchQuery) {
     }
 
     record Query(String query, QueryType type) {
