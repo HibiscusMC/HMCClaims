@@ -30,11 +30,6 @@ public class GuiTemplate {
             this.maxLength = 28;
         }
 
-        protected GuiTitle(String text, int maxLength) {
-            this.text = text;
-            this.maxLength = maxLength;
-        }
-
         public GuiTitle() {
         }
     }

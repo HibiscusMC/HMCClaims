@@ -41,16 +41,16 @@ public class ClaimSettingsConfig extends GuiTemplate {
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 0),
+            ), 1),
             "roles-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 1),
+            ), 3),
             "settings-tab", new SimpleIcon(ItemUtil.build(
                     Material.LIME_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<red>You're here!")
-            ), 2),
+            ), 5),
             "manage-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 3)
+            ), 7)
     );
 
     @Setting("setting-pages")

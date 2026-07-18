@@ -43,6 +43,6 @@ public interface BaseGui {
             return claimName;
         }
 
-        return claimName.substring(0, maxLength) + "...";
+        return claimName.substring(0, maxLength).trim() + "...";
     }
 }
