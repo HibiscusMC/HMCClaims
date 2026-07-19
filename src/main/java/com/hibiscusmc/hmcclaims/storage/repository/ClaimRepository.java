@@ -39,6 +39,24 @@ public interface ClaimRepository {
     CompletableFuture<Void> saveClaim(@NotNull Claim claim);
 
     /**
+     * Updates the name of a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> saveClaimName(@NotNull Claim claim);
+
+    /**
+     * Updates the spatial boundaries (X and Z coordinates) of a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> saveClaimRegion(@NotNull Claim claim);
+
+    /**
+     * Updates the core metadata (name, boundaries, and lock state) of a claim.
+     */
+    @NotNull
+    CompletableFuture<Void> saveClaimMeta(@NotNull Claim claims);
+
+    /**
      * Syncs all members of a claim.
      */
     @NotNull

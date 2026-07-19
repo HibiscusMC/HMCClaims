@@ -48,6 +48,10 @@ public class SQLClaimRepository implements ClaimRepository {
     private final String getClaimQuery;
 
     private final String saveClaimQuery;
+    private final String saveClaimNameQuery;
+    private final String saveClaimRegionQuery;
+    private final String saveClaimMetaQuery;
+
     private final String saveMemberQuery;
     private final String saveRoleQuery;
     private final String saveSettingQuery;
@@ -73,6 +77,12 @@ public class SQLClaimRepository implements ClaimRepository {
                 "min_x = VALUES(min_x), max_x = VALUES(max_x), min_z = VALUES(min_z), max_z = VALUES(max_z), " +
                 "roles = VALUES(roles), members = VALUES(members), settings = VALUES(settings), schema_version = VALUES(schema_version), " +
                 "parent_uuid = VALUES(parent_uuid), locked = VALUES(locked);";
+
+        this.saveClaimNameQuery = "UPDATE " + prefix + "claims SET name = ? WHERE uuid = ?";
+        this.saveClaimRegionQuery = "UPDATE " + prefix + "claims SET min_x = ?, max_x = ?, min_z = ?, max_z = ? WHERE uuid = ?";
+        this.saveClaimMetaQuery = "UPDATE " + prefix + "claims SET name = ?, " +
+                "min_x = ?, max_x = ?, min_z = ?, max_z = ?, " +
+                "locked = ? WHERE uuid = ?";
 
         this.saveMemberQuery = "UPDATE " + prefix + "claims SET members = ? WHERE uuid = ?;";
         this.saveRoleQuery = "UPDATE " + prefix + "claims SET roles = ? WHERE uuid = ?;";
@@ -225,6 +235,66 @@ public class SQLClaimRepository implements ClaimRepository {
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save claim " + claim.claimId(), e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveClaimName(@NotNull Claim claim) {
+        return CompletableFuture.runAsync(() -> {
+            UUID claimId = claim.claimId();
+
+            try (Connection con = storage.getConnection();
+                 PreparedStatement ps = con.prepareStatement(this.saveClaimNameQuery)) {
+                ps.setString(1, claim.name());
+                ps.setBytes(2, ByteUtil.UUIDtoBytes(claimId));
+
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to save name for claim " + claimId, e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveClaimRegion(@NotNull Claim claim) {
+        return CompletableFuture.runAsync(() -> {
+            UUID claimId = claim.claimId();
+
+            try (Connection con = storage.getConnection();
+                 PreparedStatement ps = con.prepareStatement(this.saveClaimRegionQuery)) {
+                ps.setInt(1, claim.region().minX());
+                ps.setInt(2, claim.region().maxX());
+                ps.setInt(3, claim.region().minZ());
+                ps.setInt(4, claim.region().maxZ());
+                ps.setBytes(5, ByteUtil.UUIDtoBytes(claimId));
+
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to save region for claim " + claimId, e);
+            }
+        }, executor);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveClaimMeta(@NotNull Claim claim) {
+        return CompletableFuture.runAsync(() -> {
+            UUID claimId = claim.claimId();
+            Set<ClaimMember> members = claim.allMembers();
+
+            try (Connection con = storage.getConnection();
+                 PreparedStatement ps = con.prepareStatement(this.saveClaimMetaQuery)) {
+                ps.setString(1, claim.name());
+                ps.setInt(2, claim.region().minX());
+                ps.setInt(3, claim.region().maxX());
+                ps.setInt(4, claim.region().minZ());
+                ps.setInt(5, claim.region().maxZ());
+                ps.setBoolean(6, claim.locked());
+                ps.setBytes(7, ByteUtil.UUIDtoBytes(claimId));
+
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Failed to save meta for claim " + claimId, e);
             }
         }, executor);
     }
