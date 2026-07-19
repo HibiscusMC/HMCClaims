@@ -25,6 +25,7 @@ import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
@@ -214,7 +215,7 @@ public class ClaimManageGui extends ClaimListGui {
                 gui.addIngredient((char) entry.getKey().intValue(), Item.builder()
                         .setItemProvider(icon.item())
                         .addClickHandler(click -> {
-                            for (Action iconAction : click.clickType().isLeftClick() ?
+                            for (Action iconAction : click.clickType() == ClickType.LEFT ?
                                     icon.leftClickActions() :
                                     icon.rightClickActions()) {
                                 iconAction.execute(player);

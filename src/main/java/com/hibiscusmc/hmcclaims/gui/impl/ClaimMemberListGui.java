@@ -26,6 +26,7 @@ import it.unimi.dsi.fastutil.chars.CharList;
 import net.kyori.adventure.text.Component;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
@@ -193,7 +194,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                 pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
                         .setItemProvider(icon.item())
                         .addClickHandler(click -> {
-                            for (Action iconAction : click.clickType().isLeftClick() ?
+                            for (Action iconAction : click.clickType() == ClickType.LEFT ?
                                     icon.leftClickActions() :
                                     icon.rightClickActions()) {
                                 iconAction.execute(player);
@@ -356,7 +357,7 @@ public class ClaimMemberListGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(player -> new ItemWrapper(buildFilterIcon(metadata.filter(), roles)))
                 .addClickHandler((it, click) -> {
-                    boolean isNext = click.clickType().isLeftClick();
+                    boolean isNext = click.clickType() == ClickType.LEFT;
 
                     String filter = metadata.filter().get();
                     if (filter == null) {

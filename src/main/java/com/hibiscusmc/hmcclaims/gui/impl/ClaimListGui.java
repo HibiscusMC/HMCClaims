@@ -23,6 +23,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Contract;
@@ -170,7 +171,7 @@ public class ClaimListGui implements BaseGui {
             pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
                     .setItemProvider(icon.item())
                     .addClickHandler(click -> {
-                        for (Action iconAction : click.clickType().isLeftClick() ?
+                        for (Action iconAction : click.clickType() == ClickType.LEFT ?
                                 icon.leftClickActions() :
                                 icon.rightClickActions()) {
                             iconAction.execute(player);
@@ -293,7 +294,7 @@ public class ClaimListGui implements BaseGui {
                     return new ItemWrapper(stack);
                 })
                 .addClickHandler((it, click) -> {
-                    if (click.clickType().isLeftClick()) {
+                    if (click.clickType() == ClickType.LEFT) {
                         metadata.filter().updateAndGet(Filter::next);
                     } else {
                         metadata.filter().updateAndGet(Filter::previous);
