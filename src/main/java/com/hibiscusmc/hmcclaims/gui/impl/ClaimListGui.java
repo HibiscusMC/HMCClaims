@@ -13,6 +13,7 @@ import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -57,6 +58,9 @@ public class ClaimListGui implements BaseGui {
     private ConfigHolder<ClaimListConfig> configHolder;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private StorageHolder storageHolder;
 
     @Inject
     private GuiRegistry guis;
@@ -376,6 +380,8 @@ public class ClaimListGui implements BaseGui {
                                         }
 
                                         claim.rename(newName);
+                                        storageHolder.get().claims()
+                                                .saveClaimName(claim);
 
                                         it.notifyWindows();
                                         updateClaims(guiReference.get(), parsedClaims, metadata);

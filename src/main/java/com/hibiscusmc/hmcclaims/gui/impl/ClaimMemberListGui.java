@@ -21,6 +21,8 @@ import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import it.unimi.dsi.fastutil.chars.CharArrayList;
+import it.unimi.dsi.fastutil.chars.CharList;
 import net.kyori.adventure.text.Component;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
@@ -35,10 +37,10 @@ import xyz.xenondevs.invui.item.BoundItem;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemBuilder;
 import xyz.xenondevs.invui.item.ItemWrapper;
+import xyz.xenondevs.invui.util.TriConsumer;
 import xyz.xenondevs.invui.window.Window;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -141,39 +143,49 @@ public class ClaimMemberListGui extends ClaimListGui {
 
         scheduler.scheduleAsync(() -> {
             PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();
-            List<String> structure = new ArrayList<>(Collections.nCopies(rows * 9, "#"));
-            structure.set(previousPage.slot(), "(");
-            structure.set(nextPage.slot(), ")");
-            structure.set(addMemberIcon.slot(), "+");
-
-            for (int slot : slots) {
-                structure.set(slot, "-");
+            CharList structure = new CharArrayList();
+            for (int i = 0; i < rows * 9; i++) {
+                structure.add('#');
             }
-
-            structure.set(filterIcon.slot(), "%");
-            structure.set(searchIcon.slot(), "&");
-
-            structure.set(membersTab.slot(), Character.toString(1));
-            structure.set(rolesTab.slot(), Character.toString(2));
-            structure.set(settingsTab.slot(), Character.toString(3));
-            structure.set(manageTab.slot(), Character.toString(4));
 
             Map<Integer, GuiTemplate.Icon> mappedIcons = new HashMap<>();
             for (GuiTemplate.Icon icon : icons) {
                 int codePoint = FIRST_SAFE_CHAR + icons.indexOf(icon);
 
-                structure.set(icon.slot(), Character.toString(codePoint));
+                structure.set(icon.slot(), (char) codePoint);
                 mappedIcons.put(codePoint, icon);
             }
 
+            structure.set(previousPage.slot(), '(');
+            structure.set(nextPage.slot(), ')');
+            structure.set(addMemberIcon.slot(), '+');
+
+            for (int slot : slots) {
+                structure.set(slot, '-');
+            }
+
+            structure.set(filterIcon.slot(), '%');
+            structure.set(searchIcon.slot(), '&');
+
+            Class<? extends BaseGui> currentClass = getClass();
+            TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
+                    structure, currentClass,
+                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), claim),
+                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), claim),
+                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), claim),
+                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), claim)
+            );
+
             String[] structureArray = new String[rows];
             for (int r = 0; r < rows; r++) {
-                List<String> rowList = structure.subList(r * 9, (r + 1) * 9);
+                CharList rowList = structure.subList(r * 9, (r + 1) * 9);
 
-                structureArray[r] = String.join("", rowList);
+                structureArray[r] = new String(rowList.toCharArray());
             }
 
             pagedGui.setStructure(structureArray);
+
+            tabsBuilder.accept(pagedGui, guis, player);
 
             for (Map.Entry<Integer, GuiTemplate.Icon> entry : mappedIcons.entrySet()) {
                 GuiTemplate.Icon icon = entry.getValue();
@@ -197,30 +209,6 @@ public class ClaimMemberListGui extends ClaimListGui {
             pagedGui.addIngredient(')', BoundItem.pagedBuilder()
                     .setItemProvider(new ItemBuilder(nextPage.item()))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
-                    .build());
-
-            pagedGui.addIngredient((char) 1, Item.builder()
-                    .setItemProvider(membersTab.item())
-                    .build());
-
-            pagedGui.addIngredient((char) 2, Item.builder()
-                    .setItemProvider(rolesTab.item())
-                    .addClickHandler(click -> {
-                    })
-                    .build());
-
-            pagedGui.addIngredient((char) 3, Item.builder()
-                    .setItemProvider(settingsTab.item())
-                    .addClickHandler(click -> guis.get(ClaimSettingsGui.class).open(player, claim))
-                    .build());
-
-            pagedGui.addIngredient((char) 4, Item.builder()
-                    .setItemProvider(manageTab.item())
-                    .addClickHandler(click -> {
-                        BaseGui gui = claim.main() == null ? guis.get(ClaimManageGui.class) : guis.get(SubClaimManageGui.class);
-
-                        gui.open(player, claim);
-                    })
                     .build());
 
             pagedGui.addIngredient('+', buildAddMemberIcon(player, claim));

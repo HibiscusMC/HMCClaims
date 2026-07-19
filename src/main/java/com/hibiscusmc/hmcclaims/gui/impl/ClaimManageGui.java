@@ -9,15 +9,20 @@ import com.hibiscusmc.hmcclaims.config.gui.MainClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
+import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.selection.Selection;
+import com.hibiscusmc.hmcclaims.storage.Storage;
+import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import it.unimi.dsi.fastutil.chars.CharArrayList;
+import it.unimi.dsi.fastutil.chars.CharList;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -27,10 +32,9 @@ import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemWrapper;
+import xyz.xenondevs.invui.util.TriConsumer;
 import xyz.xenondevs.invui.window.Window;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +50,9 @@ public class ClaimManageGui extends ClaimListGui {
     private ConfigHolder<MainClaimManageConfig> configHolder;
     @Inject
     protected ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private StorageHolder storageHolder;
 
     @Inject
     protected GuiRegistry guis;
@@ -133,14 +140,14 @@ public class ClaimManageGui extends ClaimListGui {
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
             InventoryStructure invStructure = build(player, claim);
-            List<String> structure = invStructure.structure();
-            structure.set(transferIcon.slot(), "!");
+            CharList structure = invStructure.structure();
+            structure.set(transferIcon.slot(), '!');
 
             String[] structureArray = new String[rows];
             for (int r = 0; r < rows; r++) {
-                List<String> rowList = structure.subList(r * 9, (r + 1) * 9);
+                CharList rowList = structure.subList(r * 9, (r + 1) * 9);
 
-                structureArray[r] = String.join("", rowList);
+                structureArray[r] = new String(rowList.toCharArray());
             }
 
             gui.setStructure(structureArray);
@@ -156,7 +163,12 @@ public class ClaimManageGui extends ClaimListGui {
                         .setTitle(TextUtil.parse(title.text(), Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
-                        .setUpperGui(upperGui);
+                        .setUpperGui(upperGui)
+                        .addCloseHandler(reason -> {
+                            Storage storage = storageHolder.get();
+
+                            storage.claims().saveClaimMeta(claim);
+                        });
 
                 if (lowerGui != null) {
                     window.setLowerGui(lowerGui);
@@ -168,25 +180,32 @@ public class ClaimManageGui extends ClaimListGui {
     }
 
     protected InventoryStructure build(@NotNull Player player, @NotNull Claim claim) {
-        List<String> structure = new ArrayList<>(Collections.nCopies(rows * 9, "#"));
+        CharList structure = new CharArrayList();
+        for (int i = 0; i < rows * 9; i++) {
+            structure.add('#');
+        }
 
-        structure.set(membersTab.slot(), Character.toString(1));
-        structure.set(rolesTab.slot(), Character.toString(2));
-        structure.set(settingsTab.slot(), Character.toString(3));
-        structure.set(manageTab.slot(), Character.toString(4));
-
-        structure.set(renameIcon.slot(), "(");
-        structure.set(bannedIcon.slot(), "%");
-        structure.set(lockIcon.slot(), ")");
-        structure.set(resizeIcon.slot(), "&");
+        structure.set(renameIcon.slot(), '(');
+        structure.set(bannedIcon.slot(), '%');
+        structure.set(lockIcon.slot(), ')');
+        structure.set(resizeIcon.slot(), '&');
 
         Map<Integer, GuiTemplate.Icon> mappedIcons = new HashMap<>();
         for (GuiTemplate.Icon icon : icons) {
             int codePoint = FIRST_SAFE_CHAR + icons.indexOf(icon);
 
-            structure.set(icon.slot(), Character.toString(codePoint));
+            structure.set(icon.slot(), (char) codePoint);
             mappedIcons.put(codePoint, icon);
         }
+
+        Class<? extends BaseGui> currentClass = getClass();
+        TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
+                structure, currentClass,
+                new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), claim),
+                new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), claim),
+                new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), claim),
+                new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), claim)
+        );
 
         return new InventoryStructure(structure, (gui) -> {
             for (Map.Entry<Integer, GuiTemplate.Icon> entry : mappedIcons.entrySet()) {
@@ -204,25 +223,7 @@ public class ClaimManageGui extends ClaimListGui {
                         .build());
             }
 
-            gui.addIngredient((char) 1, Item.builder()
-                    .setItemProvider(membersTab.item())
-                    .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, claim))
-                    .build());
-
-            gui.addIngredient((char) 2, Item.builder()
-                    .setItemProvider(rolesTab.item())
-                    .addClickHandler(click -> {
-                    })
-                    .build());
-
-            gui.addIngredient((char) 3, Item.builder()
-                    .setItemProvider(settingsTab.item())
-                    .addClickHandler(click -> guis.get(ClaimSettingsGui.class).open(player, claim))
-                    .build());
-
-            gui.addIngredient((char) 4, Item.builder()
-                    .setItemProvider(manageTab.item())
-                    .build());
+            tabsBuilder.accept(gui, guis, player);
 
             gui.addIngredient('(', buildRenameIcon(player, claim));
             gui.addIngredient(')', buildLockUnlockIcon(claim));
@@ -389,6 +390,6 @@ public class ClaimManageGui extends ClaimListGui {
         return null;
     }
 
-    protected record InventoryStructure(List<String> structure, Consumer<Gui.Builder<?, ?>> builder) {
+    protected record InventoryStructure(CharList structure, Consumer<Gui.Builder<?, ?>> builder) {
     }
 }

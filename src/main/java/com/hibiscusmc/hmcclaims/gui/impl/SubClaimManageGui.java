@@ -7,6 +7,7 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +18,6 @@ import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemWrapper;
 import xyz.xenondevs.invui.window.Window;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,14 +53,14 @@ public class SubClaimManageGui extends ClaimManageGui {
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
             InventoryStructure invStructure = build(player, claim);
-            List<String> structure = invStructure.structure();
-            structure.set(inheritPermissionsIcon.slot(), "!");
+            CharList structure = invStructure.structure();
+            structure.set(inheritPermissionsIcon.slot(), '!');
 
             String[] structureArray = new String[rows];
             for (int r = 0; r < rows; r++) {
-                List<String> rowList = structure.subList(r * 9, (r + 1) * 9);
+                CharList rowList = structure.subList(r * 9, (r + 1) * 9);
 
-                structureArray[r] = String.join("", rowList);
+                structureArray[r] = new String(rowList.toCharArray());
             }
 
             gui.setStructure(structureArray);
@@ -76,7 +76,12 @@ public class SubClaimManageGui extends ClaimManageGui {
                         .setTitle(TextUtil.parse(title.text(), Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
-                        .setUpperGui(upperGui);
+                        .setUpperGui(upperGui)
+                        .addCloseHandler(reason -> {
+                            Storage storage = storageHolder.get();
+
+                            storage.claims().saveClaimMeta(claim);
+                        });
 
                 if (lowerGui != null) {
                     window.setLowerGui(lowerGui);
