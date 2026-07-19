@@ -15,21 +15,31 @@ import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
-import dev.triumphteam.gui.guis.Gui;
-import dev.triumphteam.gui.guis.GuiItem;
+import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
+import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
+import it.unimi.dsi.fastutil.chars.CharArrayList;
+import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
+import xyz.xenondevs.invui.Click;
+import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.item.Item;
+import xyz.xenondevs.invui.item.ItemWrapper;
+import xyz.xenondevs.invui.util.TriConsumer;
+import xyz.xenondevs.invui.window.Window;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 @Singleton
 @SuppressWarnings({"UnstableApiUsage"})
-public class ClaimSettingsGui implements BaseGui {
+public class ClaimSettingsGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<ClaimSettingsConfig> configHolder;
@@ -48,8 +58,7 @@ public class ClaimSettingsGui implements BaseGui {
     private GuiTemplate.GuiTitle title;
     private int rows = 1;
 
-    private GuiTemplate.SimpleIcon backIcon;
-    private GuiTemplate.SimpleIcon deleteIcon;
+    protected GuiTemplate.GuiScreenType screenType;
 
     private GuiTemplate.SimpleIcon membersTab;
     private GuiTemplate.SimpleIcon rolesTab;
@@ -73,9 +82,6 @@ public class ClaimSettingsGui implements BaseGui {
         title = config.title();
         rows = config.rows();
 
-        backIcon = config.backIcon();
-        deleteIcon = config.deleteIcon();
-
         membersTab = config.tabs().get("members-tab");
         rolesTab = config.tabs().get("roles-tab");
         settingsTab = config.tabs().get("settings-tab");
@@ -87,6 +93,11 @@ public class ClaimSettingsGui implements BaseGui {
         nextPage = config.pages().get("next-page");
 
         settingPages = config.settingPages();
+
+        screenType = config.screenType();
+        if (screenType == GuiTemplate.GuiScreenType.FULL) {
+            super.loadConfig(config.lowerGui());
+        }
     }
 
     @Override
@@ -94,75 +105,111 @@ public class ClaimSettingsGui implements BaseGui {
         Claim claim = (Claim) args[0];
         int currentPage = args.length > 1 ? (int) args[1] : 1;
 
-        Gui gui = Gui.gui()
-                .title(TextUtil.parse(title.text(), Map.of(
-                        "claim_name", parseName(claim.name(), title.maxLength())
-                )))
-                .rows(rows)
-                .disableAllInteractions()
-                .create();
-
-        gui.setCloseGuiAction(action -> {
-            Storage storage = storageHolder.get();
-
-            storage.claims().saveSettings(claim);
-        });
-
         scheduler.scheduleAsync(() -> {
-            buildIcons(player, gui, claim, currentPage);
+            Gui.Builder<?, ?> gui = Gui.builder();
+            CharList structure = new CharArrayList();
+            for (int i = 0; i < rows * 9; i++) {
+                structure.add('#');
+            }
 
-            scheduler.schedule(() -> gui.open(player));
+            Char2ObjectArrayMap<GuiTemplate.Icon> mappedIcons = new Char2ObjectArrayMap<>();
+            for (GuiTemplate.Icon icon : icons) {
+                char codePoint = (char) (FIRST_SAFE_CHAR + icons.indexOf(icon));
+
+                structure.set(icon.slot(), codePoint);
+                mappedIcons.put(codePoint, icon);
+            }
+
+            Class<? extends BaseGui> currentClass = getClass();
+            TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
+                    structure, currentClass,
+                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), claim),
+                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), claim),
+                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), claim),
+                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), claim)
+            );
+
+            structure.set(previousPage.slot(), '<');
+            structure.set(nextPage.slot(), '>');
+
+            Char2ObjectArrayMap<Item> settingItems = new Char2ObjectArrayMap<>();
+            int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
+            for (ClaimSettingsConfig.SettingIcon<?> settingIcon : settingPages.getOrDefault(currentPage, List.of())) {
+                SettingItem item = buildSetting(player, claim, settingIcon);
+
+                settingItems.put((char) currentSafeCode, item.item());
+                structure.set(settingIcon.slot(), (char) currentSafeCode++);
+
+                if (settingIcon.hasModifyIcon()) {
+                    settingItems.put((char) currentSafeCode, item.modifyItem());
+                    structure.set(settingIcon.modifyIcon().slot(), (char) currentSafeCode++);
+                }
+            }
+
+            String[] structureArray = new String[rows];
+            for (int r = 0; r < rows; r++) {
+                CharList rowList = structure.subList(r * 9, (r + 1) * 9);
+
+                structureArray[r] = new String(rowList.toCharArray());
+            }
+
+            gui.setStructure(structureArray);
+
+            for (Char2ObjectMap.Entry<GuiTemplate.Icon> entry : mappedIcons.char2ObjectEntrySet()) {
+                GuiTemplate.Icon icon = entry.getValue();
+
+                gui.addIngredient(entry.getCharKey(), Item.builder()
+                        .setItemProvider(icon.item())
+                        .addClickHandler(click -> {
+                            for (Action iconAction : click.clickType() == ClickType.LEFT ?
+                                    icon.leftClickActions() :
+                                    icon.rightClickActions()) {
+                                iconAction.execute(player);
+                            }
+                        })
+                        .build());
+            }
+
+            tabsBuilder.accept(gui, guis, player);
+
+            for (Char2ObjectMap.Entry<Item> entry : settingItems.char2ObjectEntrySet()) {
+                gui.addIngredient(entry.getCharKey(), entry.getValue());
+            }
+
+            Gui lowerGui = screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player) : null;
+            Gui upperGui = gui.build();
+
+            scheduler.schedule(() -> {
+                Window.Builder.Normal.Split window = Window.builder()
+                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                                "claim_name", parseName(claim.name(), title.maxLength())
+                        )))
+                        .setUpperGui(upperGui)
+                        .addCloseHandler(reason -> {
+                            Storage storage = storageHolder.get();
+
+                            storage.claims().saveSettings(claim);
+                        });
+
+                if (lowerGui != null) {
+                    window.setLowerGui(lowerGui);
+                }
+
+                window.open(player);
+            });
         });
     }
 
-    private void buildIcons(@NotNull Player player, @NotNull Gui gui, @NotNull Claim claim, int currentPage) {
-        for (GuiTemplate.Icon icon : icons) {
-            gui.setItem(icon.slot(), new GuiItem(icon.item(), action -> {
-                for (Action iconAction : action.isLeftClick() ? icon.leftClickActions() : icon.rightClickActions()) {
-                    iconAction.execute(player);
-                }
-            }));
-        }
+    private SettingItem buildSetting(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimSettingsConfig.SettingIcon<?> settingIcon) {
+        Setting<?> setting = settingIcon.setting();
+        //noinspection unchecked
+        SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings()
+                .computeIfAbsent(setting, (k) -> SettingHolder.from(setting));
 
-        gui.setItem(membersTab.slot(), new GuiItem(membersTab.item(), action -> guis.get(ClaimMemberListGui.class)
-                .open(player, claim)));
-        gui.setItem(rolesTab.slot(), new GuiItem(rolesTab.item(), action -> player.sendRichMessage("<green>viewing roles")));
-        gui.setItem(settingsTab.slot(), new GuiItem(settingsTab.item()));
-        gui.setItem(manageTab.slot(), new GuiItem(manageTab.item(), action -> {
-            BaseGui tab = claim.main() == null ? guis.get(ClaimManageGui.class) : guis.get(SubClaimManageGui.class);
-
-            tab.open(player, claim);
-        }));
-
-        gui.setItem(deleteIcon.slot(), new GuiItem(deleteIcon.item(), action -> player.sendRichMessage("<green>viewing delete")));
-
-        gui.setItem(backIcon.slot(), new GuiItem(backIcon.item(), action ->
-                guis.get(ClaimListGui.class).open(player)
-        ));
-
-        for (ClaimSettingsConfig.SettingIcon<?> settingIcon : settingPages.getOrDefault(currentPage, List.of())) {
-            buildSetting(player, gui, claim, settingIcon);
-        }
-
-        gui.setItem(previousPage.slot(), new GuiItem(previousPage.item(), action -> {
-            if (currentPage > 1) {
-                open(player, claim, currentPage - 1);
+        BiConsumer<Item, Click> action = (it, click) -> {
+            if (click.clickType() == ClickType.DOUBLE_CLICK) {
+                return;
             }
-        }));
-
-        gui.setItem(nextPage.slot(), new GuiItem(nextPage.item(), action -> {
-            if (currentPage < settingPages.size()) {
-                open(player, claim, currentPage + 1);
-            }
-        }));
-    }
-
-    private void buildSetting(@NotNull Player player, @NotNull Gui gui, @NotNull Claim claim, @NotNull ClaimSettingsConfig.SettingIcon<?> settingIcon) {
-        Runnable action = () -> {
-            Setting<?> setting = settingIcon.setting();
-            //noinspection unchecked
-            SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings()
-                    .computeIfAbsent(setting, (k) -> SettingHolder.from(setting));
 
             boolean shouldUpdate = false;
 
@@ -176,8 +223,7 @@ public class ClaimSettingsGui implements BaseGui {
             }
 
             if (shouldUpdate) {
-                buildSetting(player, gui, claim, settingIcon);
-                gui.update();
+                it.notifyWindows();
                 return;
             }
 
@@ -200,35 +246,45 @@ public class ClaimSettingsGui implements BaseGui {
 
                         holder.value(setting.parser().apply(newValue));
 
-                        open(player, claim);
+                        it.notifyWindows();
                     })
                     .show(player);
         };
 
-        gui.setItem(settingIcon.icon().slot(), new GuiItem(settingIcon.icon().item(), event -> {
-            if (!settingIcon.hasModifyIcon()) {
-                action.run();
-            }
-        }));
+        return new SettingItem(
+                Item.builder()
+                        .setItemProvider(p -> new ItemWrapper(buildSettingIcon(holder, settingIcon.icon(), settingIcon.notSet())))
+                        .addClickHandler((it, click) -> {
+                            if (settingIcon.hasModifyIcon()) {
+                                return;
+                            }
 
-        if (settingIcon.hasModifyIcon()) {
-            Setting<?> setting = settingIcon.setting();
+                            action.accept(it, click);
+                        })
+                        .build(),
+                settingIcon.hasModifyIcon() ?
+                        Item.builder()
+                                .setItemProvider(p -> {
+                                    Object value = holder.value();
 
-            //noinspection unchecked
-            SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings().getOrDefault(setting, SettingHolder.from(setting));
-            Object value = holder.value();
+                                    ClaimSettingsConfig.SettingIcon.BooleanSettingIcon modifyIcon = settingIcon.modifyIcon();
 
-            ClaimSettingsConfig.SettingIcon.BooleanSettingIcon modifyIcon = settingIcon.modifyIcon();
+                                    GuiTemplate.DynamicIconWithStack icon;
+                                    if (value instanceof Boolean ? (Boolean) value : value != null) {
+                                        icon = modifyIcon.enabled();
+                                    } else {
+                                        icon = modifyIcon.disabled();
+                                    }
 
-            if (value instanceof Boolean ? (Boolean) value : value != null) {
-                gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.enabled(), modifyIcon.notSet()), event -> action.run()));
-            } else {
-                gui.setItem(modifyIcon.slot(), new GuiItem(buildSettingModifyIcon(holder, modifyIcon.disabled(), modifyIcon.notSet()), event -> action.run()));
-            }
-        }
+                                    return new ItemWrapper(buildSettingIcon(holder, icon, settingIcon.notSet()));
+                                })
+                                .addClickHandler(action)
+                                .build()
+                        : null
+        );
     }
 
-    private ItemStack buildSettingModifyIcon(@NotNull SettingHolder<?> holder, @NotNull GuiTemplate.DynamicIconWithStack icon, String notSetArg) {
+    private ItemStack buildSettingIcon(@NotNull SettingHolder<?> holder, @NotNull GuiTemplate.DynamicIconWithStack icon, String notSetArg) {
         ItemStack stack = icon.item();
         stack.editMeta(meta -> {
             meta.itemName(TextUtil.parse(icon.name()));
@@ -239,5 +295,8 @@ public class ClaimSettingsGui implements BaseGui {
         });
 
         return stack;
+    }
+
+    record SettingItem(Item item, Item modifyItem) {
     }
 }

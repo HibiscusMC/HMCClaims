@@ -23,6 +23,9 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     private int rows = 6;
 
+    @Setting("screen-type")
+    private GuiScreenType screenType = GuiScreenType.FULL;
+
     @Setting("delete-icon")
     private SimpleIcon deleteIcon = new SimpleIcon(ItemUtil.build(
             Material.BARRIER, "Delete claim", List.of("", "<white>Left-Click <gray>to delete claim")
@@ -65,6 +68,9 @@ public class ClaimSettingsConfig extends GuiTemplate {
             ), 41)
     );
 
+    @Setting("lower-gui")
+    private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
+
     private Map<Integer, List<SettingIcon<?>>> buildSettingPages() {
         int startSlot = 19;
         int currentPage = 1;
@@ -95,8 +101,13 @@ public class ClaimSettingsConfig extends GuiTemplate {
     @ConfigSerializable
     public static class SettingIcon<T> {
 
+        private int slot;
+
         private com.hibiscusmc.hmcclaims.claim.setting.Setting<T> setting;
-        private SimpleIcon icon;
+        private DynamicIconWithStack icon;
+
+        @Setting("value-not-set")
+        private String notSet = "Not Set";
 
         @Setting("has-modify-icon")
         private boolean hasModifyIcon = true;
@@ -112,10 +123,10 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
             List<String> lore = Arrays.stream(("<gray>" + setting.description()).split("\n")).toList();
 
-            this.icon = new SimpleIcon(
-                    ItemUtil.build(Material.BOOK, setting.displayName(), lore),
-                    slot
+            this.icon = new DynamicIconWithStack(
+                    ItemStack.of(Material.BOOK), setting.displayName(), lore
             );
+            this.slot = slot;
 
             int nextSlot = slot + 9;
 
@@ -147,9 +158,6 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
             private DynamicIconWithStack enabled;
             private DynamicIconWithStack disabled;
-
-            @Setting("not-set")
-            private String notSet = "Not Set";
 
             public BooleanSettingIcon() {
             }
