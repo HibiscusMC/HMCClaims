@@ -10,6 +10,7 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
+import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
@@ -139,8 +140,8 @@ public class ClaimMemberListGui extends ClaimListGui {
     }
 
     @Override
-    public void open(@NotNull Player player, Object... args) {
-        Claim claim = (Claim) args[0];
+    public void open(@NotNull Player player, @NotNull GuiMetadata guiMetadata) {
+        Claim claim = guiMetadata.claim();
 
         scheduler.scheduleAsync(() -> {
             PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();
@@ -171,10 +172,10 @@ public class ClaimMemberListGui extends ClaimListGui {
             Class<? extends BaseGui> currentClass = getClass();
             TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                     structure, currentClass,
-                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), claim),
-                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), claim),
-                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), claim),
-                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), claim)
+                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), guiMetadata),
+                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), guiMetadata),
+                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), guiMetadata),
+                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), guiMetadata)
             );
 
             String[] structureArray = new String[rows];
@@ -212,7 +213,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                     .build());
 
-            pagedGui.addIngredient('+', buildAddMemberIcon(player, claim));
+            pagedGui.addIngredient('+', buildAddMemberIcon(player, claim, guiMetadata));
 
             pagedGui.addIngredient('-', Markers.CONTENT_LIST_SLOT_HORIZONTAL);
 
@@ -229,7 +230,10 @@ public class ClaimMemberListGui extends ClaimListGui {
             pagedGui.addIngredient('%', buildFilter(metadata, claim, updateMembers));
             pagedGui.addIngredient('&', buildSearch(metadata, updateMembers));
 
-            Gui lowerGui = screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player) : null;
+            Gui lowerGui = guiMetadata.claimsGui() != null ? guiMetadata.claimsGui() : screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player, guiMetadata) : null;
+            if (guiMetadata.claimsGui() == null) {
+                guiMetadata.claimsGui(lowerGui);
+            }
 
             PagedGui<Item> upperGui = pagedGui.build();
             guiReference.set(upperGui);
@@ -446,7 +450,7 @@ public class ClaimMemberListGui extends ClaimListGui {
         return item;
     }
 
-    private Item buildAddMemberIcon(@NotNull Player player, @NotNull Claim claim) {
+    private Item buildAddMemberIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
                 .setItemProvider(addMemberIcon.item())
                 .addClickHandler(click -> {
@@ -468,7 +472,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                         input.onCancel(() -> {
                                     text.send(player, messagesHolder.get().inputs().cancelled());
 
-                                    open(player, claim);
+                                    open(player, metadata);
                                 })
                                 .onSubmit((member) -> {
                                     ClaimMember added = claim.addMember(member);
@@ -484,7 +488,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                                                 "claim", claim.name()
                                         ));
 
-                                        open(player, claim);
+                                        open(player, metadata);
                                     } else {
                                         text.send(player, messagesHolder.get().claims().memberAlreadyAdded());
 

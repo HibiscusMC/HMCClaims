@@ -10,6 +10,7 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SettingDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
+import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -101,9 +102,9 @@ public class ClaimSettingsGui extends ClaimListGui {
     }
 
     @Override
-    public void open(@NotNull Player player, Object... args) {
-        Claim claim = (Claim) args[0];
-        int currentPage = args.length > 1 ? (int) args[1] : 1;
+    public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        Claim claim = metadata.claim();
+        int currentPage = metadata.settingsPage();
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
@@ -123,14 +124,14 @@ public class ClaimSettingsGui extends ClaimListGui {
             Class<? extends BaseGui> currentClass = getClass();
             TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                     structure, currentClass,
-                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), claim),
-                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), claim),
-                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), claim),
-                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), claim)
+                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), metadata),
+                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), metadata),
+                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), metadata),
+                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), metadata)
             );
 
-            structure.set(previousPage.slot(), '<');
-            structure.set(nextPage.slot(), '>');
+            structure.set(previousPage.slot(), '(');
+            structure.set(nextPage.slot(), ')');
 
             Char2ObjectArrayMap<Item> settingItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
@@ -176,7 +177,11 @@ public class ClaimSettingsGui extends ClaimListGui {
                 gui.addIngredient(entry.getCharKey(), entry.getValue());
             }
 
-            Gui lowerGui = screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player) : null;
+            Gui lowerGui = metadata.claimsGui() != null ? metadata.claimsGui() : screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player, metadata) : null;
+            if (metadata.claimsGui() == null) {
+                metadata.claimsGui(lowerGui);
+            }
+
             Gui upperGui = gui.build();
 
             scheduler.schedule(() -> {

@@ -10,6 +10,7 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
+import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
@@ -135,12 +136,12 @@ public class ClaimManageGui extends ClaimListGui {
     }
 
     @Override
-    public void open(@NotNull Player player, Object... args) {
-        Claim claim = (Claim) args[0];
+    public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        Claim claim = metadata.claim();
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
-            InventoryStructure invStructure = build(player, claim);
+            InventoryStructure invStructure = build(player, claim, metadata);
             CharList structure = invStructure.structure();
             structure.set(transferIcon.slot(), '!');
 
@@ -153,10 +154,14 @@ public class ClaimManageGui extends ClaimListGui {
 
             gui.setStructure(structureArray);
 
-            gui.addIngredient('!', buildTransferIcon(player, claim));
+            gui.addIngredient('!', buildTransferIcon(player, claim, metadata));
             invStructure.builder().accept(gui);
 
-            Gui lowerGui = screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player) : null;
+            Gui lowerGui = metadata.claimsGui() != null ? metadata.claimsGui() : screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player, metadata) : null;
+            if (metadata.claimsGui() == null) {
+                metadata.claimsGui(lowerGui);
+            }
+
             Gui upperGui = gui.build();
 
             scheduler.schedule(() -> {
@@ -180,7 +185,7 @@ public class ClaimManageGui extends ClaimListGui {
         });
     }
 
-    protected InventoryStructure build(@NotNull Player player, @NotNull Claim claim) {
+    protected InventoryStructure build(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         CharList structure = new CharArrayList();
         for (int i = 0; i < rows * 9; i++) {
             structure.add('#');
@@ -202,10 +207,10 @@ public class ClaimManageGui extends ClaimListGui {
         Class<? extends BaseGui> currentClass = getClass();
         TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                 structure, currentClass,
-                new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), claim),
-                new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), claim),
-                new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), claim),
-                new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), claim)
+                new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), metadata),
+                new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), metadata),
+                new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), metadata),
+                new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), metadata)
         );
 
         return new InventoryStructure(structure, (gui) -> {
@@ -226,14 +231,14 @@ public class ClaimManageGui extends ClaimListGui {
 
             tabsBuilder.accept(gui, guis, player);
 
-            gui.addIngredient('(', buildRenameIcon(player, claim));
+            gui.addIngredient('(', buildRenameIcon(player, claim, metadata));
             gui.addIngredient(')', buildLockUnlockIcon(claim));
             gui.addIngredient('%', Item.builder().setItemProvider(bannedIcon.item()).build());
             gui.addIngredient('&', buildResizeIcon(player, claim));
         });
     }
 
-    private Item buildTransferIcon(@NotNull Player player, @NotNull Claim claim) {
+    private Item buildTransferIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
                 .setItemProvider(transferIcon.item())
                 .addClickHandler(click -> {
@@ -256,7 +261,7 @@ public class ClaimManageGui extends ClaimListGui {
                         input.onCancel(() -> {
                                     text.send(player, messagesHolder.get().inputs().cancelled());
 
-                                    open(player, claim);
+                                    open(player, metadata);
                                 })
                                 .onSubmit((member) -> {
                                     Messages messages = messagesHolder.get();
@@ -286,7 +291,7 @@ public class ClaimManageGui extends ClaimListGui {
                 .build();
     }
 
-    private Item buildRenameIcon(@NotNull Player player, @NotNull Claim claim) {
+    private Item buildRenameIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
                 .setItemProvider(renameIcon.item())
                 .addClickHandler(click -> new RenameDialog()
@@ -299,7 +304,7 @@ public class ClaimManageGui extends ClaimListGui {
 
                             claim.rename(newName);
 
-                            open(player, claim);
+                            open(player, metadata);
                         })
                         .show(player))
                 .build();

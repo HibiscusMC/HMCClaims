@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.gui.SubClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -47,12 +48,12 @@ public class SubClaimManageGui extends ClaimManageGui {
     }
 
     @Override
-    public void open(@NotNull Player player, Object... args) {
-        Claim claim = (Claim) args[0];
+    public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        Claim claim = metadata.claim();
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
-            InventoryStructure invStructure = build(player, claim);
+            InventoryStructure invStructure = build(player, claim, metadata);
             CharList structure = invStructure.structure();
             structure.set(inheritPermissionsIcon.slot(), '!');
 
@@ -68,7 +69,11 @@ public class SubClaimManageGui extends ClaimManageGui {
             gui.addIngredient('!', buildInheritIcon(claim));
             invStructure.builder().accept(gui);
 
-            Gui lowerGui = screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player) : null;
+            Gui lowerGui = metadata.claimsGui() != null ? metadata.claimsGui() : screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player, metadata) : null;
+            if (metadata.claimsGui() == null) {
+                metadata.claimsGui(lowerGui);
+            }
+
             Gui upperGui = gui.build();
 
             scheduler.schedule(() -> {

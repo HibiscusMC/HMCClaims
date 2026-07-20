@@ -32,10 +32,10 @@ public interface BaseGui {
     /**
      * Opens a context-specific version of this interface for the player.
      *
-     * @param player The player who will view the GUI.
-     * @param args   Optional contextual arguments (e.g., Claim objects, role data).
+     * @param player   The player who will view the GUI.
+     * @param metadata Contextual metadata required to render the GUI.
      */
-    default void open(@NotNull Player player, Object... args) {
+    default void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
     }
 
     /**
@@ -82,7 +82,7 @@ public interface BaseGui {
                             }
 
                             guiRegistry.get(tab.iconTab())
-                                    .open(player, tab.args());
+                                    .open(player, tab.metadata());
                         })
                         .build());
             }
@@ -95,8 +95,8 @@ public interface BaseGui {
      * @param iconTab the target GUI class this tab opens
      * @param item    the visual item stack representing the tab
      * @param slot    the inventory slot index for the tab icon
-     * @param args    optional context arguments passed when opening the target GUI
+     * @param metadata    optional context arguments passed when opening the target GUI
      */
-    record TabIcon(Class<? extends BaseGui> iconTab, ItemStack item, int slot, Object... args) {
+    record TabIcon(Class<? extends BaseGui> iconTab, ItemStack item, int slot, GuiMetadata metadata) {
     }
 }

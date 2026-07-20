@@ -12,6 +12,7 @@ import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
+import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
@@ -128,13 +129,17 @@ public class ClaimListGui implements BaseGui {
         scheduler.scheduleAsync(() -> {
             Window.Builder.Normal.Split window = Window.builder()
                     .setTitle(title)
-                    .setUpperGui(buildLowerGui(player));
+                    .setUpperGui(buildLowerGui(player, null));
 
             scheduler.schedule(() -> window.open(player));
         });
     }
 
-    protected Gui buildLowerGui(@NotNull Player player) {
+    protected Gui buildLowerGui(@NotNull Player player, @Nullable GuiMetadata guiMetadata) {
+        if (guiMetadata != null && guiMetadata.claimsGui() != null) {
+            return guiMetadata.claimsGui(); // return the cached gui instead of re-creating a new one.
+        }
+
         PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();
 
         List<String> structure = new ArrayList<>(Collections.nCopies(rows * 9, "#"));
@@ -197,7 +202,7 @@ public class ClaimListGui implements BaseGui {
         AtomicReference<PagedGui<Item>> guiReference = new AtomicReference<>(null);
 
         Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
-        Map<Claim, Item> parsedClaims = buildClaims(guiReference, claims, metadata);
+        Map<Claim, Item> parsedClaims = buildClaims(guiReference, claims, metadata, guiMetadata);
 
         Runnable updateClaims = () -> updateClaims(guiReference.get(), parsedClaims, metadata);
         pagedGui.addIngredient('%', buildFilter(metadata, updateClaims));
@@ -362,7 +367,7 @@ public class ClaimListGui implements BaseGui {
     }
 
     @NotNull
-    private Map<Claim, Item> buildClaims(@NotNull AtomicReference<PagedGui<Item>> guiReference, @NotNull Set<Claim> claims, @NotNull Metadata metadata) {
+    private Map<Claim, Item> buildClaims(@NotNull AtomicReference<PagedGui<Item>> guiReference, @NotNull Set<Claim> claims, @NotNull Metadata metadata, @Nullable GuiMetadata guiMetadata) {
         Map<Claim, Item> parsedClaims = new HashMap<>();
 
         for (Claim claim : claims) {
@@ -393,7 +398,7 @@ public class ClaimListGui implements BaseGui {
                         }
 
                         guis.get(ClaimMemberListGui.class)
-                                .open(player, claim);
+                                .open(player, guiMetadata == null ? new GuiMetadata(claim) : guiMetadata.claim(claim));
                     })
                     .build());
         }

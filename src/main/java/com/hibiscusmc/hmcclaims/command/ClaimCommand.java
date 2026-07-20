@@ -6,6 +6,7 @@ import com.hibiscusmc.hmcclaims.command.argument.ClaimMember;
 import com.hibiscusmc.hmcclaims.command.argument.PlayerOrOffline;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
 import com.hibiscusmc.hmcclaims.storage.Storage;
@@ -62,7 +63,7 @@ public class ClaimCommand implements CommandClass {
 
         ClaimMemberListGui gui = guis.get(ClaimMemberListGui.class);
 
-        gui.open(sender, claim);
+        gui.open(sender, new GuiMetadata(claim));
     }
 
     @Command(names = {"delete"})
