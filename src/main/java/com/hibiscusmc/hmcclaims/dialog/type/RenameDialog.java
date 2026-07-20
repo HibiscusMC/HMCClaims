@@ -35,7 +35,7 @@ public class RenameDialog implements Dialog {
                                 DialogInput
                                         .text("input", TextUtil.parse(messages.rename().input()))
                                         .initial((String) args[0])
-                                        .maxLength(48)
+                                        .maxLength(40)
                                         .build()
                         ))
                         .build()

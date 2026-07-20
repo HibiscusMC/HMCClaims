@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -111,7 +112,7 @@ public class Claim {
         this.region = region;
         this.main = main;
 
-        this.name = name;
+        this.name = TextUtil.strip(name);
         this.owner = owner.id();
 
         if (roles != null) {
@@ -253,7 +254,7 @@ public class Claim {
             return;
         }
 
-        this.name = newName;
+        this.name = TextUtil.strip(newName);
     }
 
     /**

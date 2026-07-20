@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}claims`
 (
     uuid           BINARY(16) PRIMARY KEY,
     owner          BINARY(16)              NOT NULL,
-    name           VARCHAR(48)             NOT NULL,
+    name VARCHAR(64) NOT NULL,
     world_name     VARCHAR(64)             NOT NULL,
     min_x          INT                     NOT NULL,
     max_x          INT                     NOT NULL,

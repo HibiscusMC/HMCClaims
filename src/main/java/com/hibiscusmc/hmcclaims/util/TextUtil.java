@@ -225,6 +225,19 @@ public class TextUtil {
     }
 
     /**
+     * Removes all tags from the text.
+     *
+     * @param unsafeText the input message, with potential tags
+     * @return the output, without tags
+     * @see MiniMessage#stripTags(String)
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static String strip(String unsafeText) {
+        return MINI_MESSAGE.stripTags(unsafeText);
+    }
+
+    /**
      * Prepends the plugin-wide message prefix to a raw string.
      * <p>
      * This method retrieves the current prefix from the {@link #messages} config holder.

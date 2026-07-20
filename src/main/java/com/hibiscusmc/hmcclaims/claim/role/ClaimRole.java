@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.claim.role;
 
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,7 +45,7 @@ public class ClaimRole {
      */
     public ClaimRole(@Nullable UUID id, String name, Set<Permission> permissions) {
         this.id = id;
-        this.name = Objects.requireNonNull(name, "name cannot be null");
+        this.name = Objects.requireNonNull(TextUtil.strip(name), "name cannot be null");
 
         this.permissions = permissions;
     }
@@ -71,7 +72,7 @@ public class ClaimRole {
             return;
         }
 
-        this.name = newName;
+        this.name = TextUtil.strip(newName);
     }
 
     /**
