@@ -301,7 +301,7 @@ public class ClaimListGui implements BaseGui {
                 .addClickHandler((it, click) -> {
                     if (click.clickType() == ClickType.LEFT) {
                         metadata.filter().updateAndGet(Filter::next);
-                    } else {
+                    } else if (click.clickType() == ClickType.RIGHT) {
                         metadata.filter().updateAndGet(Filter::previous);
                     }
 
@@ -376,7 +376,7 @@ public class ClaimListGui implements BaseGui {
                     .addClickHandler((it, click) -> {
                         Player player = click.player();
 
-                        if (click.clickType().isRightClick()) {
+                        if (click.clickType() == ClickType.RIGHT) {
                             new RenameDialog()
                                     .create(messagesHolder.get().dialogs(), claim.name())
                                     .onSubmit(view -> {

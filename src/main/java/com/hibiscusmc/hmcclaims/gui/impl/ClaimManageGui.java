@@ -219,13 +219,11 @@ public class ClaimManageGui extends ClaimListGui {
 
                 gui.addIngredient((char) entry.getKey().intValue(), Item.builder()
                         .setItemProvider(icon.item())
-                        .addClickHandler(click -> {
-                            for (Action iconAction : click.clickType() == ClickType.LEFT ?
-                                    icon.leftClickActions() :
-                                    icon.rightClickActions()) {
-                                iconAction.execute(player);
-                            }
-                        })
+                        .addClickHandler(click -> (switch (click.clickType()) {
+                            case LEFT -> icon.leftClickActions();
+                            case RIGHT -> icon.rightClickActions();
+                            default -> List.<Action>of();
+                        }).forEach(action -> action.execute(player)))
                         .build());
             }
 
