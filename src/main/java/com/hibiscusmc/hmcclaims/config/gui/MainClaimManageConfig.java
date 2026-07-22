@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class MainClaimManageConfig extends ClaimManageConfig {
     private int rows = 6;
 
     @Setting("screen-type")
+    @Comment(GuiScreenType.DESCRIPTION)
     private GuiScreenType screenType = GuiScreenType.FULL;
 
     @Setting("extra-icons")

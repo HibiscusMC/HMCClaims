@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.List;
@@ -20,14 +21,24 @@ public class GuiTemplate {
     @ConfigSerializable
     public static class GuiTitle {
 
+        @Comment("The title of the GUI")
         private String text;
 
         @Setting("max-length")
+        @Comment("""
+                This defines the max length of the Claim name, not the title itself!
+                Setting this to -1 will disable the feature.
+                Claim names that exceed the length will be sliced and suffixed with "...\"""")
         private int maxLength;
 
         protected GuiTitle(String text) {
             this.text = text;
             this.maxLength = 28;
+        }
+
+        protected GuiTitle(String text, int maxLength) {
+            this.text = text;
+            this.maxLength = maxLength;
         }
 
         public GuiTitle() {
@@ -183,6 +194,17 @@ public class GuiTemplate {
 
     public enum GuiScreenType {
         FULL,
-        NORMAL
+        NORMAL;
+
+        /**
+         * @noinspection ProtectedMemberInFinalClass
+         */
+        protected static final String DESCRIPTION = """
+                ┌─ Options:
+                ├─ FULL
+                ├   Uses both the top and the bottom inventories, using the lower part to
+                │   display player claims.
+                ├─ NORMAL
+                └   Only uses the top part of the inventory""";
     }
 }

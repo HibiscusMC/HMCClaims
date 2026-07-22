@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
     private int rows = 6;
 
     @Setting("screen-type")
+    @Comment(GuiScreenType.DESCRIPTION)
     private GuiScreenType screenType = GuiScreenType.FULL;
 
     @Setting("delete-icon")
@@ -110,6 +112,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
         private String notSet = "Not Set";
 
         @Setting("has-modify-icon")
+        @Comment("If this is set to false, players will have to interact with the icon itself")
         private boolean hasModifyIcon = true;
 
         @Setting("modify-icon")

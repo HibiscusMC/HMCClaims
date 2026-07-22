@@ -14,10 +14,6 @@ import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
-import org.spongepowered.configurate.objectmapping.ObjectMapper;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.NodeResolver;
-import org.spongepowered.configurate.objectmapping.meta.Processor;
 import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import org.spongepowered.configurate.yaml.internal.snakeyaml.DumperOptions;
@@ -37,6 +33,25 @@ public class ConfigFactory {
      */
     private final static Map<Class<?>, ConfigHolder<?>> CONFIG_FILES
             = new HashMap<>();
+
+    /**
+     * The header that will be printed in every config file.
+     */
+    public final static String CONFIG_HEADER = """
+            ┌─────────────────────────────────────────────────────────────────────┐
+            │                                                                     │
+            │       |   |   \\  |   ___|   ___|  |        _)                       │
+            │       |   |  |\\/ |  |      |      |   _` |  |  __ `__ \\    __|      │
+            │       ___ |  |   |  |      |      |  (   |  |  |   |   | \\__ \\      │
+            │      _|  _| _|  _| \\____| \\____| _| \\__,_| _| _|  _|  _| ____/      │
+            │                                                                     │
+            │                A modern claims engine designed for                  │
+            │             performance, flexibility, and reliability.              │
+            │                                                                     │
+            │                    © Hibiscus Creative Studios                      │
+            │                                                                     │
+            └─────────────────────────────────────────────────────────────────────┘
+            """;
 
     /**
      * Reloads an existing configuration file from its stored path.
@@ -82,17 +97,12 @@ public class ConfigFactory {
             return;
         }
 
-        ObjectMapper.Factory factory = ObjectMapper.factoryBuilder()
-                .addNodeResolver(NodeResolver.nodeFromParent())
-                .addProcessor(Comment.class, Processor.comments())
-                .build();
-
         YamlConfigurationLoader.Builder builder = YamlConfigurationLoader.builder()
                 .path(path)
                 .defaultOptions(opts -> opts
                         .shouldCopyDefaults(true)
+                        .header(CONFIG_HEADER)
                         .serializers(build -> build
-                                .registerAnnotatedObjects(factory)
                                 .register(ItemStack.class, CustomItemSerializer.INSTANCE)
                                 .register(Permission.class, PermissionSerializer.INSTANCE)
                                 .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
@@ -102,6 +112,7 @@ public class ConfigFactory {
                         )
                 )
                 .indent(2)
+                .commentsEnabled(true)
                 .nodeStyle(NodeStyle.BLOCK);
 
         Field optsField = builder.getClass().getDeclaredField("options");

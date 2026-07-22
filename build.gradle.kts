@@ -13,12 +13,13 @@ val serverVersion = "26.1.2"
 val serverSnapshot = "build.+"
 
 repositories {
-    mavenCentral()
+    maven("https://repo.hibiscusmc.com/releases/")
 
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/releases/")
-    maven("https://repo.hibiscusmc.com/releases/")
     maven("https://repo.xenondevs.xyz/releases")
+
+    mavenCentral()
 }
 
 dependencies {
@@ -53,7 +54,9 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.42")
 
     // Configurate
-    compileOnly("org.spongepowered:configurate-yaml:4.2.0")
+    implementation("org.spongepowered:configurate-core:4.3.0-SNAPSHOT")
+    implementation("org.spongepowered:configurate-yaml:4.3.0-SNAPSHOT")
+
     // HikariCP
     compileOnly("com.zaxxer:HikariCP:7.0.2")
 }
@@ -103,6 +106,7 @@ tasks {
         relocate("team.unnamed.inject", "$main.inject")
         relocate("com.google.protobuf", "$main.protobuf")
         relocate("team.unnamed.commandflow", "$main.commandflow")
+        relocate("org.spongepowered.configurate", "$main.configurate")
 
         archiveFileName.set("HMCClaims-${version}.jar")
     }
