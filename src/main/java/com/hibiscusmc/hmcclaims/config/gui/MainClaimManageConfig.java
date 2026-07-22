@@ -16,7 +16,7 @@ import java.util.Map;
 @SuppressWarnings({"FieldMayBeFinal"})
 public class MainClaimManageConfig extends ClaimManageConfig {
 
-    private GuiTitle title = new GuiTitle("<claim_name>");
+    private GuiTitle title = new GuiTitle("Manage | <claim_name>", 19);
 
     private int rows = 6;
 

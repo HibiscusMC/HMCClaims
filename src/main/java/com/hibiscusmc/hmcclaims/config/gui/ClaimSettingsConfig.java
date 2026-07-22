@@ -20,7 +20,7 @@ import java.util.Map;
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimSettingsConfig extends GuiTemplate {
 
-    private GuiTitle title = new GuiTitle("<claim_name>");
+    private GuiTitle title = new GuiTitle("Settings | <claim_name>", 17);
 
     private int rows = 6;
 
