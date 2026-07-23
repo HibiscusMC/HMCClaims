@@ -8,8 +8,8 @@ import com.hibiscusmc.hmcclaims.config.gui.BaseListGuiConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
-import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
+import com.hibiscusmc.hmcclaims.dialog.type.SingleInputDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
@@ -377,8 +377,12 @@ public class ClaimListGui implements BaseGui {
                         Player player = click.player();
 
                         if (click.clickType() == ClickType.RIGHT) {
-                            new RenameDialog()
-                                    .create(messagesHolder.get().dialogs(), claim.name())
+                            new SingleInputDialog()
+                                    .create(
+                                            messagesHolder.get().dialogs().rename(),
+                                            Map.of("claim_name", claim.name()), Map.of(),
+                                            claim.name(), 40
+                                    )
                                     .onSubmit(view -> {
                                         String newName = view.getText("input");
                                         if (newName == null) {

@@ -192,9 +192,30 @@ public class Messages {
 
         private Search search = new Search();
 
-        private Rename rename = new Rename();
+        private SingleInput rename = new SingleInput(
+                "Rename Your Claim", "Input the new name",
+                Map.of(
+                        "submit", new Button(
+                                "Confirm", "Click to rename your claim"
+                        ),
+                        "cancel", new Button(
+                                "Cancel", "Click to cancel"
+                        )
+                )
 
-        private ClaimSetting setting = new ClaimSetting();
+        );
+
+        private SingleInput setting = new SingleInput(
+                "Change Setting | <claim_name>", "<setting_name>",
+                Map.of(
+                        "submit", new Button(
+                                "Confirm", "Click to change setting"
+                        ),
+                        "cancel", new Button(
+                                "Cancel", "Click to cancel"
+                        )
+                )
+        );
 
         @Getter
         @ConfigSerializable
@@ -226,38 +247,22 @@ public class Messages {
 
         @Getter
         @ConfigSerializable
-        public static class Rename {
+        public static class SingleInput {
 
-            private String title = "Rename Your Claim";
+            private String title;
 
-            private String input = "Input the new name";
+            private String input;
 
-            private Map<String, Button> buttons = Map.of(
-                    "submit", new Button(
-                            "Confirm", "Click to rename your claim"
-                    ),
-                    "cancel", new Button(
-                            "Cancel", "Click to cancel"
-                    )
-            );
-        }
+            private Map<String, Button> buttons;
 
-        @Getter
-        @ConfigSerializable
-        public static class ClaimSetting {
+            public SingleInput(String title, String input, Map<String, Button> buttons) {
+                this.title = title;
+                this.input = input;
+                this.buttons = buttons;
+            }
 
-            private String title = "Change Setting | <claim_name>";
-
-            private String input = "<setting_name>";
-
-            private Map<String, Button> buttons = Map.of(
-                    "submit", new Button(
-                            "Confirm", "Click to change setting"
-                    ),
-                    "cancel", new Button(
-                            "Cancel", "Click to cancel"
-                    )
-            );
+            public SingleInput() {
+            }
         }
 
         @Getter
@@ -275,6 +280,11 @@ public class Messages {
                 this.label = label;
                 this.tooltip = tooltip;
             }
+        }
+
+        @Getter
+        @ConfigSerializable
+        public static class InputBased {
 
         }
     }

@@ -19,36 +19,35 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"UnstableApiUsage"})
-public class SettingDialog implements Dialog {
+public class SingleInputDialog implements Dialog {
 
     private io.papermc.paper.dialog.Dialog dialog;
 
     private Consumer<DialogResponseView> onSubmit;
     private Runnable onCancel;
 
-    @Override
-    public Dialog create(Messages.Dialogs messages, Object... args) {
+    public Dialog create(Messages.Dialogs.SingleInput messages, Map<String, String> titlePlaceholders, Map<String, String> labelPlaceholders, String initialValue) {
+        return create(messages, titlePlaceholders, labelPlaceholders, initialValue, 100);
+    }
+
+    public Dialog create(Messages.Dialogs.SingleInput messages, Map<String, String> titlePlaceholders, Map<String, String> labelPlaceholders, String initialValue, int maxLength) {
         this.dialog = io.papermc.paper.dialog.Dialog.create(builder -> builder.empty()
                 .base(DialogBase
-                        .builder(TextUtil.parse(messages.setting().title(), Map.of(
-                                "claim_name", (String) args[0]
-                        )))
+                        .builder(TextUtil.parse(messages.title(), titlePlaceholders))
                         .canCloseWithEscape(true)
                         .inputs(List.of(
                                 DialogInput
-                                        .text("input", TextUtil.parse(messages.setting().input(), Map.of(
-                                                "setting_name", (String) args[1]
-                                        )))
-                                        .initial((String) args[2])
-                                        .maxLength(100)
+                                        .text("input", TextUtil.parse(messages.input(), labelPlaceholders))
+                                        .initial(initialValue)
+                                        .maxLength(maxLength)
                                         .build()
                         ))
                         .build()
                 )
                 .type(DialogType.confirmation(
                         ActionButton.create(
-                                TextUtil.parse(messages.setting().buttons().get("submit").label()),
-                                TextUtil.parse(messages.setting().buttons().get("submit").tooltip()),
+                                TextUtil.parse(messages.buttons().get("submit").label()),
+                                TextUtil.parse(messages.buttons().get("submit").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {
@@ -63,8 +62,8 @@ public class SettingDialog implements Dialog {
                                 )
                         ),
                         ActionButton.create(
-                                TextUtil.parse(messages.setting().buttons().get("cancel").label()),
-                                TextUtil.parse(messages.setting().buttons().get("cancel").tooltip()),
+                                TextUtil.parse(messages.buttons().get("cancel").label()),
+                                TextUtil.parse(messages.buttons().get("cancel").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {

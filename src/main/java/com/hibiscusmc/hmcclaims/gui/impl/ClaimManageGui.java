@@ -7,7 +7,7 @@ import com.hibiscusmc.hmcclaims.config.gui.ClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.gui.MainClaimManageConfig;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
-import com.hibiscusmc.hmcclaims.dialog.type.RenameDialog;
+import com.hibiscusmc.hmcclaims.dialog.type.SingleInputDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
@@ -26,7 +26,6 @@ import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
@@ -292,8 +291,12 @@ public class ClaimManageGui extends ClaimListGui {
     private Item buildRenameIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
                 .setItemProvider(renameIcon.item())
-                .addClickHandler(click -> new RenameDialog()
-                        .create(messagesHolder.get().dialogs(), claim.name())
+                .addClickHandler(click -> new SingleInputDialog()
+                        .create(
+                                messagesHolder.get().dialogs().rename(),
+                                Map.of("claim_name", claim.name()), Map.of(),
+                                claim.name(), 40
+                        )
                         .onSubmit(view -> {
                             String newName = view.getText("input");
                             if (newName == null) {
