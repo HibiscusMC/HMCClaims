@@ -207,7 +207,7 @@ public class ClaimManageGui extends ClaimListGui {
         TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                 structure, currentClass,
                 new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), metadata),
-                new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), metadata),
+                new TabIcon(ClaimRolesGui.class, rolesTab.item(), rolesTab.slot(), metadata),
                 new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), metadata),
                 new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), metadata)
         );
@@ -293,7 +293,7 @@ public class ClaimManageGui extends ClaimListGui {
                 .setItemProvider(renameIcon.item())
                 .addClickHandler(click -> new SingleInputDialog()
                         .create(
-                                messagesHolder.get().dialogs().rename(),
+                                messagesHolder.get().dialogs().renameClaim(),
                                 Map.of("claim_name", claim.name()), Map.of(),
                                 claim.name(), 40
                         )

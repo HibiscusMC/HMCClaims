@@ -192,7 +192,8 @@ public class Messages {
 
         private Search search = new Search();
 
-        private SingleInput rename = new SingleInput(
+        @Setting("rename-claim")
+        private SingleInput renameClaim = new SingleInput(
                 "Rename Your Claim", "Input the new name",
                 Map.of(
                         "submit", new Button(
@@ -202,7 +203,19 @@ public class Messages {
                                 "Cancel", "Click to cancel"
                         )
                 )
+        );
 
+        @Setting("rename-role")
+        private SingleInput renameRole = new SingleInput(
+                "Rename | <role_name>", "Input the new name",
+                Map.of(
+                        "submit", new Button(
+                                "Confirm", "Click to rename role"
+                        ),
+                        "cancel", new Button(
+                                "Cancel", "Click to cancel"
+                        )
+                )
         );
 
         private SingleInput setting = new SingleInput(
@@ -210,6 +223,19 @@ public class Messages {
                 Map.of(
                         "submit", new Button(
                                 "Confirm", "Click to change setting"
+                        ),
+                        "cancel", new Button(
+                                "Cancel", "Click to cancel"
+                        )
+                )
+        );
+
+        @Setting("create-role")
+        private SingleInput createRole = new SingleInput(
+                "Create New Role", "Role Name",
+                Map.of(
+                        "submit", new Button(
+                                "Confirm", "Click to create role"
                         ),
                         "cancel", new Button(
                                 "Cancel", "Click to cancel"

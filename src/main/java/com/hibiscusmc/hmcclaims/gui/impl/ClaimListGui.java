@@ -377,7 +377,7 @@ public class ClaimListGui implements BaseGui {
                         if (click.clickType() == ClickType.RIGHT) {
                             new SingleInputDialog()
                                     .create(
-                                            messagesHolder.get().dialogs().rename(),
+                                            messagesHolder.get().dialogs().renameClaim(),
                                             Map.of("claim_name", claim.name()), Map.of(),
                                             claim.name(), 40
                                     )

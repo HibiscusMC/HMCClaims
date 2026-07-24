@@ -14,6 +14,8 @@ message RoleData {
   optional int32 position = 2;
 
   repeated string permissions = 3;
+
+  optional int64 creation_date = 4;
 }
 
 message MembersMessage {

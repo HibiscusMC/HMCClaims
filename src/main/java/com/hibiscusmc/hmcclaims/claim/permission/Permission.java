@@ -20,6 +20,10 @@ public record Permission(Key key, String displayName, String description) {
             new Permission("manage_member_roles", "Manage Member Roles", "Allows to modify other member roles");
     public final static Permission MANAGE_MEMBER_PERMISSIONS =
             new Permission("manage_member_permissions", "Manage Member Permissions", "Allows to modify other member permissions");
+    public final static Permission MANAGE_ROLES =
+            new Permission("manage_roles", "", "");
+    public final static Permission MANAGE_ROLE_PERMISSIONS =
+            new Permission("manage_role_permissions", "", "");
 
     // Interactions within the claim permissions
     public final static Permission PLACE_BLOCK =

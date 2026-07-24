@@ -35,13 +35,13 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve("default-roles.yml"), DefaultRoles.class);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), ClaimListConfig.class, true);
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "member-list.yml")), ClaimMemberListConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-members.yml")), ClaimMemberListConfig.class, true);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-roles.yml")), ClaimRolesConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-settings.yml")), ClaimSettingsConfig.class, true);
 
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "manage-main-claim.yml")), MainClaimManageConfig.class, true);
-            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "manage-sub-claim.yml")), SubClaimManageConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-manage.yml")), MainClaimManageConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "sub-claim-manage.yml")), SubClaimManageConfig.class, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

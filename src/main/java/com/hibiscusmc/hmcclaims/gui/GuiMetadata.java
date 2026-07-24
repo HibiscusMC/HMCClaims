@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import lombok.Data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.window.Window;
 
 /**
  * Holds contextual metadata and navigation history for GUI rendering.
@@ -25,7 +26,7 @@ public class GuiMetadata {
      * The previous GUI instance for backwards navigation.
      */
     @MonotonicNonNull
-    private BaseGui previousPage;
+    private Window previousPage;
 
     /**
      * The parent claims overview GUI instance.

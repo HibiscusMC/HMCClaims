@@ -4,6 +4,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.Normalizer;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -11,6 +14,9 @@ import java.util.regex.Pattern;
  * Utility for string manipulation and fuzzy comparison.
  */
 public class StringUtil {
+
+    private final static DateTimeFormatter DATE_FORMATTER
+            = DateTimeFormatter.ofPattern("MM/dd/yyyy").withZone(ZoneId.systemDefault());
 
     private final static Pattern NFD_PATTERN
             = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
@@ -54,5 +60,17 @@ public class StringUtil {
         return NFD_PATTERN.matcher(Normalizer.normalize(string, Normalizer.Form.NFD))
                 .replaceAll("")
                 .toLowerCase();
+    }
+
+    /**
+     * Formats an instant into a readable date in the {@code MM/dd/yyyy} format.
+     *
+     * @param instant The instant for the date
+     * @return The readable date
+     */
+    @NotNull
+    @Contract(pure = true)
+    public static String formatDate(@NotNull Instant instant) {
+        return DATE_FORMATTER.format(instant);
     }
 }

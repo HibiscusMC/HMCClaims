@@ -20,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ public class ClaimSerializer {
                     .setName(role.name())
                     .setPosition(roles.indexOf(role))
                     .addAllPermissions(role.permissions().stream().map(permission -> permission.key().asString()).toList())
+                    .setCreationDate(role.creationTimestamp().toEpochMilli())
                     .build();
 
             rolesMessageBuilder.putRoles(role.id().toString(), roleData);
@@ -126,6 +128,8 @@ public class ClaimSerializer {
 
                 ClaimRole role = new ClaimRole(roleId, data.getName(), permissions);
                 role.position(data.getPosition());
+                role.creationTimestamp(Instant.ofEpochMilli(data.getCreationDate()));
+
                 roles.add(role);
             });
 

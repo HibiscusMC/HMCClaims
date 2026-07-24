@@ -36,11 +36,6 @@ dependencies {
         exclude("net.kyori")
     }
 
-    // TriumphGUI
-    implementation("dev.triumphteam:triumph-gui:3.1.13") {
-        exclude("net.kyori")
-        exclude("com.google.gson")
-    }
     // InvUI
     implementation("xyz.xenondevs.invui:invui:2.0.0")
 
@@ -101,7 +96,6 @@ tasks {
 
         val main = "${rootProject.group}.libs"
 
-        relocate("dev.triumphteam.gui", "$main.gui")
         relocate("xyz.xenondevs.invui", "$main.invui")
         relocate("team.unnamed.inject", "$main.inject")
         relocate("com.google.protobuf", "$main.protobuf")

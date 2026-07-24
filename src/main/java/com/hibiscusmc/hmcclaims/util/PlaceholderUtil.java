@@ -13,8 +13,6 @@ import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,8 +25,6 @@ import java.util.Map;
  */
 @Singleton
 public class PlaceholderUtil {
-
-    private final static DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy").withZone(ZoneId.systemDefault());
 
     @Inject
     private UserManager userManager;
@@ -124,7 +120,7 @@ public class PlaceholderUtil {
         map.put("total_x", ((region.maxX() - region.minX()) + 1) + "");
         map.put("total_z", ((region.maxZ() - region.minZ()) + 1) + "");
         map.put("member_count", totalMembers + "");
-        map.put("creation_date", FORMATTER.format(claim.claimedTimestamp()));
+        map.put("creation_date", StringUtil.formatDate(claim.claimedTimestamp()));
 
         return map;
     }
@@ -150,7 +146,7 @@ public class PlaceholderUtil {
 
         map.put("name", member.lastKnownName());
         map.put("role", member.role().name());
-        map.put("joined_date", FORMATTER.format(member.joinedTimestamp()));
+        map.put("joined_date", StringUtil.formatDate(member.joinedTimestamp()));
 
         return map;
     }

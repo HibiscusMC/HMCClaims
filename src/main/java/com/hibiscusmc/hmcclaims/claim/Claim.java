@@ -235,7 +235,7 @@ public class Claim {
      * Renames the claim
      *
      * @param newName the new claim name
-     * @throws IllegalArgumentException if the claim name is not valid (is empty, less than 2 or higher than 48 characters)
+     * @throws IllegalArgumentException if the claim name is not valid (is empty, less than 2 or higher than 40 characters)
      */
     public void rename(@NotNull String newName) {
         if (newName.isEmpty()) {
@@ -246,8 +246,8 @@ public class Claim {
             throw new IllegalArgumentException("claim name cannot be less than 2 characters");
         }
 
-        if (newName.length() > 48) {
-            throw new IllegalArgumentException("claim name cannot be longer than 48 characters");
+        if (newName.length() > 40) {
+            throw new IllegalArgumentException("claim name cannot be longer than 40 characters");
         }
 
         if (newName.equals(this.name)) {

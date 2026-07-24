@@ -43,7 +43,7 @@ public class SearchDialog implements Dialog {
         List<DialogInput> inputs = new ArrayList<>();
         inputs.add(DialogInput
                 .text("query", TextUtil.parse(messages.search().query()))
-                .maxLength(48)
+                .maxLength(40)
                 .build());
 
         if (!options.isEmpty()) {

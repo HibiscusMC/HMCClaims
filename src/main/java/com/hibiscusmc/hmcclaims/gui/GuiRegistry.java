@@ -3,6 +3,8 @@ package com.hibiscusmc.hmcclaims.gui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimListGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimManageGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimPermissionsGui;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimRolesGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimSettingsGui;
 import com.hibiscusmc.hmcclaims.gui.impl.SubClaimManageGui;
 import team.unnamed.inject.Inject;
@@ -45,9 +47,11 @@ public class GuiRegistry {
         multiRegister(
                 ClaimListGui.class,
                 ClaimMemberListGui.class,
+                ClaimSettingsGui.class,
+                ClaimRolesGui.class,
                 ClaimManageGui.class,
                 SubClaimManageGui.class,
-                ClaimSettingsGui.class
+                ClaimPermissionsGui.class
         );
     }
 

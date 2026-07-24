@@ -7,7 +7,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
-import com.hibiscusmc.hmcclaims.dialog.type.SettingDialog;
+import com.hibiscusmc.hmcclaims.dialog.type.SingleInputDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
@@ -125,7 +125,7 @@ public class ClaimSettingsGui extends ClaimListGui {
             TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                     structure, currentClass,
                     new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), metadata),
-                    new TabIcon(ClaimMemberListGui.class, rolesTab.item(), rolesTab.slot(), metadata),
+                    new TabIcon(ClaimRolesGui.class, rolesTab.item(), rolesTab.slot(), metadata),
                     new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), metadata),
                     new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), metadata)
             );
@@ -239,8 +239,12 @@ public class ClaimSettingsGui extends ClaimListGui {
                 }
             }
 
-            new SettingDialog()
-                    .create(messagesHolder.get().dialogs(), claim.name(), settingName, holder.value() != null ? holder.value() : holder.setting().defaultValue())
+            new SingleInputDialog()
+                    .create(
+                            messagesHolder.get().dialogs().setting(),
+                            Map.of("claim_name", claim.name()), Map.of("setting_name", settingName),
+                            holder.value() != null ? holder.value().toString() : holder.setting().defaultValue().toString()
+                    )
                     .onSubmit(view -> {
                         String newValue = view.getText("input");
                         if (newValue == null) {

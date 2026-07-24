@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -34,6 +35,9 @@ public class ClaimRole {
 
     @Setter
     private int position = -1;
+
+    @Setter
+    private Instant creationTimestamp = Instant.now();
 
     /**
      * Creates a new immutable claim role.
@@ -64,8 +68,8 @@ public class ClaimRole {
             throw new IllegalArgumentException("role name cannot be less than 2 characters");
         }
 
-        if (newName.length() > 48) {
-            throw new IllegalArgumentException("role name cannot be longer than 48 characters");
+        if (newName.length() > 40) {
+            throw new IllegalArgumentException("role name cannot be longer than 40 characters");
         }
 
         if (newName.equals(this.name)) {
