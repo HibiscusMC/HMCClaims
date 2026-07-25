@@ -1,5 +1,12 @@
 package com.hibiscusmc.hmcclaims.gui;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimManageGui;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimRolesGui;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimSettingsGui;
+import com.hibiscusmc.hmcclaims.gui.impl.SubClaimManageGui;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharList;
@@ -58,10 +65,22 @@ public interface BaseGui {
      *
      * @param structure  the character grid layout of the GUI
      * @param currentTab the class of the currently active GUI tab
-     * @param tabs       the navigation icons to map and render
+     * @param claim      the claim this menu belongs to
+     * @param metadata   the metadata related to this set of GUIs
+     * @param tabIcons   an array of icons related to the tabs
      * @return a {@link TriConsumer} configured to handle the layout and click actions for the tabs
      */
-    default TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> buildTabs(@NotNull CharList structure, @NotNull Class<? extends BaseGui> currentTab, @NotNull TabIcon... tabs) {
+    default TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> buildTabs(
+            @NotNull CharList structure, @NotNull Class<? extends BaseGui> currentTab, @NotNull Claim claim, @NotNull GuiMetadata metadata,
+            @NotNull GuiTemplate.SimpleIcon... tabIcons
+    ) {
+        TabIcon[] tabs = new TabIcon[]{
+                new TabIcon(ClaimMemberListGui.class, tabIcons[0].item(), tabIcons[0].slot(), metadata),
+                new TabIcon(ClaimRolesGui.class, tabIcons[1].item(), tabIcons[1].slot(), metadata),
+                new TabIcon(ClaimSettingsGui.class, tabIcons[2].item(), tabIcons[2].slot(), metadata),
+                new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, tabIcons[3].item(), tabIcons[3].slot(), metadata)
+        };
+
         Char2ObjectMap<TabIcon> map = new Char2ObjectOpenHashMap<>();
 
         int i = 0;
@@ -92,10 +111,10 @@ public interface BaseGui {
     /**
      * Represents a navigation tab icon within a GUI.
      *
-     * @param iconTab the target GUI class this tab opens
-     * @param item    the visual item stack representing the tab
-     * @param slot    the inventory slot index for the tab icon
-     * @param metadata    optional context arguments passed when opening the target GUI
+     * @param iconTab  the target GUI class this tab opens
+     * @param item     the visual item stack representing the tab
+     * @param slot     the inventory slot index for the tab icon
+     * @param metadata optional context arguments passed when opening the target GUI
      */
     record TabIcon(Class<? extends BaseGui> iconTab, ItemStack item, int slot, GuiMetadata metadata) {
     }

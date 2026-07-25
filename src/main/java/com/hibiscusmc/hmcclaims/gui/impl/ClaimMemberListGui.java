@@ -171,11 +171,8 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             Class<? extends BaseGui> currentClass = getClass();
             TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
-                    structure, currentClass,
-                    new TabIcon(ClaimMemberListGui.class, membersTab.item(), membersTab.slot(), guiMetadata),
-                    new TabIcon(ClaimRolesGui.class, rolesTab.item(), rolesTab.slot(), guiMetadata),
-                    new TabIcon(ClaimSettingsGui.class, settingsTab.item(), settingsTab.slot(), guiMetadata),
-                    new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, manageTab.item(), manageTab.slot(), guiMetadata)
+                    structure, currentClass, claim, guiMetadata,
+                    membersTab, rolesTab, settingsTab, manageTab
             );
 
             String[] structureArray = new String[rows];
