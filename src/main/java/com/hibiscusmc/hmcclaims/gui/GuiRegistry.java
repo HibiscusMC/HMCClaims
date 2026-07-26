@@ -3,7 +3,7 @@ package com.hibiscusmc.hmcclaims.gui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimListGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimManageGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
-import com.hibiscusmc.hmcclaims.gui.impl.ClaimPermissionsGui;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimRoleManageGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimRolesGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimSettingsGui;
 import com.hibiscusmc.hmcclaims.gui.impl.SubClaimManageGui;
@@ -51,7 +51,7 @@ public class GuiRegistry {
                 ClaimRolesGui.class,
                 ClaimManageGui.class,
                 SubClaimManageGui.class,
-                ClaimPermissionsGui.class
+                ClaimRoleManageGui.class
         );
     }
 

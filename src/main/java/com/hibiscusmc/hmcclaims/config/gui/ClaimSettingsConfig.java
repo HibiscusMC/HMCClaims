@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
@@ -59,7 +60,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
     );
 
     @Setting("setting-pages")
-    private Map<Integer, List<SettingIcon<?>>> settingPages = buildSettingPages();
+    private Map<Integer, List<ToggleSettingIcon<com.hibiscusmc.hmcclaims.claim.setting.Setting<?>>>> settingPages = buildSettingPages();
 
     private Map<String, SimpleIcon> pages = Map.of(
             "previous-page", new SimpleIcon(ItemUtil.build(
@@ -70,18 +71,37 @@ public class ClaimSettingsConfig extends GuiTemplate {
             ), 41)
     );
 
+    private Map<Boolean, String> states = Map.of(
+            true, "<green>Enabled",
+            false, "<red>Disabled"
+    );
+
     @Setting("lower-gui")
     private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
 
-    private Map<Integer, List<SettingIcon<?>>> buildSettingPages() {
+    @NotNull
+    private Map<Integer, List<ToggleSettingIcon<com.hibiscusmc.hmcclaims.claim.setting.Setting<?>>>> buildSettingPages() {
         int startSlot = 19;
         int currentPage = 1;
 
-        List<SettingIcon<?>> settings = new ArrayList<>();
-        Map<Integer, List<SettingIcon<?>>> pages = new HashMap<>();
+        List<ToggleSettingIcon<com.hibiscusmc.hmcclaims.claim.setting.Setting<?>>> settings = new ArrayList<>();
+        Map<Integer, List<ToggleSettingIcon<com.hibiscusmc.hmcclaims.claim.setting.Setting<?>>>> pages = new HashMap<>();
 
         for (com.hibiscusmc.hmcclaims.claim.setting.Setting<?> setting : SettingRegistry.getAllSettings()) {
-            settings.add(new SettingIcon<>(setting, startSlot++));
+            int slot = startSlot++;
+            String name = setting.displayName();
+            String description = setting.description();
+
+            List<String> lore = Arrays.stream(("<gray>" + description).split("\n")).toList();
+
+            settings.add(new ToggleSettingIcon<>(
+                    setting, slot, name, lore,
+                    new ToggleIcon.BiStateToggleIcon(
+                            slot + 9,
+                            new DynamicIconWithStack(ItemStack.of(Material.LIME_DYE), name, ToggleIcon.buildLore(lore, "<setting_value>")),
+                            new DynamicIconWithStack(ItemStack.of(Material.GRAY_DYE), name, ToggleIcon.buildLore(lore, "<setting_value>"))
+                    )
+            ));
 
             if (startSlot > 25) {
                 pages.put(currentPage, settings);
@@ -101,75 +121,13 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     @Getter
     @ConfigSerializable
-    public static class SettingIcon<T> {
-
-        private int slot;
-
-        private com.hibiscusmc.hmcclaims.claim.setting.Setting<T> setting;
-        private DynamicIconWithStack icon;
+    public static class ToggleSettingIcon<T> extends ToggleIcon<T> {
 
         @Setting("value-not-set")
         private String notSet = "Not Set";
 
-        @Setting("has-modify-icon")
-        @Comment("If this is set to false, players will have to interact with the icon itself")
-        private boolean hasModifyIcon = true;
-
-        @Setting("modify-icon")
-        private BooleanSettingIcon modifyIcon;
-
-        public SettingIcon() {
-        }
-
-        protected SettingIcon(com.hibiscusmc.hmcclaims.claim.setting.Setting<T> setting, int slot) {
-            this.setting = setting;
-
-            List<String> lore = Arrays.stream(("<gray>" + setting.description()).split("\n")).toList();
-
-            this.icon = new DynamicIconWithStack(
-                    ItemStack.of(Material.BOOK), setting.displayName(), lore
-            );
-            this.slot = slot;
-
-            int nextSlot = slot + 9;
-
-            modifyIcon = new BooleanSettingIcon(
-                    nextSlot,
-                    new DynamicIconWithStack(ItemStack.of(Material.LIME_DYE), setting.displayName(), buildLore(lore, setting.defaultValue() instanceof Boolean ? "<green>Enabled" : "<white><setting_value>")),
-                    new DynamicIconWithStack(ItemStack.of(Material.GRAY_DYE), setting.displayName(), buildLore(lore, "<red>Disabled"))
-            );
-        }
-
-        private List<String> buildLore(List<String> baseLore, String defaultValue) {
-            List<String> cloned = new ArrayList<>(baseLore);
-
-            cloned.addAll(List.of(
-                    "",
-                    "<gray>Current Value: " + defaultValue,
-                    "",
-                    " <green><u>Click to change value"
-            ));
-
-            return cloned;
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class BooleanSettingIcon {
-
-            private int slot;
-
-            private DynamicIconWithStack enabled;
-            private DynamicIconWithStack disabled;
-
-            public BooleanSettingIcon() {
-            }
-
-            protected BooleanSettingIcon(int slot, DynamicIconWithStack enabled, DynamicIconWithStack disabled) {
-                this.slot = slot;
-                this.enabled = enabled;
-                this.disabled = disabled;
-            }
+        protected ToggleSettingIcon(T key, int slot, String name, List<String> lore, BiStateToggleIcon modifyIcon) {
+            super(key, slot, name, lore, modifyIcon);
         }
     }
 }

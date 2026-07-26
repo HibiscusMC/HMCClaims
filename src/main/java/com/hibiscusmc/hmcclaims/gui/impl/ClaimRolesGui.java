@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -246,10 +247,10 @@ public class ClaimRolesGui extends ClaimListGui {
         for (ClaimRole role : allRoles) {
             int rolePosition = allRoles.indexOf(role);
 
-            boolean canManage = /*playerMember.hasPermission(Permission.MANAGE_ROLES) &&*/
+            boolean canManage = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLES) &&
                     playerRolePosition < rolePosition;
 
-            boolean canManagePermissions = canManage /*&& playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLE_PERMISSIONS)*/;
+            boolean canManagePermissions = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLE_PERMISSIONS);
 
             boolean canRename = (playerRole.equals(registry.ownerRole()) || canManage) && !role.equals(registry.everyoneRole());
 
@@ -273,7 +274,7 @@ public class ClaimRolesGui extends ClaimListGui {
                             meta.lore(TextUtil.parseItemLore(lore.base(), Map.of(
                                     "members", roleMembers + "",
                                     "creation_date", StringUtil.formatDate(role.creationTimestamp()),
-                                    "manage", canManagePermissions ? lore.manage() : lore.cantManage(),
+                                    "manage", (canManage || canManagePermissions) ? lore.manage() : lore.cantManage(),
                                     "rename", canRename ? lore.rename() : lore.cantRename(),
                                     "swap_previous", canSwapPrev ? lore.swapPrevious() : lore.cantSwapPrevious(),
                                     "swap_next", canSwapNext ? lore.swapNext() : lore.cantSwapNext()
@@ -285,12 +286,16 @@ public class ClaimRolesGui extends ClaimListGui {
                     .addClickHandler((it, click) -> {
                         switch (click.clickType()) {
                             case LEFT -> {
-                                if (!canManagePermissions) {
+                                if (!canManage && !canManagePermissions) {
                                     return;
                                 }
 
-                                guis.get(ClaimPermissionsGui.class)
-                                        .open(player, metadata);
+                                guis.get(ClaimRoleManageGui.class)
+                                        .open(player, metadata
+                                                .role(role)
+                                                .canManageRole(canManage)
+                                                .canManageRolePermissions(canManagePermissions)
+                                        );
                             }
                             case RIGHT -> {
                                 if (!canRename) {

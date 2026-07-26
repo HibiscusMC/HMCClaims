@@ -31,6 +31,8 @@ public class PermissionRegistry {
         // Claim-related permissions
         register(Permission.MANAGE_MEMBER_ROLES);
         register(Permission.MANAGE_MEMBER_PERMISSIONS);
+        register(Permission.MANAGE_ROLES);
+        register(Permission.MANAGE_ROLE_PERMISSIONS);
 
         // Interactions within the claim permissions
         register(Permission.PLACE_BLOCK);

@@ -9,6 +9,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -189,6 +190,83 @@ public class GuiTemplate {
         }
 
         public SearchIcon() {
+        }
+    }
+
+    @Getter
+    @ConfigSerializable
+    public static class ToggleIcon<T> {
+
+        private int slot;
+
+        private T key;
+        private DynamicIconWithStack icon;
+
+        @Setting("has-modify-icon")
+        @Comment("If this is set to false, players will have to interact with the icon itself")
+        private boolean hasModifyIcon = true;
+
+        @Setting("modify-icon")
+        private BiStateToggleIcon modifyIcon;
+
+        public ToggleIcon() {
+        }
+
+        protected ToggleIcon(T key, int slot, String name, List<String> lore, BiStateToggleIcon modifyIcon) {
+            this.key = key;
+
+            this.icon = new DynamicIconWithStack(
+                    ItemStack.of(Material.BOOK), name, lore
+            );
+            this.slot = slot;
+
+            this.modifyIcon = modifyIcon;
+        }
+
+        protected static List<String> buildLore(List<String> baseLore, String value) {
+            List<String> cloned = new ArrayList<>(baseLore);
+
+            cloned.addAll(List.of(
+                    "",
+                    "<gray>Current Value: " + value,
+                    "",
+                    " <green><u>Click to change value"
+            ));
+
+            return cloned;
+        }
+
+        @Getter
+        @ConfigSerializable
+        public static class BiStateToggleIcon {
+
+            private int slot;
+
+            private DynamicIconWithStack enabled;
+            private DynamicIconWithStack disabled;
+
+            public BiStateToggleIcon() {
+            }
+
+            protected BiStateToggleIcon(int slot, DynamicIconWithStack enabled, DynamicIconWithStack disabled) {
+                this.slot = slot;
+                this.enabled = enabled;
+                this.disabled = disabled;
+            }
+        }
+
+        @Getter
+        @ConfigSerializable
+        public static class TriStateToggleIcon {
+
+            private DynamicIconWithStack unset;
+
+            public TriStateToggleIcon() {
+            }
+
+            protected TriStateToggleIcon(DynamicIconWithStack unset) {
+                this.unset = unset;
+            }
         }
     }
 

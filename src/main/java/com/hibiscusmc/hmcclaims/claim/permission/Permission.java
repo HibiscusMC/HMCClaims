@@ -17,13 +17,13 @@ public record Permission(Key key, String displayName, String description) {
 
     // Claim-related permissions
     public final static Permission MANAGE_MEMBER_ROLES =
-            new Permission("manage_member_roles", "Manage Member Roles", "Allows to modify other member roles");
+            new Permission("manage_member_roles", "Manage Member Roles", "Allows to modify other member roles.");
     public final static Permission MANAGE_MEMBER_PERMISSIONS =
-            new Permission("manage_member_permissions", "Manage Member Permissions", "Allows to modify other member permissions");
+            new Permission("manage_member_permissions", "Manage Member Permissions", "Allows to modify other member permissions.");
     public final static Permission MANAGE_ROLES =
-            new Permission("manage_roles", "", "");
+            new Permission("manage_roles", "Manage Claim Roles", "Allows to create, delete and swap role positions.");
     public final static Permission MANAGE_ROLE_PERMISSIONS =
-            new Permission("manage_role_permissions", "", "");
+            new Permission("manage_role_permissions", "Manage Role Permissions", "Allows to modify role permissions.");
 
     // Interactions within the claim permissions
     public final static Permission PLACE_BLOCK =
@@ -31,18 +31,18 @@ public record Permission(Key key, String displayName, String description) {
     public final static Permission BREAK_BLOCK =
             new Permission("break_block", "Break Blocks", "Allows breaking blocks within the claim.");
     public final static Permission INTERACT_BLOCK =
-            new Permission("interact_block", "Block Interaction", "Allows interacting with blocks such as doors and buttons.");
+            new Permission("interact_block", "Block Interaction", "Allows interacting with blocks such as doors\nand buttons.");
     public final static Permission INTERACT_ENTITY =
-            new Permission("interact_entity", "Entity Interaction", "Allows interacting with entities such as villagers or animals.");
+            new Permission("interact_entity", "Entity Interaction", "Allows interacting with entities such as\nvillagers or animals.");
     public final static Permission DAMAGE_ENTITY =
             new Permission("damage_entity", "Entity Damage", "Allows damaging entities within the claim.");
     public final static Permission USE_CONTAINER =
-            new Permission("use_container", "Use Containers", "Allows opening and using containers such as chests and furnaces.");
+            new Permission("use_container", "Use Containers", "Allows opening and using containers\nsuch as chests and furnaces.");
     public final static Permission USE_ITEM =
-            new Permission("use_item", "Use Items", "Allows using items such as buckets or flint and steel.");
+            new Permission("use_item", "Use Items", "Allows using items such as buckets or flint and\nsteel.");
     public final static Permission PICKUP_ITEM =
-            new Permission("pickup_item", "Item Pickup", "Allows picking up dropped items within the claim.");
+            new Permission("pickup_item", "Item Pickup", "Allows picking up dropped items within\nthe claim.");
     public final static Permission DROP_ITEM =
-            new Permission("drop_item", "Item Drop", "Allows dropping items within the claim.");
+            new Permission("drop_item", "Item Drop", "Allows dropping items within the\nclaim.");
 
 }

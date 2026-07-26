@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimRoleManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRolesConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.MainClaimManageConfig;
@@ -42,6 +43,8 @@ public class ConfigModule extends AbstractModule {
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-manage.yml")), MainClaimManageConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "sub-claim-manage.yml")), SubClaimManageConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "role-manage.yml")), ClaimRoleManageConfig.class, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -72,5 +75,8 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<SubClaimManageConfig>>() {
         }).toInstance(ConfigFactory.getHolder(SubClaimManageConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimRoleManageConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimRoleManageConfig.class));
     }
 }
