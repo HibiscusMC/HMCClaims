@@ -71,9 +71,19 @@ public class Messages {
         @Setting("member-banned")
         private String memberBanned = "<green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
 
+        private Permissions permissions = new Permissions();
+
         private Selecting selecting = new Selecting();
 
         private Resizing resizing = new Resizing();
+
+        @Getter
+        @ConfigSerializable
+        public static class Permissions {
+
+            @Setting("cant-interact")
+            private String cantInteract = "<red>You can't interact with this claim.";
+        }
 
         @Getter
         @ConfigSerializable
