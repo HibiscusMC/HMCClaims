@@ -126,6 +126,9 @@ public class ClaimSettingsConfig extends GuiTemplate {
         @Setting("value-not-set")
         private String notSet = "Not Set";
 
+        public ToggleSettingIcon() {
+        }
+
         protected ToggleSettingIcon(T key, int slot, String name, List<String> lore, BiStateToggleIcon modifyIcon) {
             super(key, slot, name, lore, modifyIcon);
         }

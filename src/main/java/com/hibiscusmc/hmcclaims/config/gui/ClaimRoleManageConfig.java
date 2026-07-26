@@ -144,6 +144,9 @@ public class ClaimRoleManageConfig extends GuiTemplate {
         @Setting("no-perms-icon")
         private DynamicIconWithStack noPermsIcon;
 
+        public TogglePermissionIcon() {
+        }
+
         protected TogglePermissionIcon(T key, int slot, String name, LoreValue lore, BiStateToggleIcon modifyIcon) {
             super(key, slot, name, lore.lore(), modifyIcon);
 
