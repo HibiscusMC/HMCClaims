@@ -1,9 +1,9 @@
 name: HMCClaims
 version: "${project.version}"
 api-version: "${serverVersion}"
-description: "A little Christmas Gift from iKztu & Lucian929 to caerisma. We ❤ you, bestie!"
+description: "A modern claims engine designed for performance, flexibility, and reliability."
 authors:
-  - iKztu
+  - Sqlace
 load: STARTUP
 
 main: com.hibiscusmc.hmcclaims.HMCClaims

@@ -83,7 +83,7 @@ public class ClaimMember {
             return false;
         }
 
-        if (!hasPermission(Permission.MANAGE_MEMBER_ROLES) && !hasPermission(Permission.MANAGE_MEMBER_PERMISSIONS)) {
+        if (!hasPermission(Permission.MANAGE_MEMBERS) || !hasPermission(Permission.MANAGE_MEMBER_ROLES) || !hasPermission(Permission.MANAGE_MEMBER_PERMISSIONS)) {
             return false;
         }
 

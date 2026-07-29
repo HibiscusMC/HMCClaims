@@ -55,10 +55,10 @@ public class ClaimRolesConfig extends GuiTemplate {
 
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Members", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
             "roles-tab", new SimpleIcon(ItemUtil.build(
-                    Material.LIME_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<red>You're here!")
+                    Material.LIME_STAINED_GLASS_PANE, "Roles", List.of("", "<red>You're here!")
             ), 3),
             "settings-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
@@ -99,7 +99,7 @@ public class ClaimRolesConfig extends GuiTemplate {
                     "<swap_next>"
             );
 
-            private String manage = "<white>Left-Click <gray>to manage role permissions";
+            private String manage = "<white>Left-Click <gray>to manage role";
             @Setting("cant-manage")
             private String cantManage = "<red>You can't manage this role";
 

@@ -325,6 +325,10 @@ public class ClaimManager {
         if (!claim.subClaims().isEmpty()) {
             claim.subClaims().forEach(this::deleteClaim);
         }
+
+        if (claim.main() != null) {
+            claim.main().removeSubClaim(claim);
+        }
     }
 
     /**

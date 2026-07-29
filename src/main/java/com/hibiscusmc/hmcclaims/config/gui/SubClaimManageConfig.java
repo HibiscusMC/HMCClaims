@@ -71,14 +71,9 @@ public class SubClaimManageConfig extends ClaimManageConfig {
             Material.GOLDEN_HOE, "Resize claim", List.of("", "<white>Left-Click <gray>to resize claim borders")
     ), 26);
 
-    @Setting("back-icon")
-    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
-            Material.BOOK, "Back", List.of("", "<white>Left-Click <gray>to go back")
-    ), 45);
-
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Members", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
             "roles-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
@@ -87,7 +82,7 @@ public class SubClaimManageConfig extends ClaimManageConfig {
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 5),
             "manage-tab", new SimpleIcon(ItemUtil.build(
-                    Material.LIME_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<red>You're here!")
+                    Material.LIME_STAINED_GLASS_PANE, "Manage", List.of("", "<red>You're here!")
             ), 7)
     );
 

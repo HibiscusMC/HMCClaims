@@ -8,6 +8,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.gui.impl.ClaimDeleteGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -17,14 +18,12 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import team.unnamed.commandflow.annotated.CommandClass;
 import team.unnamed.commandflow.annotated.annotation.Command;
-import team.unnamed.commandflow.annotated.annotation.OptArg;
 import team.unnamed.commandflow.annotated.annotation.Sender;
 import team.unnamed.commandflow.annotated.annotation.Usage;
 import team.unnamed.inject.Inject;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 @Command(names = {"claim"}, permission = "hmcclaims.commands.claim")
 public class ClaimCommand implements CommandClass {
@@ -67,27 +66,11 @@ public class ClaimCommand implements CommandClass {
     }
 
     @Command(names = {"delete"})
-    public void delete(@Sender Player sender, @OptArg String confirmationId) {
+    public void delete(@Sender Player sender) {
         Messages messages = messagesHolder.get();
 
-        String claimId = null;
-        if (confirmationId != null && !confirmationId.isEmpty()) {
-            String[] parts = confirmationId.split(";");
-            if (parts.length != 2 || !parts[0].equals("confirm")) {
-                return;
-            }
-
-            claimId = parts[1];
-        }
-
-        Claim claim;
-        if (claimId != null) {
-            claim = claimManager.getClaim(UUID.fromString(claimId))
-                    .orElse(null);
-        } else {
-            claim = claimManager.getClaimAt(sender.getLocation())
-                    .orElse(null);
-        }
+        Claim claim = claimManager.getClaimAt(sender.getLocation())
+                .orElse(null);
 
         if (claim == null) {
             text.send(sender, messages.commands().notInClaim());
@@ -99,15 +82,9 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (confirmationId == null || confirmationId.isEmpty()) {
-            text.send(sender, messages.commands().deleteConfirm(), Map.of(
-                    "claim_name", claim.name(),
-                    "claim_id", claim.claimId().toString()
-            ));
-        } else {
-            claimManager.deleteClaim(claim);
-            text.send(sender, messages.commands().deleteSuccess());
-        }
+        ClaimDeleteGui gui = guis.get(ClaimDeleteGui.class);
+
+        gui.open(sender, new GuiMetadata(claim));
     }
 
     @Command(names = {"add", "trust"}, permission = "hmcclaims.commands.claim.add")

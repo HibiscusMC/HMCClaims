@@ -46,10 +46,10 @@ public class ClaimRoleManageConfig extends GuiTemplate {
 
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "Members", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Members", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
             "roles-tab", new SimpleIcon(ItemUtil.build(
-                    Material.LIME_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<red>You're here!")
+                    Material.LIME_STAINED_GLASS_PANE, "Roles", List.of("", "<red>You're here!")
             ), 3),
             "settings-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
@@ -96,11 +96,11 @@ public class ClaimRoleManageConfig extends GuiTemplate {
             List<String> lore = Arrays.stream(("<gray>" + description).split("\n")).toList();
 
             permissions.add(new TogglePermissionIcon<>(
-                    permission, slot, name, new LoreValue(lore, "<permission_value>"),
-                    new ToggleIcon.BiStateToggleIcon(
+                    permission, slot, name, lore,
+                    new TogglePermissionIcon.BiStateToggleIcon(
                             slot + 9,
-                            new PermissionIcon(ItemStack.of(Material.LIME_DYE), name, TogglePermissionIcon.buildLore(lore, "<permission_value>", true), TogglePermissionIcon.buildLore(lore, "<permission_value>", false)),
-                            new PermissionIcon(ItemStack.of(Material.GRAY_DYE), name, TogglePermissionIcon.buildLore(lore, "<permission_value>", true), TogglePermissionIcon.buildLore(lore, "<permission_value>", false))
+                            new PermissionIcon(ItemStack.of(Material.LIME_DYE), name, TogglePermissionIcon.buildLore(lore, true), TogglePermissionIcon.buildLore(lore, false)),
+                            new PermissionIcon(ItemStack.of(Material.GRAY_DYE), name, TogglePermissionIcon.buildLore(lore, true), TogglePermissionIcon.buildLore(lore, false))
                     )
             ));
 
@@ -120,15 +120,15 @@ public class ClaimRoleManageConfig extends GuiTemplate {
         return pages;
     }
 
-    protected record LoreValue(List<String> lore, String value) {
-    }
-
     @Getter
     @ConfigSerializable
     public static class PermissionIcon extends DynamicIconWithStack {
 
         @Setting("cant-change-lore")
         private List<String> cantChangeLore;
+
+        public PermissionIcon() {
+        }
 
         protected PermissionIcon(ItemStack item, String name, List<String> lore, List<String> cantChangeLore) {
             super(item, name, lore);
@@ -139,33 +139,70 @@ public class ClaimRoleManageConfig extends GuiTemplate {
 
     @Getter
     @ConfigSerializable
-    public static class TogglePermissionIcon<T> extends ToggleIcon<T> {
+    public static class TogglePermissionIcon<T> {
+
+        private int slot;
+
+        private T key;
+        private DynamicIconWithStack icon;
 
         @Setting("no-perms-icon")
         private DynamicIconWithStack noPermsIcon;
 
+        @Setting("has-modify-icon")
+        private boolean hasModifyIcon = true;
+
+        @Setting("modify-icon")
+        private BiStateToggleIcon modifyIcon;
+
         public TogglePermissionIcon() {
         }
 
-        protected TogglePermissionIcon(T key, int slot, String name, LoreValue lore, BiStateToggleIcon modifyIcon) {
-            super(key, slot, name, lore.lore(), modifyIcon);
+        protected TogglePermissionIcon(T key, int slot, String name, List<String> lore, BiStateToggleIcon modifyIcon) {
+            this.key = key;
+
+            this.icon = new DynamicIconWithStack(
+                    ItemStack.of(Material.BOOK), name, lore
+            );
+            this.slot = slot;
+
+            this.modifyIcon = modifyIcon;
 
             this.noPermsIcon = new DynamicIconWithStack(
-                    ItemStack.of(Material.BOOK), name, buildLore(lore.lore(), lore.value(), false)
+                    ItemStack.of(Material.BOOK), name, lore
             );
         }
 
-        protected static List<String> buildLore(List<String> baseLore, String value, boolean hasPermission) {
+        protected static List<String> buildLore(List<String> baseLore, boolean hasPermission) {
             List<String> cloned = new ArrayList<>(baseLore);
 
             cloned.addAll(List.of(
                     "",
-                    "<gray>Current Value: " + value,
+                    "<gray>Current Value: <permission_value>",
                     "",
                     hasPermission ? " <green><u>Click to change value" : "<red>You don't have permissions to change this"
             ));
 
             return cloned;
+        }
+
+        @Getter
+        @ConfigSerializable
+        public static class BiStateToggleIcon {
+
+            private int slot;
+
+            private PermissionIcon enabled;
+            private PermissionIcon disabled;
+
+            public BiStateToggleIcon() {
+            }
+
+            protected BiStateToggleIcon(int slot, PermissionIcon enabled, PermissionIcon disabled) {
+                this.slot = slot;
+                this.enabled = enabled;
+                this.disabled = disabled;
+            }
         }
     }
 }

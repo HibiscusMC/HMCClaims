@@ -69,6 +69,9 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
+    private String enabledState;
+    private String disabledState;
+
     private Map<Integer, List<ClaimRoleManageConfig.TogglePermissionIcon<Permission>>> permissionPages;
 
     @Override
@@ -95,6 +98,9 @@ public class ClaimRoleManageGui extends ClaimListGui {
         nextPage = config.pages().get("next-page");
 
         permissionPages = config.permissionPages();
+
+        enabledState = config.states().get(true);
+        disabledState = config.states().get(false);
 
         screenType = config.screenType();
         if (screenType == GuiTemplate.GuiScreenType.FULL) {
@@ -267,7 +273,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
         return new PermissionItem(
                 Item.builder()
-                        .setItemProvider(p -> new ItemWrapper(buildPermissionIcon(metadata.canManageRolePermissions() ? toggleIcon.icon() : toggleIcon.noPermsIcon())))
+                        .setItemProvider(p -> new ItemWrapper(buildPermissionIcon(metadata.canManageRolePermissions() ? toggleIcon.icon() : toggleIcon.noPermsIcon(), role.hasPermission(permission))))
                         .addClickHandler((it, click) -> {
                             if (toggleIcon.hasModifyIcon()) {
                                 return;
@@ -279,17 +285,17 @@ public class ClaimRoleManageGui extends ClaimListGui {
                 toggleIcon.hasModifyIcon() ?
                         Item.builder()
                                 .setItemProvider(p -> {
-                                    GuiTemplate.ToggleIcon.BiStateToggleIcon modifyIcon = toggleIcon.modifyIcon();
+                                    ClaimRoleManageConfig.TogglePermissionIcon.BiStateToggleIcon modifyIcon = toggleIcon.modifyIcon();
                                     boolean hasPermission = role.hasPermission(permission);
 
                                     ClaimRoleManageConfig.PermissionIcon icon;
                                     if (hasPermission) {
-                                        icon = (ClaimRoleManageConfig.PermissionIcon) modifyIcon.enabled();
+                                        icon = modifyIcon.enabled();
                                     } else {
-                                        icon = (ClaimRoleManageConfig.PermissionIcon) modifyIcon.disabled();
+                                        icon = modifyIcon.disabled();
                                     }
 
-                                    return new ItemWrapper(buildPermissionIcon(icon, metadata));
+                                    return new ItemWrapper(buildPermissionIcon(icon, metadata, hasPermission));
                                 })
                                 .addClickHandler(action)
                                 .build()
@@ -297,23 +303,27 @@ public class ClaimRoleManageGui extends ClaimListGui {
         );
     }
 
-    private ItemStack buildPermissionIcon(@NotNull GuiTemplate.DynamicIconWithStack icon) {
+    private ItemStack buildPermissionIcon(@NotNull GuiTemplate.DynamicIconWithStack icon, boolean hasPermission) {
         ItemStack stack = icon.item();
         stack.editMeta(meta -> {
             meta.itemName(TextUtil.parse(icon.name()));
 
-            meta.lore(TextUtil.parseItemLore(icon.lore()));
+            meta.lore(TextUtil.parseItemLore(icon.lore(), Map.of(
+                    "permission_value", hasPermission ? enabledState : disabledState
+            )));
         });
 
         return stack;
     }
 
-    private ItemStack buildPermissionIcon(@NotNull ClaimRoleManageConfig.PermissionIcon icon, @NotNull GuiMetadata metadata) {
+    private ItemStack buildPermissionIcon(@NotNull ClaimRoleManageConfig.PermissionIcon icon, @NotNull GuiMetadata metadata, boolean hasPermission) {
         ItemStack stack = icon.item();
         stack.editMeta(meta -> {
             meta.itemName(TextUtil.parse(icon.name()));
 
-            meta.lore(TextUtil.parseItemLore(metadata.canManageRolePermissions() ? icon.lore() : icon.cantChangeLore()));
+            meta.lore(TextUtil.parseItemLore(metadata.canManageRolePermissions() ? icon.lore() : icon.cantChangeLore(), Map.of(
+                    "permission_value", hasPermission ? enabledState : disabledState
+            )));
         });
 
         return stack;

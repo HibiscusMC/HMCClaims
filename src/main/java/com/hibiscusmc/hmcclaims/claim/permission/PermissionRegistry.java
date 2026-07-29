@@ -29,6 +29,7 @@ public class PermissionRegistry {
 
     static {
         // Claim-related permissions
+        register(Permission.MANAGE_MEMBERS);
         register(Permission.MANAGE_MEMBER_ROLES);
         register(Permission.MANAGE_MEMBER_PERMISSIONS);
         register(Permission.MANAGE_ROLES);

@@ -3,6 +3,8 @@ package com.hibiscusmc.hmcclaims.module;
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimBannedListConfig;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimDeleteConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRoleManageConfig;
@@ -37,6 +39,7 @@ public class ConfigModule extends AbstractModule {
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), ClaimListConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-members.yml")), ClaimMemberListConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-banlist.yml")), ClaimBannedListConfig.class, true);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-roles.yml")), ClaimRolesConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-settings.yml")), ClaimSettingsConfig.class, true);
@@ -45,6 +48,8 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "sub-claim-manage.yml")), SubClaimManageConfig.class, true);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "role-manage.yml")), ClaimRoleManageConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-delete-confirm.yml")), ClaimDeleteConfig.class, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -64,6 +69,9 @@ public class ConfigModule extends AbstractModule {
         bind(new TypeReference<ConfigHolder<ClaimMemberListConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimMemberListConfig.class));
 
+        bind(new TypeReference<ConfigHolder<ClaimBannedListConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimBannedListConfig.class));
+
         bind(new TypeReference<ConfigHolder<ClaimRolesConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimRolesConfig.class));
 
@@ -78,5 +86,8 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<ClaimRoleManageConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimRoleManageConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimDeleteConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimDeleteConfig.class));
     }
 }

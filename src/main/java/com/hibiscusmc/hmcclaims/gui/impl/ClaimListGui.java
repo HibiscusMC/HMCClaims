@@ -446,7 +446,7 @@ public class ClaimListGui implements BaseGui {
             lore.add(TextUtil.parseItem(line, claimPlaceholders));
         }
 
-        meta.customName(TextUtil.parseItem(claimsIcon.name(), claimPlaceholders));
+        meta.customName(TextUtil.parseItem(icon.name(), claimPlaceholders));
         meta.lore(lore);
 
         stack.setItemMeta(meta);

@@ -35,6 +35,8 @@ public class Messages {
 
         private String resized = "<gray>The claim <#d24c9f><name> <gray>has been resized! Price: <#d24c9f><price>";
 
+        private String deleted = "<green>Claim <white><claim_name></white> deleted successfully!";
+
         @Setting("sub-claim-created")
         private String subCreated = "<gray>The sub claim <#d24c9f><name> <gray>has been created!";
 
@@ -170,12 +172,6 @@ public class Messages {
 
         @Setting("not-in-claim")
         private String notInClaim = "<red>You're not standing in a claim!";
-
-        @Setting("delete-confirm")
-        private String deleteConfirm = "<red><b>DANGER!</b> <gray>Are you sure you want to delete <white><claim_name></white>?<br>  <red><click:run_command:'/claim delete confirm;<claim_id>'>[Yes! Delete claim]</click>";
-
-        @Setting("delete-success")
-        private String deleteSuccess = "<white>Claim deleted successfully!";
 
         @Setting("claim-blocks")
         private ClaimBlocks claimBlocks = new ClaimBlocks();

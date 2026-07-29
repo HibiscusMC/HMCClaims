@@ -16,6 +16,8 @@ public record Permission(Key key, String displayName, String description) {
     }
 
     // Claim-related permissions
+    public final static Permission MANAGE_MEMBERS =
+            new Permission("manage_members", "Manage Members", "Allows to add, kick and ban other members.");
     public final static Permission MANAGE_MEMBER_ROLES =
             new Permission("manage_member_roles", "Manage Member Roles", "Allows to modify other member roles.");
     public final static Permission MANAGE_MEMBER_PERMISSIONS =

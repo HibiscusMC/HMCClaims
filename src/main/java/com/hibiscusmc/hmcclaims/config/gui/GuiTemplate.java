@@ -203,7 +203,6 @@ public class GuiTemplate {
         private DynamicIconWithStack icon;
 
         @Setting("has-modify-icon")
-        @Comment("If this is set to false, players will have to interact with the icon itself")
         private boolean hasModifyIcon = true;
 
         @Setting("modify-icon")

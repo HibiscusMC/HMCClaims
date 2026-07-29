@@ -78,7 +78,6 @@ public class ClaimManageGui extends ClaimListGui {
 
     protected GuiTemplate.GuiScreenType screenType;
 
-    protected GuiTemplate.SimpleIcon backIcon;
     protected GuiTemplate.SimpleIcon deleteIcon;
 
     protected GuiTemplate.SimpleIcon renameIcon;
@@ -112,7 +111,6 @@ public class ClaimManageGui extends ClaimListGui {
         title = config.title();
         rows = config.rows();
 
-        backIcon = config.backIcon();
         deleteIcon = config.deleteIcon();
 
         membersTab = config.tabs().get("members-tab");
@@ -164,7 +162,7 @@ public class ClaimManageGui extends ClaimListGui {
             Gui upperGui = gui.build();
 
             scheduler.schedule(() -> {
-                Window.Builder.Normal.Split window = Window.builder()
+                Window.Builder.Normal.Split windowBuilder = Window.builder()
                         .setTitle(TextUtil.parse(title.text(), Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
@@ -176,10 +174,13 @@ public class ClaimManageGui extends ClaimListGui {
                         });
 
                 if (lowerGui != null) {
-                    window.setLowerGui(lowerGui);
+                    windowBuilder.setLowerGui(lowerGui);
                 }
 
-                window.open(player);
+                Window window = windowBuilder.build(player);
+                metadata.previousPage(window);
+
+                window.open();
             });
         });
     }
@@ -190,11 +191,6 @@ public class ClaimManageGui extends ClaimListGui {
             structure.add('#');
         }
 
-        structure.set(renameIcon.slot(), '(');
-        structure.set(bannedIcon.slot(), '%');
-        structure.set(lockIcon.slot(), ')');
-        structure.set(resizeIcon.slot(), '&');
-
         Map<Integer, GuiTemplate.Icon> mappedIcons = new HashMap<>();
         for (GuiTemplate.Icon icon : icons) {
             int codePoint = FIRST_SAFE_CHAR + icons.indexOf(icon);
@@ -202,6 +198,12 @@ public class ClaimManageGui extends ClaimListGui {
             structure.set(icon.slot(), (char) codePoint);
             mappedIcons.put(codePoint, icon);
         }
+
+        structure.set(renameIcon.slot(), '(');
+        structure.set(bannedIcon.slot(), '%');
+        structure.set(lockIcon.slot(), ')');
+        structure.set(resizeIcon.slot(), '&');
+        structure.set(deleteIcon.slot(), '*');
 
         Class<? extends BaseGui> currentClass = getClass();
         TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
@@ -227,8 +229,21 @@ public class ClaimManageGui extends ClaimListGui {
 
             gui.addIngredient('(', buildRenameIcon(player, claim, metadata));
             gui.addIngredient(')', buildLockUnlockIcon(claim));
-            gui.addIngredient('%', Item.builder().setItemProvider(bannedIcon.item()).build());
+            gui.addIngredient('%', Item.builder()
+                    .setItemProvider(bannedIcon.item())
+                    .addClickHandler(click ->
+                            guis.get(ClaimBannedListGui.class)
+                                    .open(player, metadata)
+                    )
+                    .build());
             gui.addIngredient('&', buildResizeIcon(player, claim));
+            gui.addIngredient('*', Item.builder()
+                    .setItemProvider(deleteIcon.item())
+                    .addClickHandler(click ->
+                            guis.get(ClaimDeleteGui.class)
+                                    .open(player, metadata)
+                    )
+                    .build());
         });
     }
 
@@ -332,66 +347,6 @@ public class ClaimManageGui extends ClaimListGui {
                     player.closeInventory();
                 })
                 .build();
-    }
-
-    protected Item buildBannedIcon(@NotNull Player player, @NotNull Gui gui, @NotNull Claim claim) {
-        // TODO: Move this to banned members GUI
-        /*gui.setItem(bannedIcon.slot(), new GuiItem(bannedIcon.item(), action -> {
-            Input<?> currentInput = inputManager.fetch(player);
-
-            if (currentInput != null) {
-                return;
-            }
-
-            AtomicReference<Runnable> inputRunnable = new AtomicReference<>();
-            InventoryView inv = player.getOpenInventory();
-
-
-            inputRunnable.set(() -> {
-                Input<NameAndId> input = inputManager.create(player, NameAndId.class);
-                if (input == null) {
-                    return;
-                }
-
-                player.closeInventory();
-                input.onCancel(() -> {
-                            text.send(player, messagesHolder.get().inputs().cancelled());
-
-                            player.openInventory(inv);
-                        })
-                        .onSubmit((member) -> {
-                            Messages messages = messagesHolder.get();
-                            ClaimMember claimMember = claim.getMember(member.id())
-                                    .orElse(null);
-
-                            if (claimMember != null && !claimMember.uuid().equals(claim.owner()) && !claimMember.banned()) {
-                                text.send(player, messages.claims().memberBanned(), Map.of(
-                                        "name", member.name(),
-                                        "player_head", "<head:" + member.name() + ">",
-                                        "claim", claim.name()
-                                ));
-
-                                claimMember.banned(true);
-
-                                guis.get(ClaimMemberListGui.class)
-                                        .open(player, claim);
-                            } else {
-                                text.send(player, claimMember == null ?
-                                        messages.claims().playerNotMember() :
-                                        claimMember.banned() ?
-                                                messages.claims().memberAlreadyBanned() :
-                                                messages.claims().cantBanMember()
-                                );
-
-
-                                scheduler.schedule(() -> inputRunnable.get().run());
-                            }
-                        });
-            });
-
-            inputRunnable.get().run();
-        }));*/
-        return null;
     }
 
     protected record InventoryStructure(CharList structure, Consumer<Gui.Builder<?, ?>> builder) {

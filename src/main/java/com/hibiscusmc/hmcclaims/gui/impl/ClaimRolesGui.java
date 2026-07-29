@@ -234,7 +234,6 @@ public class ClaimRolesGui extends ClaimListGui {
         List<ClaimRole> allRoles = registry.allRoles();
         int allRolesQty = allRoles.size();
 
-        // TODO: Remove comments for hasPermission checks
         ClaimMember playerMember = claim.getMember(player.getUniqueId())
                 .orElse(null);
         ClaimRole playerRole = playerMember != null ?
@@ -247,10 +246,15 @@ public class ClaimRolesGui extends ClaimListGui {
         for (ClaimRole role : allRoles) {
             int rolePosition = allRoles.indexOf(role);
 
-            boolean canManage = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLES) &&
-                    playerRolePosition < rolePosition;
+            boolean isOwnerRole = role.equals(registry.ownerRole());
 
-            boolean canManagePermissions = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLE_PERMISSIONS);
+            boolean isDefaultRole = isOwnerRole || role.equals(registry.defaultRole()) || role.equals(registry.everyoneRole());
+
+            boolean canManage = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLES) &&
+                    playerRolePosition < rolePosition && !isOwnerRole;
+
+            boolean canManagePermissions = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLE_PERMISSIONS) &&
+                    !isOwnerRole;
 
             boolean canRename = (playerRole.equals(registry.ownerRole()) || canManage) && !role.equals(registry.everyoneRole());
 
@@ -293,7 +297,7 @@ public class ClaimRolesGui extends ClaimListGui {
                                 guis.get(ClaimRoleManageGui.class)
                                         .open(player, metadata
                                                 .role(role)
-                                                .canManageRole(canManage)
+                                                .canManageRole(canManage && !isDefaultRole)
                                                 .canManageRolePermissions(canManagePermissions)
                                         );
                             }
