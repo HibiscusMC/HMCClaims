@@ -83,8 +83,14 @@ public class Messages {
         @ConfigSerializable
         public static class Permissions {
 
-            @Setting("cant-interact")
-            private String cantInteract = "<red>You can't interact with this claim.";
+            @Setting("block-break")
+            private String breakBlock = "<red>You can't break blocks in this claim.";
+
+            @Setting("block-place")
+            private String placeBlock = "<red>You can't place blocks in this claim.";
+
+            @Setting("block-interact")
+            private String interactBlock = "<red>You can't interact with blocks in this claim.";
         }
 
         @Getter

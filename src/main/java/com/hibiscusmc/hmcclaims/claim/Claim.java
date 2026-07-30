@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
@@ -336,6 +337,19 @@ public class Claim {
         ClaimMember oldMember = members.remove(uuid);
 
         return oldMember != null;
+    }
+
+    /**
+     * Checks if the player is in the claim and has the permission, or if the {@code everyone} role has the permission
+     *
+     * @param playerId   the id of the player to check
+     * @param permission the permission to check
+     * @return {@code true} if either the player or the {@code everyone} role (if the player is not in the claim) has the permission
+     */
+    public boolean hasPermission(@NotNull UUID playerId, @NotNull Permission permission) {
+        return getMember(playerId)
+                .map(member -> member.hasPermission(permission))
+                .orElse(roleRegistry.everyoneRole().hasPermission(permission));
     }
 
     /**

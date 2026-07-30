@@ -5,7 +5,7 @@ import com.hibiscusmc.hmcclaims.listener.IntegrationListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerDataListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerInputListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerSelectionListener;
-import com.hibiscusmc.hmcclaims.listener.permission.VanillaInteractListener;
+import com.hibiscusmc.hmcclaims.listener.permission.VanillaBlockListener;
 import org.bukkit.event.Listener;
 import team.unnamed.inject.AbstractModule;
 
@@ -22,6 +22,6 @@ public class ListenerModule extends AbstractModule {
                 .to(ClaimLifecycleListener.class)
 
                 /* Permission Listeners */
-                .to(VanillaInteractListener.class);
+                .to(VanillaBlockListener.class);
     }
 }
