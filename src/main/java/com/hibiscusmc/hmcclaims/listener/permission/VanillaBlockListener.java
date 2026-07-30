@@ -7,18 +7,19 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import team.unnamed.inject.Inject;
 
 /**
- * Place Blocks, Break Blocks, Interact with Blocks, Use Containers
+ * Place Blocks, Break Blocks, Use Containers
  */
 public class VanillaBlockListener implements Listener {
 
@@ -32,16 +33,20 @@ public class VanillaBlockListener implements Listener {
     private TextUtil text;
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onBlockInteract(PlayerInteractEvent event) {
+    public void onUseContainer(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        Action action = event.getAction();
-        if (action != Action.RIGHT_CLICK_BLOCK && action != Action.LEFT_CLICK_BLOCK) {
+        if (!event.getAction().isRightClick()) {
             return;
         }
 
         Block block = event.getClickedBlock();
         if (block == null) {
+            return;
+        }
+
+        BlockState state = block.getState();
+        if (!(state instanceof Container)) {
             return;
         }
 
@@ -52,7 +57,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.INTERACT_BLOCK)) {
+        if (claim.hasPermission(player.getUniqueId(), Permission.USE_CONTAINER)) {
             return;
         }
 
