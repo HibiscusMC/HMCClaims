@@ -26,7 +26,17 @@ public class DefaultRoles {
                     Permission.PICKUP_ITEM,
                     Permission.DROP_ITEM,
                     Permission.DAMAGE_ENTITY,
-                    Permission.INTERACT_ENTITY
+                    Permission.INTERACT_ENTITY,
+                    Permission.DAMAGE_PLAYER,
+                    Permission.IGNITE_BLOCK,
+                    Permission.PLAYER_INTERACT,
+                    Permission.USE_REDSTONE,
+                    Permission.USE_DOOR,
+                    Permission.USE_TRAPDOOR,
+                    Permission.IGNORE_LOCKED,
+                    Permission.USE_VEHICLE,
+                    Permission.HARVEST_CROPS,
+                    Permission.PLANT_CROPS
             )),
             new ClaimRole(null, "Everyone", Set.of(
                     Permission.USE_ITEM,

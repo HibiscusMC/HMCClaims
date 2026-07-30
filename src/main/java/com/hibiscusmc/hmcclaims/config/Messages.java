@@ -91,6 +91,63 @@ public class Messages {
 
             @Setting("block-interact")
             private String interactBlock = "<red>You can't interact with blocks in this claim.";
+
+            @Setting("entity-interact")
+            private String interactEntity = "<red>You can't interact with entities in this claim.";
+
+            @Setting("entity-damage")
+            private String damageEntity = "<red>You can't damage entities in this claim.";
+
+            @Setting("item-use")
+            private String useItem = "<red>You can't use items in this claim.";
+
+            @Setting("item-pickup")
+            private String pickupItem = "<red>You can't pick up items in this claim.";
+
+            @Setting("item-drop")
+            private String dropItem = "<red>You can't drop items in this claim.";
+
+            @Setting("damage-player")
+            private String damagePlayer = "<red>You can't attack players in this claim.";
+
+            @Setting("ignite-block")
+            private String igniteBlock = "<red>You can't ignite blocks in this claim.";
+
+            @Setting("player-interact")
+            private String playerInteract = "<red>You can't interact with that in this claim.";
+
+            @Setting("use-redstone")
+            private String useRedstone = "<red>You can't use redstone in this claim.";
+
+            @Setting("use-door")
+            private String useDoor = "<red>You can't use doors in this claim.";
+
+            @Setting("use-trapdoor")
+            private String useTrapdoor = "<red>You can't use trapdoors in this claim.";
+
+            @Setting("allow-flight")
+            private String allowFlight = "<red>You can't fly in this claim.";
+
+            @Setting("use-elytra")
+            private String useElytra = "<red>You can't use elytras in this claim.";
+
+            @Setting("ignore-locked")
+            private String ignoreLocked = "<red>You can't enter this locked claim.";
+
+            @Setting("use-vehicle")
+            private String useVehicle = "<red>You can't use vehicles in this claim.";
+
+            @Setting("trample-soil")
+            private String trampleSoil = "<red>You can't trample farmland in this claim.";
+
+            @Setting("harvest-crops")
+            private String harvestCrops = "<red>You can't harvest crops in this claim.";
+
+            @Setting("plant-crops")
+            private String plantCrops = "<red>You can't plant crops in this claim.";
+
+            @Setting("use-wind-charge")
+            private String useWindCharge = "<red>You can't use wind charges in this claim.";
         }
 
         @Getter
