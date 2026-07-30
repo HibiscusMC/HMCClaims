@@ -32,8 +32,6 @@ public record Permission(Key key, String displayName, String description) {
             new Permission("place_block", "Place Blocks", "Allows placing blocks within the claim.");
     public final static Permission BREAK_BLOCK =
             new Permission("break_block", "Break Blocks", "Allows breaking blocks within the claim.");
-    public final static Permission INTERACT_BLOCK =
-            new Permission("interact_block", "Block Interaction", "Allows interacting with blocks such as doors\nand buttons.");
     public final static Permission INTERACT_ENTITY =
             new Permission("interact_entity", "Entity Interaction", "Allows interacting with entities such as\nvillagers or animals.");
     public final static Permission DAMAGE_ENTITY =

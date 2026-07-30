@@ -38,10 +38,9 @@ public class PermissionRegistry {
         // Interactions within the claim permissions
         register(Permission.PLACE_BLOCK);
         register(Permission.BREAK_BLOCK);
-        register(Permission.INTERACT_BLOCK);
+        register(Permission.USE_CONTAINER);
         register(Permission.INTERACT_ENTITY);
         register(Permission.DAMAGE_ENTITY);
-        register(Permission.USE_CONTAINER);
         register(Permission.USE_ITEM);
         register(Permission.PICKUP_ITEM);
         register(Permission.DROP_ITEM);

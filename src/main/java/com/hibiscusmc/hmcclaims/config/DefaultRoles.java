@@ -19,14 +19,13 @@ public class DefaultRoles {
     private List<ClaimRole> defaultRoles = List.of(
             new ClaimRole(null, "Owner", new HashSet<>(PermissionRegistry.getAllPermissions())),
             new ClaimRole(null, "Member", Set.of(
-                    Permission.USE_ITEM,
-                    Permission.USE_CONTAINER,
-                    Permission.PICKUP_ITEM,
-                    Permission.DROP_ITEM,
                     Permission.PLACE_BLOCK,
                     Permission.BREAK_BLOCK,
+                    Permission.USE_CONTAINER,
+                    Permission.USE_ITEM,
+                    Permission.PICKUP_ITEM,
+                    Permission.DROP_ITEM,
                     Permission.DAMAGE_ENTITY,
-                    Permission.INTERACT_BLOCK,
                     Permission.INTERACT_ENTITY
             )),
             new ClaimRole(null, "Everyone", Set.of(
