@@ -68,7 +68,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().interactBlock());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().interactBlock());
         event.setCancelled(true);
     }
 
@@ -95,7 +95,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useDoor());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useDoor());
         event.setCancelled(true);
     }
 
@@ -122,7 +122,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useTrapdoor());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useTrapdoor());
         event.setCancelled(true);
     }
 
@@ -146,7 +146,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useRedstone());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useRedstone());
         event.setCancelled(true);
     }
 
@@ -169,12 +169,6 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        // Only cancel when the block actually has an interaction
-        var blockType = type.asBlockType();
-        if (blockType == null || !blockType.isInteractable()) {
-            return;
-        }
-
         Player player = event.getPlayer();
         Claim claim = claimManager.getClaimAt(block.getLocation())
                 .orElse(null);
@@ -187,7 +181,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().playerInteract());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().playerInteract());
         event.setCancelled(true);
     }
 
@@ -224,7 +218,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().igniteBlock());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().igniteBlock());
         event.setCancelled(true);
     }
 
@@ -246,7 +240,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().igniteBlock());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().igniteBlock());
         event.setCancelled(true);
     }
 
@@ -268,7 +262,7 @@ public class VanillaBlockListener implements Listener {
                 return;
             }
 
-            text.send(player, messagesHolder.get().claims().permissions().plantCrops());
+            text.sendNotification(player, messagesHolder.get().claims().permissions().plantCrops());
             event.setCancelled(true);
             return;
         }
@@ -277,7 +271,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().placeBlock());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().placeBlock());
         event.setCancelled(true);
     }
 
@@ -299,7 +293,7 @@ public class VanillaBlockListener implements Listener {
                 return;
             }
 
-            text.send(player, messagesHolder.get().claims().permissions().harvestCrops());
+            text.sendNotification(player, messagesHolder.get().claims().permissions().harvestCrops());
             event.setCancelled(true);
             return;
         }
@@ -308,7 +302,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().breakBlock());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().breakBlock());
         event.setCancelled(true);
     }
 
@@ -335,7 +329,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().trampleSoil());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().trampleSoil());
         event.setCancelled(true);
     }
 
@@ -360,7 +354,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().trampleSoil());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().trampleSoil());
         event.setCancelled(true);
     }
 

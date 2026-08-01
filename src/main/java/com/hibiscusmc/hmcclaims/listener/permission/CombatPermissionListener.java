@@ -51,7 +51,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        text.send(attacker, messagesHolder.get().claims().permissions().damageEntity());
+        text.sendNotification(attacker, messagesHolder.get().claims().permissions().damageEntity());
         event.setCancelled(true);
     }
 
@@ -77,7 +77,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        text.send(attacker, messagesHolder.get().claims().permissions().damagePlayer());
+        text.sendNotification(attacker, messagesHolder.get().claims().permissions().damagePlayer());
         event.setCancelled(true);
     }
 

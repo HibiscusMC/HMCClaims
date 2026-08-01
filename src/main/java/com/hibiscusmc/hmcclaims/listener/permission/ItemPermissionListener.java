@@ -58,7 +58,7 @@ public class ItemPermissionListener implements Listener {
         }
 
         if (event.getHand() == EquipmentSlot.HAND) {
-            text.send(player, messagesHolder.get().claims().permissions().interactEntity());
+            text.sendNotification(player, messagesHolder.get().claims().permissions().interactEntity());
         }
         event.setCancelled(true);
     }
@@ -90,7 +90,7 @@ public class ItemPermissionListener implements Listener {
         }
 
         if (event.getHand() == EquipmentSlot.HAND) {
-            text.send(player, messagesHolder.get().claims().permissions().useItem());
+            text.sendNotification(player, messagesHolder.get().claims().permissions().useItem());
         }
         event.setUseItemInHand(Event.Result.DENY);
     }
@@ -112,7 +112,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().pickupItem());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().pickupItem());
         event.setCancelled(true);
     }
 
@@ -130,7 +130,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().dropItem());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().dropItem());
         event.setCancelled(true);
     }
 
@@ -152,7 +152,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useWindCharge());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useWindCharge());
         event.setCancelled(true);
     }
 
@@ -190,7 +190,7 @@ public class ItemPermissionListener implements Listener {
 
         // Paper does not expose a cancellable event for only the Wind Burst
         // effect, so denying it also denies the triggering smash attack.
-        text.send(player, messagesHolder.get().claims().permissions().useWindCharge());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useWindCharge());
         event.setCancelled(true);
     }
 
@@ -212,7 +212,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useVehicle());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useVehicle());
         event.setCancelled(true);
     }
 
@@ -239,7 +239,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useVehicle());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useVehicle());
         event.setCancelled(true);
     }
 

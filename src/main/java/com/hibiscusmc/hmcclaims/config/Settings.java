@@ -112,4 +112,8 @@ public class Settings {
             "world_nether", "Nether",
             "world_the_end", "The End"
     );
+
+    @Setting("notification-cooldown")
+    @Comment("Defines the cooldown between sending missing permission notifications. Set to -1 to disable.")
+    private long notificationCooldown = 1_000;
 }

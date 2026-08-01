@@ -1,8 +1,12 @@
 package com.hibiscusmc.hmcclaims.util;
 
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.user.User;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -31,6 +35,12 @@ public class TextUtil {
     @Inject
     private ConfigHolder<Messages> messages;
 
+    @Inject
+    private ConfigHolder<Settings> settings;
+
+    @Inject
+    private UserManager userManager;
+
     /**
      * Sends a MiniMessage-formatted string to an audience.
      *
@@ -49,6 +59,45 @@ public class TextUtil {
      * @param data     A map of placeholders and their replacement values.
      */
     public void send(@NotNull Audience audience, String string, Map<String, String> data) {
+        audience.sendMessage(parseWithPrefix(string, data));
+    }
+
+    /**
+     * Sends a MiniMessage-formatted notification string to a user.
+     * This method takes into consideration the notification-cooldown set in the config.
+     *
+     * @param audience The recipient.
+     * @param string   The message content.
+     */
+    public void sendNotification(@NotNull Audience audience, String string) {
+        sendNotification(audience, string, Map.of());
+    }
+
+    /**
+     * Sends a MiniMessage-formatted notification string with placeholders to a user.
+     * This method takes into consideration the notification-cooldown set in the config.
+     *
+     * @param audience The recipient.
+     * @param string   The message content.
+     * @param data     A map of placeholders and their replacement values.
+     */
+    public void sendNotification(@NotNull Audience audience, String string, Map<String, String> data) {
+        long notificationCooldown = settings.get().notificationCooldown();
+
+        if (notificationCooldown > -1) {
+            User user = audience.get(Identity.UUID)
+                    .flatMap(uuid -> userManager.getUser(uuid))
+                    .orElse(null);
+
+            if (user != null) {
+                if (System.currentTimeMillis() > (user.lastNotificationSent() + notificationCooldown)) {
+                    return;
+                }
+
+                user.lastNotificationSent(System.currentTimeMillis());
+            }
+        }
+
         audience.sendMessage(parseWithPrefix(string, data));
     }
 

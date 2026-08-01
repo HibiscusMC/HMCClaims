@@ -63,22 +63,4 @@ public class User {
     public boolean hasActiveSelection() {
         return currentSelection != null;
     }
-
-    /**
-     * Determines if the user can receive a notification based on a 2-second cooldown.
-     * <p>
-     * <b>Side Effect:</b> If this returns {@code true}, the internal
-     * {@code lastNotificationSent} timer is automatically updated to the current time.
-     *
-     * @return {@code true} if 2000ms have passed since the last notification.
-     */
-    public boolean canReceiveNotification() {
-        long now = System.currentTimeMillis();
-        if (now - lastNotificationSent > 2_000) {
-            lastNotificationSent = now;
-            return true;
-        }
-
-        return false;
-    }
 }

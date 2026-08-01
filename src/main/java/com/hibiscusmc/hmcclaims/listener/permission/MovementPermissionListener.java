@@ -55,7 +55,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
         event.setTo(from);
     }
 
@@ -78,7 +78,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
         event.setCancelled(true);
     }
 
@@ -100,7 +100,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().allowFlight());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().allowFlight());
         event.setCancelled(true);
         player.setFlying(false);
     }
@@ -133,7 +133,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().allowFlight());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().allowFlight());
         player.setFlying(false);
     }
 
@@ -159,7 +159,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useElytra());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useElytra());
         player.setGliding(false);
     }
 
@@ -185,7 +185,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        text.send(player, messagesHolder.get().claims().permissions().useElytra());
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useElytra());
         event.setCancelled(true);
     }
 }
