@@ -47,4 +47,33 @@ public record Permission(Key key, String displayName, String description) {
     public final static Permission DROP_ITEM =
             new Permission("drop_item", "Item Drop", "Allows dropping items within the\nclaim.");
 
+    public final static Permission DAMAGE_PLAYER =
+            new Permission("damage_player", "Damage Players", "Allows attacking other players within the claim.");
+    public final static Permission IGNITE_BLOCK =
+            new Permission("ignite_block", "Ignite Blocks", "Allows igniting blocks and placing fire\nwithin the claim.");
+    public final static Permission PLAYER_INTERACT =
+            new Permission("player_interact", "Player Interactions", "Allows player interactions not blocked by\nother permissions.");
+    public final static Permission USE_REDSTONE =
+            new Permission("use_redstone", "Use Redstone", "Allows using redstone, levers, pressure\nplates and similar blocks.");
+    public final static Permission USE_DOOR =
+            new Permission("use_door", "Use Doors", "Allows opening and closing doors within\nthe claim.");
+    public final static Permission USE_TRAPDOOR =
+            new Permission("use_trapdoor", "Use Trapdoors", "Allows opening and closing trapdoors\nwithin the claim.");
+    public final static Permission ALLOW_FLIGHT =
+            new Permission("allow_flight", "Allow Flight", "Allows flying within the claim.");
+    public final static Permission USE_ELYTRA =
+            new Permission("use_elytra", "Use Elytra", "Allows using elytras within the claim.");
+    public final static Permission IGNORE_LOCKED =
+            new Permission("ignore_locked", "Ignore Locked", "Allows entering the claim while it is locked.");
+    public final static Permission USE_VEHICLE =
+            new Permission("use_vehicle", "Use Vehicles", "Allows placing and using vehicles within\nthe claim.");
+    public final static Permission TRAMPLE_SOIL =
+            new Permission("trample_soil", "Trample Farmland", "Allows trampling farmland within the claim.");
+    public final static Permission HARVEST_CROPS =
+            new Permission("harvest_crops", "Harvest Crops", "Allows harvesting crops within the claim.");
+    public final static Permission PLANT_CROPS =
+            new Permission("plant_crops", "Plant Crops", "Allows planting crops and saplings within\nthe claim.");
+    public final static Permission USE_WIND_CHARGE =
+            new Permission("use_wind_charge", "Use Wind Charge", "Allows using wind charges and maces with\nWind Burst within the claim.");
+
 }

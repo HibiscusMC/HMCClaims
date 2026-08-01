@@ -45,6 +45,21 @@ public class PermissionRegistry {
         register(Permission.USE_ITEM);
         register(Permission.PICKUP_ITEM);
         register(Permission.DROP_ITEM);
+
+        register(Permission.DAMAGE_PLAYER);
+        register(Permission.IGNITE_BLOCK);
+        register(Permission.PLAYER_INTERACT);
+        register(Permission.USE_REDSTONE);
+        register(Permission.USE_DOOR);
+        register(Permission.USE_TRAPDOOR);
+        register(Permission.ALLOW_FLIGHT);
+        register(Permission.USE_ELYTRA);
+        register(Permission.IGNORE_LOCKED);
+        register(Permission.USE_VEHICLE);
+        register(Permission.TRAMPLE_SOIL);
+        register(Permission.HARVEST_CROPS);
+        register(Permission.PLANT_CROPS);
+        register(Permission.USE_WIND_CHARGE);
     }
 
     /**
