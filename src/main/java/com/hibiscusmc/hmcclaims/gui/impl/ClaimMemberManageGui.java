@@ -99,14 +99,18 @@ public abstract class ClaimMemberManageGui implements BaseGui {
             @NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target,
             @NotNull GuiTemplate.SimpleIcon kickIcon, @NotNull ItemStack cantKickIcon
     ) {
+        boolean canKick = claim.getMember(player.getUniqueId())
+                .map(member -> member.canManage(target) && member.hasPermission(Permission.MANAGE_MEMBERS))
+                .orElse(false);
+
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(
-                        claim.hasPermission(player.getUniqueId(), Permission.MANAGE_MEMBERS) ?
+                        canKick ?
                                 kickIcon.item() :
                                 cantKickIcon
                 ))
                 .addClickHandler(click -> {
-                    if (!claim.hasPermission(player.getUniqueId(), Permission.MANAGE_MEMBERS)) {
+                    if (!canKick) {
                         return;
                     }
 
@@ -124,14 +128,18 @@ public abstract class ClaimMemberManageGui implements BaseGui {
             @NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target,
             @NotNull GuiTemplate.SimpleIcon banIcon, @NotNull ItemStack cantBanIcon
     ) {
+        boolean canBan = claim.getMember(player.getUniqueId())
+                .map(member -> member.canManage(target) && member.hasPermission(Permission.BAN_MEMBERS))
+                .orElse(false);
+
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(
-                        claim.hasPermission(player.getUniqueId(), Permission.BAN_MEMBERS) ?
+                        canBan ?
                                 banIcon.item() :
                                 cantBanIcon
                 ))
                 .addClickHandler(click -> {
-                    if (!claim.hasPermission(player.getUniqueId(), Permission.BAN_MEMBERS)) {
+                    if (!canBan) {
                         return;
                     }
 
