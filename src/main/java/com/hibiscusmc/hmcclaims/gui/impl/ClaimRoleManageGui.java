@@ -56,10 +56,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
     protected GuiTemplate.GuiScreenType screenType;
 
-    private GuiTemplate.SimpleIcon membersTab;
-    private GuiTemplate.SimpleIcon rolesTab;
-    private GuiTemplate.SimpleIcon settingsTab;
-    private GuiTemplate.SimpleIcon manageTab;
+    private Map<String, GuiTemplate.SimpleIcon> tabs;
 
     private GuiTemplate.SimpleIcon deleteIcon;
     private ItemStack cantDeleteIcon;
@@ -84,10 +81,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
         title = config.title();
         rows = config.rows();
 
-        membersTab = config.tabs().get("members-tab");
-        rolesTab = config.tabs().get("roles-tab");
-        settingsTab = config.tabs().get("settings-tab");
-        manageTab = config.tabs().get("manage-tab");
+        tabs = config.tabs();
 
         deleteIcon = config.deleteIcon();
         cantDeleteIcon = config.cantDeleteIcon();
@@ -132,7 +126,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
             Class<? extends BaseGui> currentClass = getClass();
             TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                     structure, currentClass, claim, metadata,
-                    membersTab, rolesTab, settingsTab, manageTab
+                    tabs
             );
 
             structure.set(previousPage.slot(), '(');

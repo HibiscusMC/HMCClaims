@@ -20,8 +20,10 @@ import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.util.TriConsumer;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The core interface for all GUIs within the plugin.
@@ -94,25 +96,40 @@ public interface BaseGui {
      * @param currentTab the class of the currently active GUI tab
      * @param claim      the claim this menu belongs to
      * @param metadata   the metadata related to this set of GUIs
-     * @param tabIcons   an array of icons related to the tabs
+     * @param tabs       the map of tabs set in the config
      * @return a {@link TriConsumer} configured to handle the layout and click actions for the tabs
      */
     @NotNull
     default TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> buildTabs(
             @NotNull CharList structure, @NotNull Class<? extends BaseGui> currentTab, @NotNull Claim claim, @NotNull GuiMetadata metadata,
-            @NotNull GuiTemplate.SimpleIcon... tabIcons
+            @NotNull Map<String, GuiTemplate.SimpleIcon> tabs
     ) {
-        TabIcon[] tabs = new TabIcon[]{
-                new TabIcon(ClaimMemberListGui.class, tabIcons[0].item(), tabIcons[0].slot(), metadata),
-                new TabIcon(ClaimRolesGui.class, tabIcons[1].item(), tabIcons[1].slot(), metadata),
-                new TabIcon(ClaimSettingsGui.class, tabIcons[2].item(), tabIcons[2].slot(), metadata),
-                new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, tabIcons[3].item(), tabIcons[3].slot(), metadata)
-        };
+        Set<TabIcon> icons = new HashSet<>();
+
+        if (tabs.containsKey("members-tab")) {
+            GuiTemplate.SimpleIcon tab = tabs.get("members-tab");
+            icons.add(new TabIcon(ClaimMemberListGui.class, tab.item(), tab.slot(), metadata));
+        }
+
+        if (tabs.containsKey("roles-tab")) {
+            GuiTemplate.SimpleIcon tab = tabs.get("roles-tab");
+            icons.add(new TabIcon(ClaimRolesGui.class, tab.item(), tab.slot(), metadata));
+        }
+
+        if (tabs.containsKey("settings-tab")) {
+            GuiTemplate.SimpleIcon tab = tabs.get("settings-tab");
+            icons.add(new TabIcon(ClaimSettingsGui.class, tab.item(), tab.slot(), metadata));
+        }
+
+        if (tabs.containsKey("manage-tab")) {
+            GuiTemplate.SimpleIcon tab = tabs.get("manage-tab");
+            icons.add(new TabIcon(claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class, tab.item(), tab.slot(), metadata));
+        }
 
         Char2ObjectMap<TabIcon> map = new Char2ObjectOpenHashMap<>();
 
         int i = 0;
-        for (TabIcon tab : tabs) {
+        for (TabIcon tab : icons) {
             map.put((char) (++i), tab);
             structure.set(tab.slot(), (char) i);
         }

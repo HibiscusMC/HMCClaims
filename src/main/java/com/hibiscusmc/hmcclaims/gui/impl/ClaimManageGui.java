@@ -88,10 +88,7 @@ public class ClaimManageGui extends ClaimListGui {
 
     private GuiTemplate.SimpleIcon transferIcon;
 
-    protected GuiTemplate.SimpleIcon membersTab;
-    protected GuiTemplate.SimpleIcon rolesTab;
-    protected GuiTemplate.SimpleIcon settingsTab;
-    protected GuiTemplate.SimpleIcon manageTab;
+    private Map<String, GuiTemplate.SimpleIcon> tabs;
 
     protected List<GuiTemplate.Icon> icons;
 
@@ -113,10 +110,7 @@ public class ClaimManageGui extends ClaimListGui {
 
         deleteIcon = config.deleteIcon();
 
-        membersTab = config.tabs().get("members-tab");
-        rolesTab = config.tabs().get("roles-tab");
-        settingsTab = config.tabs().get("settings-tab");
-        manageTab = config.tabs().get("manage-tab");
+        tabs = config.tabs();
 
         renameIcon = config.renameIcon();
         lockIcon = config.lockIcon();
@@ -208,7 +202,7 @@ public class ClaimManageGui extends ClaimListGui {
         Class<? extends BaseGui> currentClass = getClass();
         TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                 structure, currentClass, claim, metadata,
-                membersTab, rolesTab, settingsTab, manageTab
+                tabs
         );
 
         return new InventoryStructure(structure, (gui) -> {

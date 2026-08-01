@@ -85,10 +85,7 @@ public class ClaimBannedListGui extends ClaimListGui {
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
-    private GuiTemplate.SimpleIcon membersTab;
-    private GuiTemplate.SimpleIcon rolesTab;
-    private GuiTemplate.SimpleIcon settingsTab;
-    private GuiTemplate.SimpleIcon manageTab;
+    private Map<String, GuiTemplate.SimpleIcon> tabs;
 
     private List<GuiTemplate.Icon> icons;
 
@@ -110,10 +107,7 @@ public class ClaimBannedListGui extends ClaimListGui {
         previousPage = config.pages().get("previous-page");
         nextPage = config.pages().get("next-page");
 
-        membersTab = config.tabs().get("members-tab");
-        rolesTab = config.tabs().get("roles-tab");
-        settingsTab = config.tabs().get("settings-tab");
-        manageTab = config.tabs().get("manage-tab");
+        tabs = config.tabs();
 
         icons = config.extraIcons().values().stream().toList();
 
@@ -160,7 +154,7 @@ public class ClaimBannedListGui extends ClaimListGui {
             Class<? extends BaseGui> currentClass = getClass();
             TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                     structure, currentClass, claim, metadata,
-                    membersTab, rolesTab, settingsTab, manageTab
+                    tabs
             );
 
             String[] structureArray = new String[rows];
