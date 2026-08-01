@@ -1,16 +1,15 @@
 package com.hibiscusmc.hmcclaims.claim;
 
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
-import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -44,7 +43,7 @@ public class ClaimMember {
      * <p>A value of {@code true} explicitly grants the permission,
      * while {@code false} explicitly denies it.</p>
      */
-    private Set<PermissionHolder> permissions;
+    private Object2BooleanMap<Permission> permissions;
 
     /**
      * Whether this member is currently banned from the claim.
@@ -55,7 +54,7 @@ public class ClaimMember {
     @Setter
     private Instant joinedTimestamp;
 
-    public ClaimMember(UUID uuid, Claim claim, String lastKnownName, ClaimRole role, Set<PermissionHolder> permissions) {
+    public ClaimMember(UUID uuid, Claim claim, String lastKnownName, ClaimRole role, Object2BooleanMap<Permission> permissions) {
         this.uuid = uuid;
         this.claim = claim;
         this.lastKnownName = lastKnownName;
@@ -106,14 +105,10 @@ public class ClaimMember {
             return true;
         }
 
-        PermissionHolder holder = permissions.stream().filter(h -> h.permission().equals(permission))
-                .findAny()
-                .orElse(null);
-
-        if (holder == null) {
+        if (!permissions.containsKey(permission)) {
             return role.hasPermission(permission);
         }
 
-        return holder.status();
+        return permissions.getBoolean(permission);
     }
 }

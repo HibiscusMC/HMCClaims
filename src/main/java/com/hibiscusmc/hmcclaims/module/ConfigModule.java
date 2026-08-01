@@ -7,6 +7,8 @@ import com.hibiscusmc.hmcclaims.config.gui.ClaimBannedListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimDeleteConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberPermissionsConfig;
+import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberRoleConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRoleManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRolesConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
@@ -48,6 +50,8 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "sub-claim-manage.yml")), SubClaimManageConfig.class, true);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "role-manage.yml")), ClaimRoleManageConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "member-manage-role.yml")), ClaimMemberRoleConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("guis", "member-manage-permissions.yml")), ClaimMemberPermissionsConfig.class, true);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-delete-confirm.yml")), ClaimDeleteConfig.class, true);
         } catch (Exception e) {
@@ -86,6 +90,12 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<ClaimRoleManageConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimRoleManageConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimMemberRoleConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimMemberRoleConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimMemberPermissionsConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimMemberPermissionsConfig.class));
 
         bind(new TypeReference<ConfigHolder<ClaimDeleteConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimDeleteConfig.class));

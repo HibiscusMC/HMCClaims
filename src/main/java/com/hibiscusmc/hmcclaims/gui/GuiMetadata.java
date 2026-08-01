@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import lombok.Data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -22,6 +23,11 @@ public class GuiMetadata {
      * The target role associated with this GUI context.
      */
     private ClaimRole role;
+
+    /**
+     * The target member associated with this GUI context.
+     */
+    private ClaimMember member;
 
     /**
      * If the opener of the GUI is able to manage this role

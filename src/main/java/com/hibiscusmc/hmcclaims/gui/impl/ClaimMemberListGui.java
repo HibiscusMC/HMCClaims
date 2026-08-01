@@ -219,9 +219,9 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             AtomicReference<PagedGui<Item>> guiReference = new AtomicReference<>(null);
 
-            Map<ClaimMember, Item> parsedMembers = buildMembers(guiReference, player, claim);
+            Map<ClaimMember, Item> parsedMembers = buildMembers(guiMetadata, player, claim);
 
-            Runnable updateMembers = () -> updateMembers(guiReference.get(), player, claim, parsedMembers, metadata);
+            Runnable updateMembers = () -> updateMembers(guiReference.get(), claim, parsedMembers, metadata);
             pagedGui.addIngredient('%', buildFilter(metadata, claim, updateMembers));
             pagedGui.addIngredient('&', buildSearch(metadata, updateMembers));
 
@@ -236,22 +236,24 @@ public class ClaimMemberListGui extends ClaimListGui {
             updateMembers.run();
 
             scheduler.schedule(() -> {
-                Window.Builder.Normal.Split window = Window.builder()
+                Window.Builder.Normal.Split builder = Window.builder()
                         .setTitle(TextUtil.parse(title.text(), Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui);
 
                 if (lowerGui != null) {
-                    window.setLowerGui(lowerGui);
+                    builder.setLowerGui(lowerGui);
                 }
 
-                window.open(player);
+                Window window = builder.build(player);
+                guiMetadata.previousPage(window);
+                window.open();
             });
         });
     }
 
-    private void updateMembers(@NotNull PagedGui<Item> gui, @NotNull Player player, @NotNull Claim claim, @NotNull Map<ClaimMember, Item> parsedMembers, @NotNull Metadata metadata) {
+    private void updateMembers(@NotNull PagedGui<Item> gui, @NotNull Claim claim, @NotNull Map<ClaimMember, Item> parsedMembers, @NotNull Metadata metadata) {
         List<Item> items = new ArrayList<>();
 
         List<Map.Entry<ClaimMember, Item>> sortedMembers = parsedMembers.entrySet().stream()
@@ -287,7 +289,7 @@ public class ClaimMemberListGui extends ClaimListGui {
         gui.setContent(items);
     }
 
-    private Map<ClaimMember, Item> buildMembers(@NotNull AtomicReference<PagedGui<Item>> guiReference, @NotNull Player player, @NotNull Claim claim) {
+    private Map<ClaimMember, Item> buildMembers(@NotNull GuiMetadata metadata, @NotNull Player player, @NotNull Claim claim) {
         Map<ClaimMember, Item> parsedMembers = new HashMap<>();
 
         Set<ClaimMember> members = claim.members();
@@ -313,9 +315,10 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             parsedMembers.put(member, Item.builder()
                     .setItemProvider(head)
-                    .addClickHandler(click -> {
-                        System.out.println("clicked on " + member.lastKnownName());
-                    })
+                    .addClickHandler(click ->
+                            guis.get(ClaimMemberRoleGui.class)
+                                    .open(player, metadata.member(member))
+                    )
                     .build());
         }
 

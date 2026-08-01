@@ -10,12 +10,18 @@ import com.hibiscusmc.hmcclaims.gui.impl.SubClaimManageGui;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.util.TriConsumer;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * The core interface for all GUIs within the plugin.
@@ -46,12 +52,33 @@ public interface BaseGui {
     }
 
     /**
+     * Parses a character list into an array of row strings.
+     *
+     * @param structure the character list containing row data
+     * @param rows      the number of rows to parse
+     * @return an array containing each row as a string
+     */
+    @NotNull
+    @Contract(pure = true)
+    default String[] parseStructure(@NotNull CharList structure, int rows) {
+        String[] structureArray = new String[rows];
+        for (int r = 0; r < rows; r++) {
+            CharList rowList = structure.subList(r * 9, (r + 1) * 9);
+            structureArray[r] = new String(rowList.toCharArray());
+        }
+
+        return structureArray;
+    }
+
+    /**
      * Truncates the claim name to the title's maximum length, appending "..." if exceeded.
      *
      * @param claimName the original claim name to parse
      * @param maxLength the maximum allowed length for the claim name
      * @return the potentially truncated claim name, or the original if within limits
      */
+    @NotNull
+    @Contract(pure = true)
     default String parseName(@NotNull String claimName, int maxLength) {
         if (maxLength < 0 || claimName.length() <= maxLength) {
             return claimName;
@@ -70,6 +97,7 @@ public interface BaseGui {
      * @param tabIcons   an array of icons related to the tabs
      * @return a {@link TriConsumer} configured to handle the layout and click actions for the tabs
      */
+    @NotNull
     default TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> buildTabs(
             @NotNull CharList structure, @NotNull Class<? extends BaseGui> currentTab, @NotNull Claim claim, @NotNull GuiMetadata metadata,
             @NotNull GuiTemplate.SimpleIcon... tabIcons
@@ -106,6 +134,31 @@ public interface BaseGui {
                         .build());
             }
         };
+    }
+
+    /**
+     * Converts a map of template icons into a map of interactive items.
+     *
+     * @param icons the map of icons to parse
+     * @return a map of built items with mapped click actions and the slot they belong to
+     */
+    @NotNull
+    @Contract(pure = true)
+    default Int2ObjectMap<Item> parseExtraItems(@NotNull Map<String, GuiTemplate.Icon> icons) {
+        Int2ObjectMap<Item> items = new Int2ObjectArrayMap<>();
+
+        for (GuiTemplate.Icon icon : icons.values()) {
+            items.put(icon.slot(), Item.builder()
+                    .setItemProvider(icon.item())
+                    .addClickHandler(click -> (switch (click.clickType()) {
+                        case LEFT -> icon.leftClickActions();
+                        case RIGHT -> icon.rightClickActions();
+                        default -> List.<Action>of();
+                    }).forEach(action -> action.execute(click.player())))
+                    .build());
+        }
+
+        return items;
     }
 
     /**

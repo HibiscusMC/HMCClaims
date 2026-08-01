@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import lombok.Getter;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
@@ -74,6 +75,8 @@ public class ClaimRolesConfig extends GuiTemplate {
     @Getter
     @ConfigSerializable
     public static class RoleIcon {
+
+        private ItemStack icon = ItemStack.of(Material.BOOK);
 
         private String name = "<name>";
 

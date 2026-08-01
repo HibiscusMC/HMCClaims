@@ -20,9 +20,9 @@ import java.util.Map;
 @Getter
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal"})
-public class ClaimRoleManageConfig extends GuiTemplate {
+public class ClaimMemberPermissionsConfig extends ClaimMemberManageConfig {
 
-    private GuiTitle title = new GuiTitle("Permissions | <role_name> Role", 20);
+    private GuiTitle title = new GuiTitle("Manage | <member_name>", 20);
 
     private int rows = 6;
 
@@ -30,13 +30,38 @@ public class ClaimRoleManageConfig extends GuiTemplate {
     @Comment(GuiScreenType.DESCRIPTION)
     private GuiScreenType screenType = GuiScreenType.FULL;
 
-    private Map<String, SimpleIcon> pages = Map.of(
-            "previous-page", new SimpleIcon(ItemUtil.build(
-                    Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
-            ), 48),
-            "next-page", new SimpleIcon(ItemUtil.build(
-                    Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
-            ), 50)
+    private Map<String, String> states = Map.of(
+            "enabled", "<green>Enabled",
+            "unset", "<gray>Unset",
+            "disabled", "<red>Disabled"
+    );
+
+    @Setting("permission-pages")
+    private Map<Integer, Map<String, TogglePermissionIcon<Permission>>> permissionPages = buildPermissionPages();
+
+    @Setting("back-icon")
+    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+    ), 45);
+
+    @Setting("kick-icon")
+    private SimpleIcon kickIcon = new SimpleIcon(ItemUtil.build(
+            Material.BARRIER, "Kick Member", List.of("", "<white>Left-Click <gray>to kick this member")
+    ), 48);
+
+    @Setting("cant-kick-icon")
+    private ItemStack cantKickIcon = ItemUtil.build(
+            Material.BARRIER, "Kick Member", List.of("", "<red>You can't kick this member")
+    );
+
+    @Setting("ban-icon")
+    private SimpleIcon banIcon = new SimpleIcon(ItemUtil.build(
+            Material.BARRIER, "Ban Member", List.of("", "<white>Left-Click <gray>to ban this member")
+    ), 50);
+
+    @Setting("cant-ban-icon")
+    private ItemStack cantBanIcon = ItemUtil.build(
+            Material.BARRIER, "Ban Member", List.of("", "<red>You can't ban this member")
     );
 
     @Setting("extra-icons")
@@ -45,40 +70,22 @@ public class ClaimRoleManageConfig extends GuiTemplate {
     );
 
     private Map<String, SimpleIcon> tabs = Map.of(
-            "members-tab", new SimpleIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Members", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 1),
             "roles-tab", new SimpleIcon(ItemUtil.build(
-                    Material.LIME_STAINED_GLASS_PANE, "Roles", List.of("", "<red>You're here!")
-            ), 3),
-            "settings-tab", new SimpleIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 5),
-            "manage-tab", new SimpleIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Manage", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 7)
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
+            ), 2),
+            "permissions-tab", new SimpleIcon(ItemUtil.build(
+                    Material.LIME_STAINED_GLASS_PANE, "Permissions", List.of("", "<red>You're here!")
+            ), 5)
     );
 
-    @Setting("delete-icon")
-    private SimpleIcon deleteIcon = new SimpleIcon(ItemUtil.build(
-            Material.BARRIER, "Delete role", List.of("", "<white>Left-Click <gray>to delete role")
-    ), 53);
-
-    @Setting("cant-delete-icon")
-    private ItemStack cantDeleteIcon = ItemUtil.build(
-            Material.BARRIER, "Delete role", List.of("", "<red>You can't delete this role")
+    private Map<String, SimpleIcon> pages = Map.of(
+            "previous-page", new SimpleIcon(ItemUtil.build(
+                    Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
+            ), 47),
+            "next-page", new SimpleIcon(ItemUtil.build(
+                    Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
+            ), 51)
     );
-
-    private Map<String, String> states = Map.of(
-            "enabled", "<green>Enabled",
-            "disabled", "<red>Disabled"
-    );
-
-    @Setting("permission-pages")
-    private Map<Integer, Map<String, TogglePermissionIcon<Permission>>> permissionPages = buildPermissionPages();
-
-    @Setting("lower-gui")
-    private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
 
     @NotNull
     private Map<Integer, Map<String, TogglePermissionIcon<Permission>>> buildPermissionPages() {
@@ -97,10 +104,11 @@ public class ClaimRoleManageConfig extends GuiTemplate {
 
             permissions.put(permission.key().value().toLowerCase() + "-permission", new TogglePermissionIcon<>(
                     permission, slot, name, lore,
-                    new TogglePermissionIcon.BiStateToggleIcon(
+                    new TogglePermissionIcon.TriStateToggleIcon(
                             slot + 9,
                             new PermissionIcon(ItemStack.of(Material.LIME_DYE), name, TogglePermissionIcon.buildLore(lore, true), TogglePermissionIcon.buildLore(lore, false)),
-                            new PermissionIcon(ItemStack.of(Material.GRAY_DYE), name, TogglePermissionIcon.buildLore(lore, true), TogglePermissionIcon.buildLore(lore, false))
+                            new PermissionIcon(ItemStack.of(Material.GRAY_DYE), name, TogglePermissionIcon.buildLore(lore, true), TogglePermissionIcon.buildLore(lore, false)),
+                            new PermissionIcon(ItemStack.of(Material.RED_DYE), name, TogglePermissionIcon.buildLore(lore, true), TogglePermissionIcon.buildLore(lore, false))
                     )
             ));
 
@@ -153,12 +161,12 @@ public class ClaimRoleManageConfig extends GuiTemplate {
         private boolean hasModifyIcon = true;
 
         @Setting("modify-icon")
-        private BiStateToggleIcon modifyIcon;
+        private TriStateToggleIcon modifyIcon;
 
         public TogglePermissionIcon() {
         }
 
-        protected TogglePermissionIcon(T key, int slot, String name, List<String> lore, BiStateToggleIcon modifyIcon) {
+        protected TogglePermissionIcon(T key, int slot, String name, List<String> lore, TriStateToggleIcon modifyIcon) {
             this.key = key;
 
             this.icon = new DynamicIconWithStack(
@@ -188,19 +196,21 @@ public class ClaimRoleManageConfig extends GuiTemplate {
 
         @Getter
         @ConfigSerializable
-        public static class BiStateToggleIcon {
+        public static class TriStateToggleIcon {
 
             private int slot;
 
             private PermissionIcon enabled;
+            private PermissionIcon unset;
             private PermissionIcon disabled;
 
-            public BiStateToggleIcon() {
+            public TriStateToggleIcon() {
             }
 
-            protected BiStateToggleIcon(int slot, PermissionIcon enabled, PermissionIcon disabled) {
+            protected TriStateToggleIcon(int slot, PermissionIcon enabled, PermissionIcon unset, PermissionIcon disabled) {
                 this.slot = slot;
                 this.enabled = enabled;
+                this.unset = unset;
                 this.disabled = disabled;
             }
         }

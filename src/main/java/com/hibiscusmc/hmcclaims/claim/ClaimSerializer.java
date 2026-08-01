@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.claim;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
-import com.hibiscusmc.hmcclaims.claim.permission.PermissionHolder;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
@@ -16,6 +15,8 @@ import com.hibiscusmc.hmcclaims.proto.RolesMessage;
 import com.hibiscusmc.hmcclaims.proto.SettingsMessage;
 import com.hibiscusmc.hmcclaims.util.ByteUtil;
 import com.hibiscusmc.hmcclaims.util.Logger;
+import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -78,8 +79,8 @@ public class ClaimSerializer {
                     .setBanned(member.banned())
                     .setJoinDate(System.currentTimeMillis());
 
-            for (PermissionHolder holder : member.permissions()) {
-                memberDataBuilder.putPermissions(holder.permission().key().asString(), holder.status());
+            for (Object2BooleanMap.Entry<Permission> entry : member.permissions().object2BooleanEntrySet()) {
+                memberDataBuilder.putPermissions(entry.getKey().key().asString(), entry.getBooleanValue());
             }
 
             membersMessageBuilder.putMembers(member.uuid().toString(), memberDataBuilder.build());
@@ -158,12 +159,12 @@ public class ClaimSerializer {
 
                 Optional<ClaimRole> role = roleRegistry.find(roleId);
 
-                Set<PermissionHolder> overrides = new HashSet<>();
+                Object2BooleanMap<Permission> overrides = new Object2BooleanArrayMap<>();
                 data.getPermissionsMap().forEach((permStr, status) -> {
                     Permission perm = PermissionRegistry.getPermission(permStr);
 
                     if (perm != null) {
-                        overrides.add(new PermissionHolder(perm, status));
+                        overrides.put(perm, (boolean) status);
                     }
                 });
 

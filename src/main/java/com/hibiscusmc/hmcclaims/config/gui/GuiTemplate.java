@@ -280,7 +280,7 @@ public class GuiTemplate {
                 ┌─ Options:
                 ├─ FULL
                 ├   Uses both the top and the bottom inventories, using the lower part to
-                │   display player claims.
+                │   display what is in the lower-gui config
                 ├─ NORMAL
                 └   Only uses the top part of the inventory""";
     }

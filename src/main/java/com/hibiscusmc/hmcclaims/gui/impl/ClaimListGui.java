@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
+import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.gui.Markers;
 import xyz.xenondevs.invui.gui.PagedGui;
@@ -51,6 +52,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+@Singleton
 @SuppressWarnings({"UnstableApiUsage"})
 public class ClaimListGui implements BaseGui {
 

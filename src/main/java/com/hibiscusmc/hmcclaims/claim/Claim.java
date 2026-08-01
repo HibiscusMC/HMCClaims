@@ -7,6 +7,7 @@ import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -125,7 +126,7 @@ public class Claim {
                         this,
                         owner.name(),
                         roleRegistry.ownerRole(),
-                        new HashSet<>()
+                        new Object2BooleanArrayMap<>()
                 ));
             }
         }
@@ -204,7 +205,7 @@ public class Claim {
             member = members.get(id);
 
             member.role(roleRegistry.ownerRole());
-            member.permissions(new HashSet<>());
+            member.permissions(new Object2BooleanArrayMap<>());
 
             if (member.banned()) {
                 member.banned(false);
@@ -215,7 +216,7 @@ public class Claim {
                     this,
                     name,
                     roleRegistry.ownerRole(),
-                    new HashSet<>()
+                    new Object2BooleanArrayMap<>()
             );
 
             members.put(id, member);
@@ -223,7 +224,7 @@ public class Claim {
 
         owner = member.uuid();
         oldOwner.role(roleRegistry.defaultRole());
-        oldOwner.permissions(new HashSet<>());
+        oldOwner.permissions(new Object2BooleanArrayMap<>());
 
         if (!subClaims.isEmpty()) {
             subClaims.forEach(subClaim -> subClaim.transfer(newOwner));
@@ -311,7 +312,7 @@ public class Claim {
                 this,
                 data.name(),
                 roleRegistry.defaultRole(),
-                new HashSet<>()
+                new Object2BooleanArrayMap<>()
         );
 
         return addMember(member);
@@ -347,6 +348,10 @@ public class Claim {
      * @return {@code true} if either the player or the {@code everyone} role (if the player is not in the claim) has the permission
      */
     public boolean hasPermission(@NotNull UUID playerId, @NotNull Permission permission) {
+        if (owner.equals(playerId)) {
+            return true;
+        }
+
         return getMember(playerId)
                 .map(member -> member.hasPermission(permission))
                 .orElse(roleRegistry.everyoneRole().hasPermission(permission));

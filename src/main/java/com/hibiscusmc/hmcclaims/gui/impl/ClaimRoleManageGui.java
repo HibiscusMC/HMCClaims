@@ -62,7 +62,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private GuiTemplate.SimpleIcon manageTab;
 
     private GuiTemplate.SimpleIcon deleteIcon;
-    private GuiTemplate.SimpleIcon cantDeleteIcon;
+    private ItemStack cantDeleteIcon;
 
     private List<GuiTemplate.Icon> icons;
 
@@ -72,7 +72,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private String enabledState;
     private String disabledState;
 
-    private Map<Integer, List<ClaimRoleManageConfig.TogglePermissionIcon<Permission>>> permissionPages;
+    private Map<Integer, Map<String, ClaimRoleManageConfig.TogglePermissionIcon<Permission>>> permissionPages;
 
     @Override
     public void loadConfig() {
@@ -99,8 +99,8 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
         permissionPages = config.permissionPages();
 
-        enabledState = config.states().get(true);
-        disabledState = config.states().get(false);
+        enabledState = config.states().get("enabled");
+        disabledState = config.states().get("disabled");
 
         screenType = config.screenType();
         if (screenType == GuiTemplate.GuiScreenType.FULL) {
@@ -142,7 +142,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
             Char2ObjectArrayMap<Item> permissionItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
-            for (ClaimRoleManageConfig.TogglePermissionIcon<Permission> toggleIcon : permissionPages.getOrDefault(currentPage, List.of())) {
+            for (ClaimRoleManageConfig.TogglePermissionIcon<Permission> toggleIcon : permissionPages.getOrDefault(currentPage, Map.of()).values()) {
                 PermissionItem item = buildPermission(role, toggleIcon, metadata);
 
                 permissionItems.put((char) currentSafeCode, item.item());
@@ -183,7 +183,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
             }
 
             gui.addIngredient('*', Item.builder()
-                    .setItemProvider(metadata.canManageRole() ? deleteIcon.item() : cantDeleteIcon.item())
+                    .setItemProvider(metadata.canManageRole() ? deleteIcon.item() : cantDeleteIcon)
                     .addClickHandler(click -> {
                         ClaimRoleRegistry registry = claim.roleRegistry();
 

@@ -23,6 +23,7 @@ import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
+import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -42,7 +43,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -314,7 +314,7 @@ public class ClaimBannedListGui extends ClaimListGui {
 
                                     if (!claimMember.banned()) {
                                         claimMember.role(claim.roleRegistry().defaultRole());
-                                        claimMember.permissions(new HashSet<>());
+                                        claimMember.permissions(new Object2BooleanArrayMap<>());
                                         claimMember.joinedTimestamp(Instant.now());
                                         claimMember.banned(true);
 

@@ -22,7 +22,6 @@ import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -264,7 +263,7 @@ public class ClaimRolesGui extends ClaimListGui {
 
             Item item = Item.builder()
                     .setItemProvider(p -> {
-                        ItemStack stack = ItemStack.of(Material.BOOK);
+                        ItemStack stack = roleIcon.icon();
                         stack.editMeta(meta -> {
                             meta.itemName(TextUtil.parseItem(roleIcon.name(), Map.of(
                                     "name", role.name()
