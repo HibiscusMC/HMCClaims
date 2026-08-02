@@ -5,6 +5,8 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
+import com.hibiscusmc.hmcclaims.user.User;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
@@ -76,6 +78,9 @@ public class ClaimManager {
     private ConfigHolder<DefaultRoles> rolesHolder;
 
     @Inject
+    private UserManager userManager;
+
+    @Inject
     private StorageHolder storageHolder;
 
     /**
@@ -116,6 +121,9 @@ public class ClaimManager {
      */
     @Contract("_, _, _ -> new")
     public Claim createClaim(@NotNull Player player, @NotNull ClaimRegion region, @Nullable Claim main) {
+        User user = userManager.getUser(player.getUniqueId())
+                .orElseThrow(() -> new IllegalStateException("User is not loaded"));
+
         long totalMainClaims = playerClaims.getOrDefault(player.getUniqueId(), new HashSet<>())
                 .stream()
                 .filter(claim -> claim.main() == null)
@@ -137,8 +145,17 @@ public class ClaimManager {
         addClaimToCache(newClaim);
 
         Storage storage = storageHolder.get();
+
         ClaimRepository claimRepository = storage.claims();
-        claimRepository.saveClaim(newClaim);
+        if (!user.persistent()) {
+            storage.users().saveUser(user)
+                    .thenAccept(v -> {
+                        user.persistent(true);
+                        claimRepository.saveClaim(newClaim);
+                    });
+        } else {
+            claimRepository.saveClaim(newClaim);
+        }
 
         return newClaim;
     }

@@ -44,6 +44,11 @@ public class User {
     private transient long lastNotificationSent = 0;
 
     /**
+     * Marks if this user is already saved to the database.
+     */
+    private transient boolean persistent = false;
+
+    /**
      * Constructs a new User with initial identity data.
      *
      * @param uuid The unique identifier of the player.

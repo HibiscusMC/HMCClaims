@@ -152,6 +152,7 @@ public class SQLUserRepository implements UserRepository {
                 rs.getLong("claim_blocks")
         );
 
+        user.persistent(true);
         user.lastOnline(rs.getTimestamp("last_online").toInstant());
 
         return user;
