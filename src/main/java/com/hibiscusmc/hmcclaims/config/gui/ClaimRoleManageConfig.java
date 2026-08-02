@@ -69,6 +69,11 @@ public class ClaimRoleManageConfig extends GuiTemplate {
             Material.BARRIER, "Delete role", List.of("", "<red>You can't delete this role")
     );
 
+    @Setting("back-icon")
+    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+    ), 45);
+
     private Map<String, String> states = Map.of(
             "enabled", "<green>Enabled",
             "disabled", "<red>Disabled"

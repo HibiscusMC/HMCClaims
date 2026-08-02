@@ -66,6 +66,8 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private String enabledState;
     private String disabledState;
 
@@ -92,6 +94,8 @@ public class ClaimRoleManageGui extends ClaimListGui {
         nextPage = config.pages().get("next-page");
 
         permissionPages = config.permissionPages();
+
+        backIcon = config.backIcon();
 
         enabledState = config.states().get("enabled");
         disabledState = config.states().get("disabled");
@@ -133,6 +137,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
             structure.set(nextPage.slot(), ')');
 
             structure.set(deleteIcon.slot(), '*');
+            structure.set(backIcon.slot(), '$');
 
             Char2ObjectArrayMap<Item> permissionItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
@@ -213,6 +218,11 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
                         open(player, metadata.currentPage(page));
                     })
+                    .build());
+
+            gui.addIngredient('$', Item.builder()
+                    .setItemProvider(backIcon.item())
+                    .addClickHandler(click -> guis.get(ClaimRolesGui.class).open(player, metadata))
                     .build());
 
             Gui lowerGui = metadata.claimsGui() != null ? metadata.claimsGui() : screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player, metadata) : null;
