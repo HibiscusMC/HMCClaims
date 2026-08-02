@@ -90,6 +90,8 @@ public class ClaimListGui implements BaseGui {
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private List<GuiTemplate.Icon> icons;
 
     @Override
@@ -117,6 +119,8 @@ public class ClaimListGui implements BaseGui {
         nextPage = lowerConfig.pages().get("next-page");
 
         icons = lowerConfig.extraIcons().values().stream().toList();
+
+        backIcon = lowerConfig.backIcon();
 
         slots.clear();
         for (RangeUtil range : lowerConfig.validSlots()) {
@@ -154,6 +158,10 @@ public class ClaimListGui implements BaseGui {
 
         structure.set(filterIcon.slot(), "%");
         structure.set(searchIcon.slot(), "&");
+
+        if (isValidIcon(backIcon)) {
+            structure.set(backIcon.slot(), "$");
+        }
 
         Map<Integer, GuiTemplate.Icon> mappedIcons = new HashMap<>();
         for (GuiTemplate.Icon icon : icons) {
@@ -193,6 +201,13 @@ public class ClaimListGui implements BaseGui {
                 .setItemProvider(new ItemBuilder(nextPage.item()))
                 .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                 .build());
+
+        if (isValidIcon(backIcon)) {
+            pagedGui.addIngredient('$', Item.builder()
+                    .setItemProvider(backIcon.item())
+                    .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
+                    .build());
+        }
 
         Metadata metadata = new Metadata(
                 new AtomicReference<>(Filter.ALL),

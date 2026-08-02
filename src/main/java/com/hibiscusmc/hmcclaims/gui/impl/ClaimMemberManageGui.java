@@ -75,7 +75,10 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         structure.set(kickIcon.slot(), (char) 0);
         structure.set(banIcon.slot(), (char) 1);
-        structure.set(backIcon.slot(), (char) 2);
+
+        if (isValidIcon(backIcon)) {
+            structure.set(backIcon.slot(), (char) 2);
+        }
 
         int currentPoint = 3;
         Char2ObjectMap<Item> itemMap = new Char2ObjectOpenHashMap<>();
@@ -94,10 +97,13 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         guiBuilder.addIngredient((char) 0, buildKickItem(player, claim, target, kickIcon, cantKickIcon));
         guiBuilder.addIngredient((char) 1, buildBanItem(player, claim, target, banIcon, cantBanIcon));
-        guiBuilder.addIngredient((char) 2, Item.builder()
-                .setItemProvider(backIcon.item())
-                .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
-                .build());
+
+        if (isValidIcon(backIcon)) {
+            guiBuilder.addIngredient((char) 2, Item.builder()
+                    .setItemProvider(backIcon.item())
+                    .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
+                    .build());
+        }
 
         return guiBuilder.build();
     }

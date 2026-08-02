@@ -40,6 +40,11 @@ public class ClaimRolesConfig extends GuiTemplate {
             "example-icon", new Icon(53)
     );
 
+    @Setting("back-icon")
+    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+    ), 45);
+
     @Setting("create-role")
     private SimpleIcon createRoleIcon = new SimpleIcon(ItemUtil.build(
             Material.NETHER_STAR, "Create Role", List.of("", "<white>Left-Click <gray>to create a new role")

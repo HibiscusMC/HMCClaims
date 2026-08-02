@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.util.TriConsumer;
@@ -176,6 +177,16 @@ public interface BaseGui {
         }
 
         return items;
+    }
+
+    /**
+     * Checks if the icon exists in the config and if it's on a valid slot before setting it in the structure.
+     *
+     * @param icon the icon to validate
+     * @return {@code true} if it's a valid icon, {@code false} otherwise.
+     */
+    default boolean isValidIcon(@Nullable GuiTemplate.SimpleIcon icon) {
+        return icon != null && icon.item() != null && icon.slot() > -1;
     }
 
     /**

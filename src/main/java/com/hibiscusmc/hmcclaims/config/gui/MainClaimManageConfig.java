@@ -65,6 +65,11 @@ public class MainClaimManageConfig extends ClaimManageConfig {
             Material.GOLDEN_HOE, "Resize claim", List.of("", "<white>Left-Click <gray>to resize claim borders")
     ), 26);
 
+    @Setting("back-icon")
+    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+    ), 45);
+
     private Map<String, SimpleIcon> tabs = Map.of(
             "members-tab", new SimpleIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Members", List.of("", "<white>Left-Click <gray>to go to this tab")

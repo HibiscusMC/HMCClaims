@@ -88,6 +88,8 @@ public class ClaimMemberListGui extends ClaimListGui {
     private ClaimMemberListConfig.SearchIcon searchIcon;
     private GuiTemplate.SimpleIcon addMemberIcon;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
@@ -115,6 +117,8 @@ public class ClaimMemberListGui extends ClaimListGui {
 
         previousPage = config.pages().get("previous-page");
         nextPage = config.pages().get("next-page");
+
+        backIcon = config.backIcon();
 
         tabs = config.tabs();
 
@@ -155,6 +159,10 @@ public class ClaimMemberListGui extends ClaimListGui {
             structure.set(previousPage.slot(), '(');
             structure.set(nextPage.slot(), ')');
             structure.set(addMemberIcon.slot(), '+');
+
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), '$');
+            }
 
             for (int slot : slots) {
                 structure.set(slot, '-');
@@ -203,6 +211,14 @@ public class ClaimMemberListGui extends ClaimListGui {
                     .build());
 
             pagedGui.addIngredient('+', buildAddMemberIcon(player, claim, guiMetadata));
+
+            if (isValidIcon(backIcon)) {
+                pagedGui.addIngredient('$', Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
+                        .build()
+                );
+            }
 
             pagedGui.addIngredient('-', Markers.CONTENT_LIST_SLOT_HORIZONTAL);
 

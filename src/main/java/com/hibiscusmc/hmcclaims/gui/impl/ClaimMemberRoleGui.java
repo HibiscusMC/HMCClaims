@@ -151,7 +151,9 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             structure.set(kickIcon.slot(), (char) (FIRST_SAFE_CHAR + 6));
             structure.set(banIcon.slot(), (char) (FIRST_SAFE_CHAR + 7));
 
-            structure.set(backIcon.slot(), (char) (FIRST_SAFE_CHAR + 8));
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), (char) (FIRST_SAFE_CHAR + 8));
+            }
 
             int currentPoint = FIRST_SAFE_CHAR + 9;
             Char2ObjectMap<Item> tabsMap = new Char2ObjectOpenHashMap<>();
@@ -211,10 +213,12 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 6), buildKickItem(player, claim, member, kickIcon, cantKickIcon));
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 7), buildBanItem(player, claim, member, banIcon, cantBanIcon));
 
-            builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()
-                    .setItemProvider(backIcon.item())
-                    .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
-                    .build());
+            if (isValidIcon(backIcon)) {
+                builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
+                        .build());
+            }
 
             AtomicReference<PagedGui<Item>> guiReference = new AtomicReference<>();
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 1), Markers.CONTENT_LIST_SLOT_HORIZONTAL);
@@ -267,7 +271,6 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
         for (ClaimRole role : allRoles) {
             boolean validPosition = rolePosition < allRoles.indexOf(role);
             boolean validRole = !role.equals(claim.roleRegistry().everyoneRole()) &&
-                    !role.equals(claim.roleRegistry().defaultRole()) &&
                     !role.equals(claim.roleRegistry().ownerRole());
 
             Item item = Item.builder()

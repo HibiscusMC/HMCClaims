@@ -26,6 +26,8 @@ public abstract class ClaimManageConfig extends GuiTemplate {
 
     public abstract SimpleIcon resizeIcon();
 
+    public abstract SimpleIcon backIcon();
+
     public abstract Map<String, SimpleIcon> tabs();
 
     public abstract BaseListGuiConfig lowerGui();

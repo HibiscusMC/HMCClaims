@@ -27,6 +27,11 @@ public class BaseListGuiConfig extends GuiTemplate {
             "example-icon", new Icon(31)
     );
 
+    @Setting("back-icon")
+    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+    ), 27);
+
     @Setting("claims-icon")
     private ClaimsIcon claimsIcon = new ClaimsIcon();
 

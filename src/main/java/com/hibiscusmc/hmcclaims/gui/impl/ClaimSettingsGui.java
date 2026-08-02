@@ -68,6 +68,8 @@ public class ClaimSettingsGui extends ClaimListGui {
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private String enabledState;
     private String disabledState;
 
@@ -89,6 +91,8 @@ public class ClaimSettingsGui extends ClaimListGui {
 
         previousPage = config.pages().get("previous-page");
         nextPage = config.pages().get("next-page");
+
+        backIcon = config.backIcon();
 
         enabledState = config.states().get(true);
         disabledState = config.states().get(false);
@@ -129,6 +133,10 @@ public class ClaimSettingsGui extends ClaimListGui {
 
             structure.set(previousPage.slot(), '(');
             structure.set(nextPage.slot(), ')');
+
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), '$');
+            }
 
             Char2ObjectArrayMap<Item> settingItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
@@ -200,6 +208,14 @@ public class ClaimSettingsGui extends ClaimListGui {
                         open(player, metadata.currentPage(page));
                     })
                     .build());
+
+            if (isValidIcon(backIcon)) {
+                gui.addIngredient('$', Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
+                        .build()
+                );
+            }
 
             Gui upperGui = gui.build();
 

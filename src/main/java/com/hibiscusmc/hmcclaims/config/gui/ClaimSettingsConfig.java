@@ -36,7 +36,7 @@ public class ClaimSettingsConfig extends GuiTemplate {
 
     @Setting("back-icon")
     private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
-            Material.BOOK, "Back", List.of("", "<white>Left-Click <gray>to go back")
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
     ), 45);
 
     @Setting("extra-icons")

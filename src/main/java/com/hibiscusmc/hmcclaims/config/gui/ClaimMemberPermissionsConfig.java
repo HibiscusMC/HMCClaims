@@ -71,10 +71,10 @@ public class ClaimMemberPermissionsConfig extends ClaimMemberManageConfig {
 
     private Map<String, SimpleMultiIcon> tabs = Map.of(
             "roles-tab", new SimpleMultiIcon(ItemUtil.build(
-                    Material.LIME_STAINED_GLASS_PANE, "Roles", List.of("", "<red>You're here!")
+                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), List.of(1, 2, 3)),
             "permissions-tab", new SimpleMultiIcon(ItemUtil.build(
-                    Material.GRAY_STAINED_GLASS_PANE, "<gray>Permissions", List.of("", "<white>Left-Click <gray>to go to this tab")
+                    Material.LIME_STAINED_GLASS_PANE, "Permissions", List.of("", "<red>You're here!")
             ), List.of(5, 6, 7))
     );
 

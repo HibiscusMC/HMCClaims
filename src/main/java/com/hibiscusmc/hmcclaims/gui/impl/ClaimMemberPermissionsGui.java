@@ -143,7 +143,9 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
             structure.set(kickIcon.slot(), (char) (FIRST_SAFE_CHAR + 6));
             structure.set(banIcon.slot(), (char) (FIRST_SAFE_CHAR + 7));
 
-            structure.set(backIcon.slot(), (char) (FIRST_SAFE_CHAR + 8));
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), (char) (FIRST_SAFE_CHAR + 8));
+            }
 
             int currentPoint = FIRST_SAFE_CHAR + 9;
             Char2ObjectMap<Item> tabsMap = new Char2ObjectOpenHashMap<>();
@@ -229,10 +231,12 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 6), buildKickItem(player, claim, member, kickIcon, cantKickIcon));
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 7), buildBanItem(player, claim, member, banIcon, cantBanIcon));
 
-            builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()
-                    .setItemProvider(backIcon.item())
-                    .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
-                    .build());
+            if (isValidIcon(backIcon)) {
+                builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
+                        .build());
+            }
 
             Gui lowerGui = screenType == GuiTemplate.GuiScreenType.FULL ? build(player, metadata) : null;
 

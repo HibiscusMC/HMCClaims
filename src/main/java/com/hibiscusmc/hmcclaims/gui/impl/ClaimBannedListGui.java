@@ -85,6 +85,8 @@ public class ClaimBannedListGui extends ClaimListGui {
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private Map<String, GuiTemplate.SimpleIcon> tabs;
 
     private List<GuiTemplate.Icon> icons;
@@ -106,6 +108,8 @@ public class ClaimBannedListGui extends ClaimListGui {
 
         previousPage = config.pages().get("previous-page");
         nextPage = config.pages().get("next-page");
+
+        backIcon = config.backIcon();
 
         tabs = config.tabs();
 
@@ -146,6 +150,10 @@ public class ClaimBannedListGui extends ClaimListGui {
             structure.set(previousPage.slot(), '(');
             structure.set(nextPage.slot(), ')');
             structure.set(banMemberIcon.slot(), '+');
+
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), '$');
+            }
 
             for (int slot : slots) {
                 structure.set(slot, '-');
@@ -191,6 +199,16 @@ public class ClaimBannedListGui extends ClaimListGui {
                     .build());
 
             pagedGui.addIngredient('+', buildBanMemberIcon(player, claim, metadata));
+
+            if (isValidIcon(backIcon)) {
+                pagedGui.addIngredient('$', Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click ->
+                                guis.get((Class<? extends BaseGui>) (claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class))
+                                        .open(player, metadata)
+                        )
+                        .build());
+            }
 
             pagedGui.addIngredient('-', Markers.CONTENT_LIST_SLOT_HORIZONTAL);
 

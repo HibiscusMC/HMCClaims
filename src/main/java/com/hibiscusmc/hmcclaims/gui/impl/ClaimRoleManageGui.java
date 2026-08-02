@@ -137,7 +137,10 @@ public class ClaimRoleManageGui extends ClaimListGui {
             structure.set(nextPage.slot(), ')');
 
             structure.set(deleteIcon.slot(), '*');
-            structure.set(backIcon.slot(), '$');
+
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), '$');
+            }
 
             Char2ObjectArrayMap<Item> permissionItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
@@ -220,10 +223,12 @@ public class ClaimRoleManageGui extends ClaimListGui {
                     })
                     .build());
 
-            gui.addIngredient('$', Item.builder()
-                    .setItemProvider(backIcon.item())
-                    .addClickHandler(click -> guis.get(ClaimRolesGui.class).open(player, metadata))
-                    .build());
+            if (isValidIcon(backIcon)) {
+                gui.addIngredient('$', Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimRolesGui.class).open(player, metadata))
+                        .build());
+            }
 
             Gui lowerGui = metadata.claimsGui() != null ? metadata.claimsGui() : screenType == GuiTemplate.GuiScreenType.FULL ? buildLowerGui(player, metadata) : null;
             if (metadata.claimsGui() == null) {

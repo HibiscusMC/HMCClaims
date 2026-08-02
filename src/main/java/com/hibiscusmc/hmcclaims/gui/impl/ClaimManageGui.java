@@ -86,6 +86,8 @@ public class ClaimManageGui extends ClaimListGui {
     protected GuiTemplate.SimpleIcon bannedIcon;
     protected GuiTemplate.SimpleIcon resizeIcon;
 
+    protected GuiTemplate.SimpleIcon backIcon;
+
     private GuiTemplate.SimpleIcon transferIcon;
 
     private Map<String, GuiTemplate.SimpleIcon> tabs;
@@ -117,6 +119,8 @@ public class ClaimManageGui extends ClaimListGui {
         unlockIcon = config.unlockIcon();
         bannedIcon = config.bannedIcon();
         resizeIcon = config.resizeIcon();
+
+        backIcon = config.backIcon();
 
         icons = config.extraIcons().values().stream().toList();
 
@@ -199,6 +203,10 @@ public class ClaimManageGui extends ClaimListGui {
         structure.set(resizeIcon.slot(), '&');
         structure.set(deleteIcon.slot(), '*');
 
+        if (isValidIcon(backIcon)) {
+            structure.set(backIcon.slot(), '$');
+        }
+
         Class<? extends BaseGui> currentClass = getClass();
         TriConsumer<Gui.Builder<?, ?>, GuiRegistry, Player> tabsBuilder = buildTabs(
                 structure, currentClass, claim, metadata,
@@ -238,6 +246,14 @@ public class ClaimManageGui extends ClaimListGui {
                                     .open(player, metadata)
                     )
                     .build());
+
+            if (isValidIcon(backIcon)) {
+                gui.addIngredient('$', Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
+                        .build()
+                );
+            }
         });
     }
 

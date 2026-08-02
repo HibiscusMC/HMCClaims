@@ -49,6 +49,11 @@ public class ClaimBannedListConfig extends GuiTemplate {
             Material.WRITABLE_BOOK, "Ban Member", List.of("", "<white>Left-Click <gray>to ban member")
     ), 49);
 
+    @Setting("back-icon")
+    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+            Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+    ), 45);
+
     private Map<String, SimpleIcon> pages = Map.of(
             "previous-page", new SimpleIcon(ItemUtil.build(
                     Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")

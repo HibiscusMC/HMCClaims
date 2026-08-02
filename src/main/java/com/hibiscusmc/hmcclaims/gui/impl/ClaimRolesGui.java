@@ -72,6 +72,8 @@ public class ClaimRolesGui extends ClaimListGui {
 
     private GuiTemplate.SimpleIcon createRoleIcon;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
 
@@ -98,6 +100,8 @@ public class ClaimRolesGui extends ClaimListGui {
         nextPage = config.pages().get("next-page");
 
         tabs = config.tabs();
+
+        backIcon = config.backIcon();
 
         icons = config.extraIcons().values().stream().toList();
 
@@ -136,6 +140,10 @@ public class ClaimRolesGui extends ClaimListGui {
             structure.set(previousPage.slot(), '(');
             structure.set(nextPage.slot(), ')');
             structure.set(createRoleIcon.slot(), '+');
+
+            if (isValidIcon(backIcon)) {
+                structure.set(backIcon.slot(), '$');
+            }
 
             for (int slot : slots) {
                 structure.set(slot, '-');
@@ -183,6 +191,14 @@ public class ClaimRolesGui extends ClaimListGui {
             AtomicReference<PagedGui<Item>> guiReference = new AtomicReference<>(null);
 
             pagedGui.addIngredient('+', buildCreateRoleIcon(player, claim, guiReference, metadata));
+
+            if (isValidIcon(backIcon)) {
+                pagedGui.addIngredient('$', Item.builder()
+                        .setItemProvider(backIcon.item())
+                        .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
+                        .build()
+                );
+            }
 
             pagedGui.addIngredient('-', Markers.CONTENT_LIST_SLOT_HORIZONTAL);
 

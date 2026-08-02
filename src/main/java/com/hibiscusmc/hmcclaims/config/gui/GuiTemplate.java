@@ -87,9 +87,9 @@ public class GuiTemplate {
     @ConfigSerializable
     public static class SimpleIcon {
 
-        private ItemStack item = ItemStack.of(Material.STONE);
+        private ItemStack item = ItemStack.of(Material.AIR);
 
-        private int slot = 0;
+        private int slot = -1;
 
         public SimpleIcon() {
         }
@@ -104,9 +104,9 @@ public class GuiTemplate {
     @ConfigSerializable
     public static class SimpleMultiIcon {
 
-        private ItemStack item = ItemStack.of(Material.STONE);
+        private ItemStack item = ItemStack.of(Material.AIR);
 
-        private List<Integer> slots = List.of(0);
+        private List<Integer> slots = List.of();
 
         public SimpleMultiIcon() {
         }
@@ -268,20 +268,6 @@ public class GuiTemplate {
                 this.slot = slot;
                 this.enabled = enabled;
                 this.disabled = disabled;
-            }
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class TriStateToggleIcon {
-
-            private DynamicIconWithStack unset;
-
-            public TriStateToggleIcon() {
-            }
-
-            protected TriStateToggleIcon(DynamicIconWithStack unset) {
-                this.unset = unset;
             }
         }
     }
