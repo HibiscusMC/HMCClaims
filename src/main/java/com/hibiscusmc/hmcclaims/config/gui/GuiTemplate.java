@@ -102,6 +102,23 @@ public class GuiTemplate {
 
     @Getter
     @ConfigSerializable
+    public static class SimpleMultiIcon {
+
+        private ItemStack item = ItemStack.of(Material.STONE);
+
+        private List<Integer> slots = List.of(0);
+
+        public SimpleMultiIcon() {
+        }
+
+        protected SimpleMultiIcon(ItemStack item, List<Integer> slots) {
+            this.item = item;
+            this.slots = slots;
+        }
+    }
+
+    @Getter
+    @ConfigSerializable
     public static class Icon {
 
         private ItemStack item = ItemUtil.build(Material.OAK_SIGN, "<aqua>Example Icon", List.of(

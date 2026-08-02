@@ -73,8 +73,8 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
     private GuiTemplate.SimpleIcon banIcon;
     private ItemStack cantBanIcon;
 
-    private GuiTemplate.SimpleIcon rolesTab;
-    private GuiTemplate.SimpleIcon permissionsTab;
+    private GuiTemplate.SimpleMultiIcon rolesTab;
+    private GuiTemplate.SimpleMultiIcon permissionsTab;
 
     private GuiTemplate.SimpleIcon previousPage;
     private GuiTemplate.SimpleIcon nextPage;
@@ -145,9 +145,6 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                 structure.set(slot, (char) (FIRST_SAFE_CHAR + 1));
             }
 
-            structure.set(rolesTab.slot(), (char) (FIRST_SAFE_CHAR + 2));
-            structure.set(permissionsTab.slot(), (char) (FIRST_SAFE_CHAR + 3));
-
             structure.set(previousPage.slot(), (char) (FIRST_SAFE_CHAR + 4));
             structure.set(nextPage.slot(), (char) (FIRST_SAFE_CHAR + 5));
 
@@ -157,6 +154,25 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             structure.set(backIcon.slot(), (char) (FIRST_SAFE_CHAR + 8));
 
             int currentPoint = FIRST_SAFE_CHAR + 9;
+            Char2ObjectMap<Item> tabsMap = new Char2ObjectOpenHashMap<>();
+            for (int slot : rolesTab.slots()) {
+                structure.set(slot, (char) currentPoint);
+
+                tabsMap.put((char) currentPoint, Item.builder()
+                        .setItemProvider(rolesTab.item())
+                        .build());
+                currentPoint++;
+            }
+            for (int slot : permissionsTab.slots()) {
+                structure.set(slot, (char) currentPoint);
+
+                tabsMap.put((char) currentPoint, Item.builder()
+                        .setItemProvider(permissionsTab.item())
+                        .addClickHandler(click -> guis.get(ClaimMemberPermissionsGui.class).open(player, metadata))
+                        .build());
+                currentPoint++;
+            }
+
             Char2ObjectMap<Item> itemMap = new Char2ObjectOpenHashMap<>();
             for (Int2ObjectMap.Entry<Item> extraItem : extraItems.int2ObjectEntrySet()) {
                 structure.set(extraItem.getIntKey(), (char) currentPoint);
@@ -166,6 +182,10 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             }
 
             builder.setStructure(parseStructure(structure, rows));
+
+            tabsMap.char2ObjectEntrySet().forEach(entry -> builder.addIngredient(
+                    entry.getCharKey(), entry.getValue()
+            ));
 
             itemMap.char2ObjectEntrySet().forEach(entry -> builder.addIngredient(
                     entry.getCharKey(), entry.getValue()

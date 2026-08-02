@@ -95,13 +95,13 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
             "example-icon", new Icon(53)
     );
 
-    private Map<String, SimpleIcon> tabs = Map.of(
-            "roles-tab", new SimpleIcon(ItemUtil.build(
+    private Map<String, SimpleMultiIcon> tabs = Map.of(
+            "roles-tab", new SimpleMultiIcon(ItemUtil.build(
                     Material.LIME_STAINED_GLASS_PANE, "Roles", List.of("", "<red>You're here!")
-            ), 2),
-            "permissions-tab", new SimpleIcon(ItemUtil.build(
+            ), List.of(0, 1, 2)),
+            "permissions-tab", new SimpleMultiIcon(ItemUtil.build(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Permissions", List.of("", "<white>Left-Click <gray>to go to this tab")
-            ), 5)
+            ), List.of(4, 5, 6))
     );
 
     private Map<String, SimpleIcon> pages = Map.of(
