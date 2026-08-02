@@ -91,6 +91,10 @@ sourceSets {
 }
 
 tasks {
+    jar {
+        enabled = false
+    }
+
     shadowJar {
         archiveBaseName.set(project.name)
         archiveVersion.set(version(project.version.toString()))
@@ -150,7 +154,7 @@ fun fetchCommit(): String {
 
 fun version(ver: String): String {
     return ver + if (fetchVersionType() == VersionType.DEVELOPMENT) {
-        "-dev." + fetchCommit()
+        ".dev." + fetchCommit()
     } else ""
 }
 
