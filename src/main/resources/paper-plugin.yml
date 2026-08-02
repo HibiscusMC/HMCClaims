@@ -14,3 +14,7 @@ dependencies:
     HibiscusCommons:
       required: true
       join-classpath: true
+
+    PlaceholderAPI:
+      load: BEFORE
+      required: false

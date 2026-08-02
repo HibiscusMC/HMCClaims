@@ -79,7 +79,7 @@ public class ClaimManager {
     private StorageHolder storageHolder;
 
     /**
-     * Checks if the claim is still loading..
+     * Checks if the claim is still loading.
      *
      * @param claimId The id of the claim to check.
      * @return {@code true} if the claim is still loading, {@code false} otherwise.

@@ -42,7 +42,7 @@ dependencies {
     // HibiscusCommons
     compileOnly("me.lojosho:HibiscusCommons:0.9.1")
     // PlaceholderAPI
-    compileOnly("me.clip:placeholderapi:2.12.2")
+    compileOnly("me.clip:placeholderapi:2.12.3")
 
     // Lombok
     annotationProcessor("org.projectlombok:lombok:1.18.42")
