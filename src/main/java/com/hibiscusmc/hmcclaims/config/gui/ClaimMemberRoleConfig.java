@@ -73,7 +73,7 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
     @Setting("kick-icon")
     private SimpleIcon kickIcon = new SimpleIcon(ItemUtil.build(
             Material.BARRIER, "Kick Member", List.of("", "<white>Left-Click <gray>to kick this member")
-    ), 48);
+    ), 47);
 
     @Setting("cant-kick-icon")
     private ItemStack cantKickIcon = ItemUtil.build(
@@ -83,7 +83,7 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
     @Setting("ban-icon")
     private SimpleIcon banIcon = new SimpleIcon(ItemUtil.build(
             Material.BARRIER, "Ban Member", List.of("", "<white>Left-Click <gray>to ban this member")
-    ), 50);
+    ), 51);
 
     @Setting("cant-ban-icon")
     private ItemStack cantBanIcon = ItemUtil.build(
