@@ -92,7 +92,9 @@ sourceSets {
 
 tasks {
     shadowJar {
-        archiveClassifier.set(fetchCommit())
+        archiveBaseName.set(project.name)
+        archiveVersion.set(version(project.version.toString()))
+        archiveClassifier.set("")
 
         val main = "${rootProject.group}.libs"
 
@@ -101,8 +103,6 @@ tasks {
         relocate("com.google.protobuf", "$main.protobuf")
         relocate("team.unnamed.commandflow", "$main.commandflow")
         relocate("org.spongepowered.configurate", "$main.configurate")
-
-        archiveFileName.set("HMCClaims-${version}.jar")
     }
 
     build {
@@ -146,4 +146,20 @@ fun fetchCommit(): String {
     } catch (_: Exception) {
         ""
     }
+}
+
+fun version(ver: String): String {
+    return ver + if (fetchVersionType() == VersionType.DEVELOPMENT) {
+        "-dev." + fetchCommit()
+    } else ""
+}
+
+fun fetchVersionType(): VersionType {
+    return if ((System.getenv("RELEASE") ?: "").isNotEmpty()) VersionType.RELEASE
+    else VersionType.DEVELOPMENT
+}
+
+enum class VersionType {
+    RELEASE,
+    DEVELOPMENT
 }
