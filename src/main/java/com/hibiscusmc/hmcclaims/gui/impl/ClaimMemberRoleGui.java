@@ -148,8 +148,13 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             structure.set(previousPage.slot(), (char) (FIRST_SAFE_CHAR + 4));
             structure.set(nextPage.slot(), (char) (FIRST_SAFE_CHAR + 5));
 
-            structure.set(kickIcon.slot(), (char) (FIRST_SAFE_CHAR + 6));
-            structure.set(banIcon.slot(), (char) (FIRST_SAFE_CHAR + 7));
+            if (isValidIcon(kickIcon)) {
+                structure.set(kickIcon.slot(), (char) (FIRST_SAFE_CHAR + 6));
+            }
+
+            if (isValidIcon(banIcon)) {
+                structure.set(banIcon.slot(), (char) (FIRST_SAFE_CHAR + 7));
+            }
 
             if (isValidIcon(backIcon)) {
                 structure.set(backIcon.slot(), (char) (FIRST_SAFE_CHAR + 8));
@@ -210,8 +215,13 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                     .build());
 
-            builder.addIngredient((char) (FIRST_SAFE_CHAR + 6), buildKickItem(player, claim, member, kickIcon, cantKickIcon));
-            builder.addIngredient((char) (FIRST_SAFE_CHAR + 7), buildBanItem(player, claim, member, banIcon, cantBanIcon));
+            if (isValidIcon(kickIcon)) {
+                builder.addIngredient((char) (FIRST_SAFE_CHAR + 6), buildKickItem(player, claim, member, kickIcon, cantKickIcon));
+            }
+
+            if (isValidIcon(banIcon)) {
+                builder.addIngredient((char) (FIRST_SAFE_CHAR + 7), buildBanItem(player, claim, member, banIcon, cantBanIcon));
+            }
 
             if (isValidIcon(backIcon)) {
                 builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()

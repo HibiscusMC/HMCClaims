@@ -73,8 +73,13 @@ public abstract class ClaimMemberManageGui implements BaseGui {
             structure.add('#');
         }
 
-        structure.set(kickIcon.slot(), (char) 0);
-        structure.set(banIcon.slot(), (char) 1);
+        if (isValidIcon(kickIcon)) {
+            structure.set(kickIcon.slot(), (char) 0);
+        }
+
+        if (isValidIcon(banIcon)) {
+            structure.set(banIcon.slot(), (char) 1);
+        }
 
         if (isValidIcon(backIcon)) {
             structure.set(backIcon.slot(), (char) 2);
@@ -95,8 +100,13 @@ public abstract class ClaimMemberManageGui implements BaseGui {
                 entry.getCharKey(), entry.getValue()
         ));
 
-        guiBuilder.addIngredient((char) 0, buildKickItem(player, claim, target, kickIcon, cantKickIcon));
-        guiBuilder.addIngredient((char) 1, buildBanItem(player, claim, target, banIcon, cantBanIcon));
+        if (isValidIcon(kickIcon)) {
+            guiBuilder.addIngredient((char) 0, buildKickItem(player, claim, target, kickIcon, cantKickIcon));
+        }
+
+        if (isValidIcon(banIcon)) {
+            guiBuilder.addIngredient((char) 1, buildBanItem(player, claim, target, banIcon, cantBanIcon));
+        }
 
         if (isValidIcon(backIcon)) {
             guiBuilder.addIngredient((char) 2, Item.builder()
