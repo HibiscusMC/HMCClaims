@@ -18,6 +18,7 @@ public final class HMCClaimsLoader implements PluginLoader {
         resolver.addDependency(new Dependency(new DefaultArtifact("com.zaxxer:HikariCP:7.0.2"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("org.spongepowered:configurate-yaml:4.2.0"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("org.mariadb.jdbc:mariadb-java-client:3.5.7"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("com.h2database:h2:2.4.240"), null));
 
         builder.addLibrary(resolver);
     }

@@ -1,4 +1,4 @@
-package com.hibiscusmc.hmcclaims.storage.impl.remote;
+package com.hibiscusmc.hmcclaims.storage.impl;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hibiscusmc.hmcclaims.config.Settings;
@@ -13,7 +13,9 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -60,6 +62,30 @@ public abstract class HikariStorage implements Storage {
     protected abstract void setup(@NotNull Settings.Storage storage);
 
     /**
+     * Configures the JDBC connection URL and credentials on the pool.
+     * <p>
+     * Defaults to a MariaDB-style {@code jdbc:mariadb://host:port/database} connection
+     * string built from {@link Settings.Storage#remote()}. Subclasses backed by a
+     * different driver (e.g. an embedded database) should override this to supply
+     * their own connection details instead.
+     *
+     * @param config  The Hikari config being built.
+     * @param storage The storage configuration.
+     */
+    protected void configureConnection(@NotNull HikariConfig config, @NotNull Settings.Storage storage) {
+        Settings.Storage.Remote remote = storage.remote();
+
+        config.addDataSourceProperty("url", remote.uri().isEmpty() ? String.format(
+                "jdbc:mariadb://%s:%d/%s",
+                remote.address(),
+                remote.port(),
+                storage.database()
+        ) : remote.uri());
+        config.addDataSourceProperty("user", remote.username());
+        config.addDataSourceProperty("password", remote.password());
+    }
+
+    /**
      * Allows subclasses to inject additional driver-specific properties into the pool.
      *
      * @param properties The property set to modify.
@@ -91,17 +117,9 @@ public abstract class HikariStorage implements Storage {
         HikariConfig config = new HikariConfig();
         config.setPoolName("hmcclaims-storage");
 
-        Settings.Storage.Remote remote = storage.remote();
         config.setDataSourceClassName(dataSourceClassName());
 
-        config.addDataSourceProperty("url", remote.uri().isEmpty() ? String.format(
-                "jdbc:mariadb://%s:%d/%s",
-                remote.address(),
-                remote.port(),
-                storage.database()
-        ) : remote.uri());
-        config.addDataSourceProperty("user", remote.username());
-        config.addDataSourceProperty("password", remote.password());
+        this.configureConnection(config, storage);
 
         config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(5));
         config.setMaxLifetime(TimeUnit.MINUTES.toMillis(30));
@@ -148,5 +166,44 @@ public abstract class HikariStorage implements Storage {
      */
     protected InputStream getSchemaResource(String database) {
         return getClass().getClassLoader().getResourceAsStream("schemas/" + database + ".sql");
+    }
+
+    /**
+     * Loads a schema resource, splits it into individual statements, substitutes the
+     * table prefix, and executes each statement in turn.
+     * <p>
+     * Shared by implementations so the "split on ; and run" boilerplate isn't
+     * duplicated in every {@link #setup(Settings.Storage)} override.
+     *
+     * @param storage    The storage configuration (used for the table prefix).
+     * @param schemaName The schema resource name (without .sql extension).
+     */
+    protected void executeSchemaScript(@NotNull Settings.Storage storage, @NotNull String schemaName) {
+        try (Connection connection = getConnection()) {
+            InputStream rawSchema = getSchemaResource(schemaName);
+            if (rawSchema == null) {
+                throw new IllegalStateException("Schema not found for database " + schemaName);
+            }
+
+            String schema = new String(rawSchema.readAllBytes(), StandardCharsets.UTF_8);
+
+            for (String rawStatement : schema.split(";")) {
+                String statement = rawStatement.trim()
+                        .replaceAll("\\s+", " ")
+                        .replaceAll("\\{prefix}", storage.prefix());
+
+                if (statement.isEmpty()) {
+                    continue;
+                }
+
+                try (PreparedStatement preparedStatement = connection.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
+                }
+            }
+
+            rawSchema.close();
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }

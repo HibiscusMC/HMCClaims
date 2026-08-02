@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.storage.impl.local.H2Storage;
 import com.hibiscusmc.hmcclaims.storage.impl.remote.MariaDBStorage;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import team.unnamed.inject.Inject;
@@ -25,6 +26,7 @@ public class StorageService implements Service {
 
         Storage impl;
         switch (storage.method()) {
+            case H2 -> impl = injector.getInstance(H2Storage.class);
             case MARIADB -> impl = injector.getInstance(MariaDBStorage.class);
             default -> throw new IllegalArgumentException("Unsupported storage method: " + storage.method());
         }

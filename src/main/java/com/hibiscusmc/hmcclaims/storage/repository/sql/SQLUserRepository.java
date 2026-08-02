@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.storage.repository.sql;
 
 import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.storage.impl.remote.HikariStorage;
+import com.hibiscusmc.hmcclaims.storage.impl.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.util.ByteUtil;
