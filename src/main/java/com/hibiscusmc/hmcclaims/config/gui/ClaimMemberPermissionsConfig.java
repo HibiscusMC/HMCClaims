@@ -47,7 +47,7 @@ public class ClaimMemberPermissionsConfig extends ClaimMemberManageConfig {
     @Setting("kick-icon")
     private SimpleIcon kickIcon = new SimpleIcon(ItemUtil.build(
             Material.BARRIER, "Kick Member", List.of("", "<white>Left-Click <gray>to kick this member")
-    ), 48);
+    ), 47);
 
     @Setting("cant-kick-icon")
     private ItemStack cantKickIcon = ItemUtil.build(
@@ -57,7 +57,7 @@ public class ClaimMemberPermissionsConfig extends ClaimMemberManageConfig {
     @Setting("ban-icon")
     private SimpleIcon banIcon = new SimpleIcon(ItemUtil.build(
             Material.BARRIER, "Ban Member", List.of("", "<white>Left-Click <gray>to ban this member")
-    ), 50);
+    ), 51);
 
     @Setting("cant-ban-icon")
     private ItemStack cantBanIcon = ItemUtil.build(
@@ -81,10 +81,10 @@ public class ClaimMemberPermissionsConfig extends ClaimMemberManageConfig {
     private Map<String, SimpleIcon> pages = Map.of(
             "previous-page", new SimpleIcon(ItemUtil.build(
                     Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
-            ), 47),
+            ), 48),
             "next-page", new SimpleIcon(ItemUtil.build(
                     Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
-            ), 51)
+            ), 50)
     );
 
     @NotNull
