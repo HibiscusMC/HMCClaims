@@ -39,6 +39,8 @@ public abstract class ClaimMemberManageGui implements BaseGui {
     private GuiTemplate.SimpleIcon banIcon;
     private ItemStack cantBanIcon;
 
+    private GuiTemplate.SimpleIcon backIcon;
+
     private Int2ObjectMap<Item> extraItems;
 
     protected void loadConfig(@Nullable ClaimMemberManageConfig.LowerGui lowerGui) {
@@ -51,6 +53,8 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         banIcon = lowerGui.banIcon();
         cantBanIcon = lowerGui.cantBanIcon();
+
+        backIcon = lowerGui.backIcon();
 
         extraItems = parseExtraItems(lowerGui.extraIcons());
     }
@@ -71,8 +75,9 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         structure.set(kickIcon.slot(), (char) 0);
         structure.set(banIcon.slot(), (char) 1);
+        structure.set(backIcon.slot(), (char) 2);
 
-        int currentPoint = 2;
+        int currentPoint = 3;
         Char2ObjectMap<Item> itemMap = new Char2ObjectOpenHashMap<>();
         for (Int2ObjectMap.Entry<Item> extraItem : extraItems.int2ObjectEntrySet()) {
             structure.set(extraItem.getIntKey(), (char) currentPoint);
@@ -89,6 +94,10 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         guiBuilder.addIngredient((char) 0, buildKickItem(player, claim, target, kickIcon, cantKickIcon));
         guiBuilder.addIngredient((char) 1, buildBanItem(player, claim, target, banIcon, cantBanIcon));
+        guiBuilder.addIngredient((char) 2, Item.builder()
+                .setItemProvider(backIcon.item())
+                .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
+                .build());
 
         return guiBuilder.build();
     }

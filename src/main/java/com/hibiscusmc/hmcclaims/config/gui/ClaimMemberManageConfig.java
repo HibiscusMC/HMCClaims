@@ -45,5 +45,10 @@ public class ClaimMemberManageConfig extends GuiTemplate {
         private ItemStack cantBanIcon = ItemUtil.build(
                 Material.BARRIER, "Ban Member", List.of("", "<red>You can't ban this member")
         );
+
+        @Setting("back-icon")
+        private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+                Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
+        ), 18);
     }
 }
