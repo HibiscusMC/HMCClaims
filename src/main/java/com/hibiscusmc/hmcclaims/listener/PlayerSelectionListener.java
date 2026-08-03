@@ -17,6 +17,7 @@ import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import me.lojosho.hibiscuscommons.hooks.Hooks;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -126,7 +127,7 @@ public class PlayerSelectionListener implements Listener {
             return;
         }
 
-        if (!itemInHand.isSimilar(settings.claiming().claimTool())) {
+        if (!isValidTool(itemInHand)) {
             return;
         }
 
@@ -218,11 +219,8 @@ public class PlayerSelectionListener implements Listener {
         ItemStack oldItem = player.getInventory().getItem(event.getPreviousSlot());
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
 
-        Settings holder = settingsHolder.get();
-        ItemStack claimTool = holder.claiming().claimTool();
-
-        if ((newItem == null || !newItem.isSimilar(claimTool)) &&
-                (oldItem != null && oldItem.isSimilar(claimTool))) {
+        if ((newItem == null || !isValidTool(newItem)) &&
+                (oldItem != null && isValidTool(oldItem))) {
             removeSelection(player, false);
         }
     }
@@ -251,6 +249,19 @@ public class PlayerSelectionListener implements Listener {
     @EventHandler
     public void onPlayerDisconnect(PlayerQuitEvent event) {
         selectionManager.destroySelection(event.getPlayer());
+    }
+
+    /**
+     * Checks if the item stack is a valid claiming tool
+     */
+    private boolean isValidTool(@NotNull ItemStack tool) {
+        Settings settings = settingsHolder.get();
+
+        if (settings.claiming().claimToolStrict()) {
+            return tool.isSimilar(settings.claiming().claimTool());
+        } else {
+            return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(settings.claiming().claimTool()));
+        }
     }
 
     /**

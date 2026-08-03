@@ -112,6 +112,10 @@ public class Settings {
         @Setting("claim-tool")
         @Comment("The tool required to select land")
         private ItemStack claimTool = ItemStack.of(Material.GOLDEN_SHOVEL);
+
+        @Setting("claim-tool-strict")
+        @Comment("If the item should be strictly the same as the set in the config")
+        private boolean claimToolStrict = true;
     }
 
     @Setting("world-aliases")
