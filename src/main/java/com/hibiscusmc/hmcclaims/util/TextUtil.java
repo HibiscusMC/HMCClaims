@@ -59,7 +59,7 @@ public class TextUtil {
      * @param data     A map of placeholders and their replacement values.
      */
     public void send(@NotNull Audience audience, String string, Map<String, String> data) {
-        if (string.isEmpty()) {
+        if (string == null || string.isEmpty()) {
             return;
         }
 
@@ -86,7 +86,7 @@ public class TextUtil {
      * @param data     A map of placeholders and their replacement values.
      */
     public void sendNotification(@NotNull Audience audience, String string, Map<String, String> data) {
-        if (string.isEmpty()) {
+        if (string == null || string.isEmpty()) {
             return;
         }
 
