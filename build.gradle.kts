@@ -1,5 +1,7 @@
 plugins {
     id("java")
+    id("maven-publish")
+    id("io.freefair.lombok") version "9.2.0"
     id("com.gradleup.shadow") version "9.1.0"
     id("com.google.protobuf") version "0.10.0"
     id("xyz.jpenilla.run-paper") version "3.0.2"
@@ -44,16 +46,16 @@ dependencies {
     // PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.12.3")
 
-    // Lombok
-    annotationProcessor("org.projectlombok:lombok:1.18.42")
-    compileOnly("org.projectlombok:lombok:1.18.42")
-
     // Configurate
     implementation("org.spongepowered:configurate-core:4.4.0-HMC")
     implementation("org.spongepowered:configurate-yaml:4.4.0-HMC")
 
     // HikariCP
     compileOnly("com.zaxxer:HikariCP:7.0.2")
+}
+
+lombok {
+    version = "1.18.42"
 }
 
 java {
@@ -63,6 +65,9 @@ java {
 
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+
+    withSourcesJar()
+    withJavadocJar()
 }
 
 protobuf {
@@ -134,6 +139,40 @@ tasks {
             )
         }
     }
+
+    javadoc {
+        options {
+            encoding(Charsets.UTF_8.name())
+            charset(Charsets.UTF_8.name())
+
+            (this as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "HibiscusMCRepository"
+            url = uri("https://repo.hibiscusmc.com/" + fetchVersionType().repo)
+            credentials {
+                username = System.getenv("HMC_REPOSILITE_USER")
+                password = System.getenv("HMC_REPOSILITE_SECRET")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = rootProject.group.toString()
+            artifactId = project.name
+            version = rootProject.version.toString()
+
+            artifact(tasks.shadowJar)
+            artifact(tasks.named("javadocJar"))
+            artifact(tasks.named("sourcesJar"))
+        }
+    }
 }
 
 fun fetchCommit(): String {
@@ -163,7 +202,7 @@ fun fetchVersionType(): VersionType {
     else VersionType.DEVELOPMENT
 }
 
-enum class VersionType {
-    RELEASE,
-    DEVELOPMENT
+enum class VersionType(val repo: String) {
+    RELEASE("releases"),
+    DEVELOPMENT("snapshots")
 }
