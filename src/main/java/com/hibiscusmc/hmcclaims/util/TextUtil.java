@@ -59,6 +59,10 @@ public class TextUtil {
      * @param data     A map of placeholders and their replacement values.
      */
     public void send(@NotNull Audience audience, String string, Map<String, String> data) {
+        if (string.isEmpty()) {
+            return;
+        }
+
         audience.sendMessage(parseWithPrefix(string, data));
     }
 
@@ -82,6 +86,10 @@ public class TextUtil {
      * @param data     A map of placeholders and their replacement values.
      */
     public void sendNotification(@NotNull Audience audience, String string, Map<String, String> data) {
+        if (string.isEmpty()) {
+            return;
+        }
+
         long notificationCooldown = settings.get().notificationCooldown();
 
         if (notificationCooldown > -1) {
