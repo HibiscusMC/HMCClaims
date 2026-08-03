@@ -13,8 +13,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public class RegistryUtil {
 
-    private static final String PLUGIN_NAMESPACE = "hmcclaims";
-    private static final String DEFAULT_NAMESPACE = "minecraft";
+    private final static String PLUGIN_NAMESPACE = "hmcclaims";
+    private final static String DEFAULT_NAMESPACE = "minecraft";
 
     /**
      * Creates a new {@link Key} using the minecraft namespace.

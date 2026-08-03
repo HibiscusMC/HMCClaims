@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.storage.repository;
 
 import com.hibiscusmc.hmcclaims.user.User;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +21,7 @@ public interface UserRepository {
      * with {@code null} if no data exists for this UUID.
      */
     @NotNull
-    CompletableFuture<User> getUser(@NotNull UUID uuid);
+    CompletableFuture<@Nullable User> getUser(@NotNull UUID uuid);
 
     /**
      * Retrieves a user from storage by their last known username.
@@ -32,7 +33,7 @@ public interface UserRepository {
      * @return A future containing the {@link User}, or a future completing with {@code null}.
      */
     @NotNull
-    CompletableFuture<User> getUserByName(@NotNull String name);
+    CompletableFuture<@Nullable User> getUserByName(@NotNull String name);
 
     /**
      * Persists a single user's data to storage.

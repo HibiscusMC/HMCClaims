@@ -41,9 +41,9 @@ public class PlayerDataListener implements Listener {
         String playerName = event.getName();
         UUID uuid = event.getUniqueId();
 
-        Storage storage;
         try {
-            storage = holder.get();
+            //noinspection ResultOfMethodCallIgnored
+            holder.get();
         } catch (IllegalStateException e) {
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
                     TextUtil.parse("<red>The claims storage was not initialized properly."));
@@ -51,7 +51,7 @@ public class PlayerDataListener implements Listener {
         }
 
         try {
-            storage.users().getUser(uuid).thenAccept(user -> {
+            manager.getOrLoadUser(uuid).thenAccept(user -> {
                 if (user == null) {
                     user = new User(uuid, playerName, 0L);
                 }

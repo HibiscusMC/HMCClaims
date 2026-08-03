@@ -5,7 +5,9 @@ import com.hibiscusmc.hmcclaims.storage.impl.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.util.ByteUtil;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -53,7 +55,7 @@ public class SQLUserRepository implements UserRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<User> getUser(@NotNull UUID uuid) {
+    public @NotNull CompletableFuture<@Nullable User> getUser(@NotNull UUID uuid) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.getUserQuery)) {
@@ -73,7 +75,7 @@ public class SQLUserRepository implements UserRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<User> getUserByName(@NotNull String name) {
+    public @NotNull CompletableFuture<@Nullable User> getUserByName(@NotNull String name) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.getUserByNameQuery)) {
@@ -144,6 +146,8 @@ public class SQLUserRepository implements UserRepository {
      * @return A fully populated User instance.
      * @throws SQLException If a required column is missing or data conversion fails.
      */
+    @NotNull
+    @Contract(pure = true)
     private User buildUser(ResultSet rs) throws SQLException {
         UUID uuid = ByteUtil.bytesToUUID(rs.getBytes("uuid"));
         User user = new User(

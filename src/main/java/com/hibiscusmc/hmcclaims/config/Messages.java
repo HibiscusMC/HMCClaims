@@ -252,6 +252,18 @@ public class Messages {
                     
                     <dark_gray><b>»</b> <gray>Used Blocks: <white><used_blocks>
                     <dark_gray><b>»</b> <gray>Available Blocks: <white><available_blocks>""";
+
+            @Setting("set-amount")
+            private String setAmount = "<gray>You set <white><amount></white> claim blocks to <white><name></white>!";
+
+            @Setting
+            private String invalid = "<red>Invalid amount of claim blocks!";
+
+            @Setting("add-amount")
+            private String addAmount = "<gray>You added <white><amount></white> claim blocks to <white><name></white>!\n<gray>New amount: <white><new_amount>";
+
+            @Setting("remove-amount")
+            private String removeAmount = "<gray>You removed <white><amount></white> claim blocks from <white><name></white>!\n<gray>New amount: <white><new_amount>";
         }
     }
 

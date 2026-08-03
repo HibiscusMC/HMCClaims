@@ -279,7 +279,7 @@ public class GuiTemplate {
         /**
          * @noinspection ProtectedMemberInFinalClass
          */
-        protected static final String DESCRIPTION = """
+        protected final static String DESCRIPTION = """
                 ┌─ Options:
                 ├─ FULL
                 ├   Uses both the top and the bottom inventories, using the lower part to
