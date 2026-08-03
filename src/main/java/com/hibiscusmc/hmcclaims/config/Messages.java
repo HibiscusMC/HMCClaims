@@ -39,6 +39,9 @@ public class Messages {
 
         private String deleted = "<green>Claim <white><claim_name></white> deleted successfully!";
 
+        @Setting("dont-have-any")
+        private String dontHaveAny = "<red>You don't have any claims";
+
         @Setting("sub-claim-created")
         private String subCreated = "<gray>The sub claim <#d24c9f><name> <gray>has been created!";
 

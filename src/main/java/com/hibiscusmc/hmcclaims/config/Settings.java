@@ -136,4 +136,29 @@ public class Settings {
     @Setting("announce-disabled-world")
     @Comment("If it should announce that this world is disabled or let them interact with the item")
     private boolean announceDisabledWorld = true;
+
+    private Guis guis = new Guis();
+
+    @Getter
+    @ConfigSerializable
+    public static class Guis {
+
+        @Setting("claims-gui")
+        @Comment("""
+                The gui that will be opened when running /claims
+                
+                ┌─ Options:
+                ├─ LIST
+                ├   Uses the claim-list.yml config file. It will only open the list of
+                │   claims this player has access to
+                ├─ FIRST_CLAIM
+                ├   Uses the claim-members.yml config file. It will open the first claim
+                └   that appears on the player's list of claims""")
+        private ClaimsGui claimsGui = ClaimsGui.LIST;
+
+        public enum ClaimsGui {
+            LIST,
+            FIRST_CLAIM
+        }
+    }
 }

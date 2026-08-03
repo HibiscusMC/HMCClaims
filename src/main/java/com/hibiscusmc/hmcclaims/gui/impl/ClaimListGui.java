@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.gui.BaseListGuiConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
@@ -62,6 +63,8 @@ public class ClaimListGui implements BaseGui {
     private ConfigHolder<ClaimListConfig> configHolder;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+    @Inject
+    private ConfigHolder<Settings> settingsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -76,6 +79,9 @@ public class ClaimListGui implements BaseGui {
 
     @Inject
     private ClaimManager claimManager;
+
+    @Inject
+    private TextUtil text;
 
     private final List<Integer> slots = new ArrayList<>();
     private Component title;
@@ -132,6 +138,19 @@ public class ClaimListGui implements BaseGui {
 
     @Override
     public void open(@NotNull Player player) {
+        if (settingsHolder.get().guis().claimsGui() == Settings.Guis.ClaimsGui.FIRST_CLAIM) {
+            Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
+            if (claims.isEmpty()) {
+                player.closeInventory();
+                text.send(player, messagesHolder.get().claims().dontHaveAny());
+                return;
+            }
+
+            guis.get(ClaimMemberListGui.class)
+                    .open(player, new GuiMetadata(claims.iterator().next()));
+            return;
+        }
+
         scheduler.scheduleAsync(() -> {
             Window.Builder.Normal.Split window = Window.builder()
                     .setTitle(title)
