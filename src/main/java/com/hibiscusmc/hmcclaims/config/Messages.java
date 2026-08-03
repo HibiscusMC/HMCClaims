@@ -28,6 +28,8 @@ public class Messages {
     @ConfigSerializable
     public static class Claims {
 
+        private String disabled = "<red>Claims are disabled in this world!";
+
         @Setting("owned-by")
         private String ownedBy = "<gray>Claim <#d24c9f><name> <gray>is owned by <#d24c9f><owner>";
 

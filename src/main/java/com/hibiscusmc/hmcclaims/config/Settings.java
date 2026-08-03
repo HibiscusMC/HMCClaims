@@ -1,5 +1,7 @@
 package com.hibiscusmc.hmcclaims.config;
 
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -8,11 +10,15 @@ import org.spongepowered.configurate.objectmapping.meta.Comment;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.Map;
+import java.util.Set;
 
 @Getter
 @ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal"})
 public class Settings {
+
+    public final static Object2BooleanMap<String> INVALID_WORLDS
+            = new Object2BooleanOpenHashMap<>();
 
     @Comment("Manages how the data will be stored")
     private Storage storage = new Storage();
@@ -91,8 +97,11 @@ public class Settings {
 
         @Comment("How much every claim blocks will cost. You need Vault for this!")
         private int price = 1;
-
     }
+
+    @Setting("notification-cooldown")
+    @Comment("Defines the cooldown between sending missing permission notifications. Set to -1 to disable.")
+    private long notificationCooldown = 1_000;
 
     private Claiming claiming = new Claiming();
 
@@ -113,7 +122,14 @@ public class Settings {
             "world_the_end", "The End"
     );
 
-    @Setting("notification-cooldown")
-    @Comment("Defines the cooldown between sending missing permission notifications. Set to -1 to disable.")
-    private long notificationCooldown = 1_000;
+    @Setting("disabled-worlds")
+    @Comment("List of worlds where players won't be able to create claims. Use % to match everything after or before.")
+    private Set<String> disabledWorlds = Set.of(
+            "world_%_end",
+            "testing_world"
+    );
+
+    @Setting("announce-disabled-world")
+    @Comment("If it should announce that this world is disabled or let them interact with the item")
+    private boolean announceDisabledWorld = true;
 }

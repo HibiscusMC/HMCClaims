@@ -31,11 +31,14 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Handles all player-driven interactions related to claim selection and inspection.
@@ -124,6 +127,15 @@ public class PlayerSelectionListener implements Listener {
         }
 
         if (!itemInHand.isSimilar(settings.claiming().claimTool())) {
+            return;
+        }
+
+        if (isWorldDisabled(player.getWorld().getName())) {
+            if (settings.announceDisabledWorld()) {
+                text.send(player, messages.claims().disabled());
+                event.setCancelled(true);
+            }
+
             return;
         }
 
@@ -300,5 +312,36 @@ public class PlayerSelectionListener implements Listener {
             selectionManager.destroySelection(player);
             text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
         }
+    }
+
+    /**
+     * Checks if the target world matches any entry in the disabled worlds set.
+     *
+     * @param worldName The name of the world to check.
+     * @return True if the world matches a disabled pattern, false otherwise.
+     */
+    public boolean isWorldDisabled(@NotNull String worldName) {
+        if (Settings.INVALID_WORLDS.containsKey(worldName)) {
+            return Settings.INVALID_WORLDS.getBoolean(worldName);
+        }
+
+        Settings settings = settingsHolder.get();
+
+        Set<String> disabledWorlds = settings.disabledWorlds();
+        if (disabledWorlds == null || disabledWorlds.isEmpty()) {
+            Settings.INVALID_WORLDS.put(worldName, false);
+            return false;
+        }
+
+        for (String pattern : disabledWorlds) {
+            String regex = "^" + Pattern.quote(pattern).replace("%", "\\E.*\\Q") + "$";
+            if (worldName.matches(regex)) {
+                Settings.INVALID_WORLDS.put(worldName, true);
+                return true;
+            }
+        }
+
+        Settings.INVALID_WORLDS.put(worldName, false);
+        return false;
     }
 }

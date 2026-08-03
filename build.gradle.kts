@@ -49,8 +49,8 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.42")
 
     // Configurate
-    implementation("org.spongepowered:configurate-core:4.4.0-HMC")
-    implementation("org.spongepowered:configurate-yaml:4.4.0-HMC")
+    implementation("org.spongepowered:configurate-core:4.4.1-HMC")
+    implementation("org.spongepowered:configurate-yaml:4.4.1-HMC")
 
     // HikariCP
     compileOnly("com.zaxxer:HikariCP:7.0.2")
