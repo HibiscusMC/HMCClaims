@@ -14,7 +14,7 @@ public class Messages {
     private String prefix = "<b><gradient:#49fc4f:#3ffcb4:#49fc4f>HMCClaims</gradient> <dark_gray>|</dark_gray></b> ";
 
     @Setting("reload")
-    private String pluginReload = "<gray>Plugin reloaded!";
+    private String pluginReload = "<prefix><gray>Plugin reloaded!";
 
     private Claims claims = new Claims();
 
@@ -28,55 +28,55 @@ public class Messages {
     @ConfigSerializable
     public static class Claims {
 
-        private String disabled = "<red>Claims are disabled in this world!";
+        private String disabled = "<prefix><red>Claims are disabled in this world!";
 
         @Setting("owned-by")
-        private String ownedBy = "<gray>Claim <#d24c9f><name> <gray>is owned by <#d24c9f><owner>";
+        private String ownedBy = "<prefix><gray>Claim <#d24c9f><name> <gray>is owned by <#d24c9f><owner>";
 
-        private String created = "<gray>The claim <#d24c9f><name> <gray>has been created! Price: <#d24c9f><price>";
+        private String created = "<prefix><gray>The claim <#d24c9f><name> <gray>has been created! Price: <#d24c9f><price>";
 
-        private String resized = "<gray>The claim <#d24c9f><name> <gray>has been resized! Price: <#d24c9f><price>";
+        private String resized = "<prefix><gray>The claim <#d24c9f><name> <gray>has been resized! Price: <#d24c9f><price>";
 
-        private String deleted = "<green>Claim <white><claim_name></white> deleted successfully!";
+        private String deleted = "<prefix><green>Claim <white><claim_name></white> deleted successfully!";
 
         @Setting("dont-have-any")
-        private String dontHaveAny = "<red>You don't have any claims";
+        private String dontHaveAny = "<prefix><red>You don't have any claims";
 
         @Setting("sub-claim-created")
-        private String subCreated = "<gray>The sub claim <#d24c9f><name> <gray>has been created!";
+        private String subCreated = "<prefix><gray>The sub claim <#d24c9f><name> <gray>has been created!";
 
         @Setting("sub-claim-resized")
-        private String subResized = "<gray>The sub claim <#d24c9f><name> <gray>has been resized!";
+        private String subResized = "<prefix><gray>The sub claim <#d24c9f><name> <gray>has been resized!";
 
         @Setting("member-added")
-        private String memberAdded = "<green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
+        private String memberAdded = "<prefix><green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
 
         @Setting("member-remove")
-        private String memberRemoved = "<red>Player <white><player_head> <name></white> <red>removed from <white><claim></white>!";
+        private String memberRemoved = "<prefix><red>Player <white><player_head> <name></white> <red>removed from <white><claim></white>!";
 
         @Setting("member-already-added")
-        private String memberAlreadyAdded = "<red>This player is already in the claim!";
+        private String memberAlreadyAdded = "<prefix><red>This player is already in the claim!";
 
         @Setting("member-already-banned")
-        private String memberAlreadyBanned = "<red>This player is already banned!";
+        private String memberAlreadyBanned = "<prefix><red>This player is already banned!";
 
         @Setting("cant-ban-member")
-        private String cantBanMember = "<red>You can't ban this member!";
+        private String cantBanMember = "<prefix><red>You can't ban this member!";
 
         @Setting("player-not-member")
-        private String playerNotMember = "<red>This player is not a member of this claim!";
+        private String playerNotMember = "<prefix><red>This player is not a member of this claim!";
 
         @Setting("self-already-owner")
-        private String selfAlreadyOwner = "<red>You're already the owner of this claim!";
+        private String selfAlreadyOwner = "<prefix><red>You're already the owner of this claim!";
 
         @Setting("member-already-owner")
-        private String memberAlreadyOwner = "<red>This member is already the owner of this claim!";
+        private String memberAlreadyOwner = "<prefix><red>This member is already the owner of this claim!";
 
         @Setting("claim-transferred")
-        private String claimTransferred = "<green>Claim <white><claim></white> transferred to <white><player_head> <name></white>!";
+        private String claimTransferred = "<prefix><green>Claim <white><claim></white> transferred to <white><player_head> <name></white>!";
 
         @Setting("member-banned")
-        private String memberBanned = "<green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
+        private String memberBanned = "<prefix><green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
 
         private Permissions permissions = new Permissions();
 
@@ -89,70 +89,70 @@ public class Messages {
         public static class Permissions {
 
             @Setting("block-break")
-            private String breakBlock = "<red>You can't break blocks in this claim.";
+            private String breakBlock = "<prefix><red>You can't break blocks in this claim.";
 
             @Setting("block-place")
-            private String placeBlock = "<red>You can't place blocks in this claim.";
+            private String placeBlock = "<prefix><red>You can't place blocks in this claim.";
 
             @Setting("block-interact")
-            private String interactBlock = "<red>You can't interact with blocks in this claim.";
+            private String interactBlock = "<prefix><red>You can't interact with blocks in this claim.";
 
             @Setting("entity-interact")
-            private String interactEntity = "<red>You can't interact with entities in this claim.";
+            private String interactEntity = "<prefix><red>You can't interact with entities in this claim.";
 
             @Setting("entity-damage")
-            private String damageEntity = "<red>You can't damage entities in this claim.";
+            private String damageEntity = "<prefix><red>You can't damage entities in this claim.";
 
             @Setting("item-use")
-            private String useItem = "<red>You can't use items in this claim.";
+            private String useItem = "<prefix><red>You can't use items in this claim.";
 
             @Setting("item-pickup")
-            private String pickupItem = "<red>You can't pick up items in this claim.";
+            private String pickupItem = "<prefix><red>You can't pick up items in this claim.";
 
             @Setting("item-drop")
-            private String dropItem = "<red>You can't drop items in this claim.";
+            private String dropItem = "<prefix><red>You can't drop items in this claim.";
 
             @Setting("damage-player")
-            private String damagePlayer = "<red>You can't attack players in this claim.";
+            private String damagePlayer = "<prefix><red>You can't attack players in this claim.";
 
             @Setting("ignite-block")
-            private String igniteBlock = "<red>You can't ignite blocks in this claim.";
+            private String igniteBlock = "<prefix><red>You can't ignite blocks in this claim.";
 
             @Setting("player-interact")
-            private String playerInteract = "<red>You can't interact with that in this claim.";
+            private String playerInteract = "<prefix><red>You can't interact with that in this claim.";
 
             @Setting("use-redstone")
-            private String useRedstone = "<red>You can't use redstone in this claim.";
+            private String useRedstone = "<prefix><red>You can't use redstone in this claim.";
 
             @Setting("use-door")
-            private String useDoor = "<red>You can't use doors in this claim.";
+            private String useDoor = "<prefix><red>You can't use doors in this claim.";
 
             @Setting("use-trapdoor")
-            private String useTrapdoor = "<red>You can't use trapdoors in this claim.";
+            private String useTrapdoor = "<prefix><red>You can't use trapdoors in this claim.";
 
             @Setting("allow-flight")
-            private String allowFlight = "<red>You can't fly in this claim.";
+            private String allowFlight = "<prefix><red>You can't fly in this claim.";
 
             @Setting("use-elytra")
-            private String useElytra = "<red>You can't use elytras in this claim.";
+            private String useElytra = "<prefix><red>You can't use elytras in this claim.";
 
             @Setting("ignore-locked")
-            private String ignoreLocked = "<red>You can't enter this locked claim.";
+            private String ignoreLocked = "<prefix><red>You can't enter this locked claim.";
 
             @Setting("use-vehicle")
-            private String useVehicle = "<red>You can't use vehicles in this claim.";
+            private String useVehicle = "<prefix><red>You can't use vehicles in this claim.";
 
             @Setting("trample-soil")
-            private String trampleSoil = "<red>You can't trample farmland in this claim.";
+            private String trampleSoil = "<prefix><red>You can't trample farmland in this claim.";
 
             @Setting("harvest-crops")
-            private String harvestCrops = "<red>You can't harvest crops in this claim.";
+            private String harvestCrops = "<prefix><red>You can't harvest crops in this claim.";
 
             @Setting("plant-crops")
-            private String plantCrops = "<red>You can't plant crops in this claim.";
+            private String plantCrops = "<prefix><red>You can't plant crops in this claim.";
 
             @Setting("use-wind-charge")
-            private String useWindCharge = "<red>You can't use wind charges in this claim.";
+            private String useWindCharge = "<prefix><red>You can't use wind charges in this claim.";
         }
 
         @Getter
@@ -160,43 +160,43 @@ public class Messages {
         public static class Selecting {
 
             @Setting("first-selection")
-            private String firstSelection = "<gray>Selected <#d24c9f>first corner <gray>at location <#d24c9f><location><gray>.";
+            private String firstSelection = "<prefix><gray>Selected <#d24c9f>first corner <gray>at location <#d24c9f><location><gray>.";
 
             @Setting("second-selection")
-            private String secondSelection = "<gray>Selected <#d24c9f>second corner <gray>at location <#d24c9f><location><gray>. <#d24c9f>Left-Click <gray>to create your claim!";
+            private String secondSelection = "<prefix><gray>Selected <#d24c9f>second corner <gray>at location <#d24c9f><location><gray>. <#d24c9f>Left-Click <gray>to create your claim!";
 
             @Setting("selection-removed")
-            private String selectionRemoved = "<gray>Your selection has been removed!";
+            private String selectionRemoved = "<prefix><gray>Your selection has been removed!";
 
             @Setting("corner-unselected")
-            private String cornerUnselected = "<gray>Corner at location <#d24c9f><location> <gray>has been unselected.";
+            private String cornerUnselected = "<prefix><gray>Corner at location <#d24c9f><location> <gray>has been unselected.";
 
             @Setting("must-select-region")
-            private String mustSelectRegion = "<red>You must select a region with <#d24c9f>Left-Click<red>!";
+            private String mustSelectRegion = "<prefix><red>You must select a region with <#d24c9f>Left-Click<red>!";
 
             @Setting("must-select-points")
-            private String mustSelectPoints = "<red>You must select two points!";
+            private String mustSelectPoints = "<prefix><red>You must select two points!";
 
             @Setting("claim-overlaps")
-            private String claimOverlaps = "<red>There's already a claim on this area!";
+            private String claimOverlaps = "<prefix><red>There's already a claim on this area!";
 
             @Setting("selection-too-small")
-            private String selectionTooSmall = "<red>The selected region is too small! <gray>(Should be at least 5x5)";
+            private String selectionTooSmall = "<prefix><red>The selected region is too small! <gray>(Should be at least 5x5)";
 
             @Setting("not-enough-claimblocks")
-            private String notEnoughClaimBlocks = "<red>You don't have enough claim blocks! <gray>Required: <white><required_blocks></white>, <gray>Current: <white><current_blocks>";
+            private String notEnoughClaimBlocks = "<prefix><red>You don't have enough claim blocks! <gray>Required: <white><required_blocks></white>, <gray>Current: <white><current_blocks>";
 
             @Setting("land-already-claimed")
-            private String landAlreadyClaimed = "<red>Someone already claimed this land!";
+            private String landAlreadyClaimed = "<prefix><red>Someone already claimed this land!";
 
             @Setting("resizing-wrong-claim")
-            private String resizingWrongClaim = "<red>You are not resizing this claim!";
+            private String resizingWrongClaim = "<prefix><red>You are not resizing this claim!";
 
             @Setting("claim-within-sub")
-            private String claimWithinSub = "<red>Can't create a claim within a sub claim";
+            private String claimWithinSub = "<prefix><red>Can't create a claim within a sub claim";
 
             @Setting("sub-outside-boundaries")
-            private String subOutsideBoundaries = "<red>Sub claim can't be outside of main claim boundaries";
+            private String subOutsideBoundaries = "<prefix><red>Sub claim can't be outside of main claim boundaries";
         }
 
         @Getter
@@ -204,16 +204,16 @@ public class Messages {
         public static class Resizing {
 
             @Setting("select-a-corner")
-            private String selectACorner = "<red>You should select a corner";
+            private String selectACorner = "<prefix><red>You should select a corner";
 
             @Setting("enclose-claim-boundaries")
-            private String encloseClaimBoundaries = "<red>The new region must completely enclose the original claim boundaries!";
+            private String encloseClaimBoundaries = "<prefix><red>The new region must completely enclose the original claim boundaries!";
 
             @Setting("within-main-claim")
-            private String withinMainClaim = "<red>The new region must be inside of the main claim boundaries!";
+            private String withinMainClaim = "<prefix><red>The new region must be inside of the main claim boundaries!";
 
             @Setting("sub-within-sub")
-            private String subWithinSub = "<red>There's already a sub claim here!";
+            private String subWithinSub = "<prefix><red>There's already a sub claim here!";
         }
     }
 
@@ -222,24 +222,24 @@ public class Messages {
     public static class Commands {
 
         @Setting("no-permission")
-        private String noPermission = "<red>No permissions.";
+        private String noPermission = "<prefix><red>No permissions.";
 
-        private String usage = "<gray>Command usage: <white>/<command> <usage>";
+        private String usage = "<prefix><gray>Command usage: <white>/<command> <usage>";
 
         @Setting("invalid-argument")
-        private String invalidArgument = "<red>Invalid argument provided!";
+        private String invalidArgument = "<prefix><red>Invalid argument provided!";
 
         @Setting("missing-player")
-        private String missingPlayer = "<red>You need to specify a player!";
+        private String missingPlayer = "<prefix><red>You need to specify a player!";
 
         @Setting("player-not-found")
-        private String playerNotFound = "<red>Player not found";
+        private String playerNotFound = "<prefix><red>Player not found";
 
         @Setting("not-your-claim")
-        private String notYourClaim = "<red>This is not your claim!";
+        private String notYourClaim = "<prefix><red>This is not your claim!";
 
         @Setting("not-in-claim")
-        private String notInClaim = "<red>You're not standing in a claim!";
+        private String notInClaim = "<prefix><red>You're not standing in a claim!";
 
         @Setting("claim-blocks")
         private ClaimBlocks claimBlocks = new ClaimBlocks();
@@ -249,7 +249,7 @@ public class Messages {
         public static class ClaimBlocks {
 
             private String summary = """
-                    <gray><white><player_name></white>'s claim blocks breakdown:
+                    <prefix><gray><white><player_name></white>'s claim blocks breakdown:
                     
                     <dark_gray><b>»</b> <gray>Starting Blocks: <white><starting_blocks>
                     <dark_gray><b>»</b> <gray>Obtained Blocks: <white><obtained_blocks>
@@ -259,16 +259,16 @@ public class Messages {
                     <dark_gray><b>»</b> <gray>Available Blocks: <white><available_blocks>""";
 
             @Setting("set-amount")
-            private String setAmount = "<gray>You set <white><amount></white> claim blocks to <white><name></white>!";
+            private String setAmount = "<prefix><gray>You set <white><amount></white> claim blocks to <white><name></white>!";
 
             @Setting
-            private String invalid = "<red>Invalid amount of claim blocks!";
+            private String invalid = "<prefix><red>Invalid amount of claim blocks!";
 
             @Setting("add-amount")
-            private String addAmount = "<gray>You added <white><amount></white> claim blocks to <white><name></white>!\n<gray>New amount: <white><new_amount>";
+            private String addAmount = "<prefix><gray>You added <white><amount></white> claim blocks to <white><name></white>!\n<gray>New amount: <white><new_amount>";
 
             @Setting("remove-amount")
-            private String removeAmount = "<gray>You removed <white><amount></white> claim blocks from <white><name></white>!\n<gray>New amount: <white><new_amount>";
+            private String removeAmount = "<prefix><gray>You removed <white><amount></white> claim blocks from <white><name></white>!\n<gray>New amount: <white><new_amount>";
         }
     }
 
@@ -405,7 +405,7 @@ public class Messages {
     @ConfigSerializable
     public static class Inputs {
 
-        private String cancelled = "<red>Input cancelled.";
+        private String cancelled = "<prefix><red>Input cancelled.";
 
         private Title title = new Title();
 

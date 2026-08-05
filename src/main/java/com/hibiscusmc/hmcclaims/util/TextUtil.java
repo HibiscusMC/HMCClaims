@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -154,11 +155,11 @@ public class TextUtil {
             return Component.empty();
         }
 
-        if (withPrefix) {
-            string = prefix(string);
-        }
-
-        return parse(string, data);
+        return parse(
+                string, withPrefix ?
+                        MapUtil.add(new HashMap<>(data), "prefix", messages.get().prefix()) :
+                        data
+        );
     }
 
     /**
@@ -316,19 +317,6 @@ public class TextUtil {
     @Contract(value = "_ -> new", pure = true)
     public static String strip(String unsafeText) {
         return MINI_MESSAGE.stripTags(unsafeText);
-    }
-
-    /**
-     * Prepends the plugin-wide message prefix to a raw string.
-     * <p>
-     * This method retrieves the current prefix from the {@link #messages} config holder.
-     *
-     * @param string The message content to be prefixed.
-     * @return A concatenated string of [prefix] + [string].
-     */
-    @NotNull
-    private String prefix(String string) {
-        return messages.get().prefix() + string;
     }
 
     /**
