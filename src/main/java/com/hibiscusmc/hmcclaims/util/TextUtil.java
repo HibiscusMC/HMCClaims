@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
  * Utility for parsing and sending messages using the MiniMessage format.
  */
 @Singleton
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TextUtil {
 
     private final static MiniMessage MINI_MESSAGE
@@ -71,7 +72,7 @@ public class TextUtil {
      * @param string   The message content.
      * @param data     A map of placeholders and their replacement values.
      */
-    public void send(@NotNull Audience audience, String string, Map<String, String> data) {
+    public void send(@NotNull Audience audience, String string, Map data) {
         if (string == null || string.isEmpty()) {
             return;
         }
@@ -98,7 +99,7 @@ public class TextUtil {
      * @param string   The message content.
      * @param data     A map of placeholders and their replacement values.
      */
-    public void sendNotification(@NotNull Audience audience, String string, Map<String, String> data) {
+    public void sendNotification(@NotNull Audience audience, String string, Map data) {
         if (string == null || string.isEmpty()) {
             return;
         }
@@ -134,7 +135,7 @@ public class TextUtil {
      * Parses a string with placeholders into a {@link Component}, including the configured prefix.
      */
     @NotNull
-    public Component parseWithPrefix(String string, Map<String, String> data) {
+    public Component parseWithPrefix(String string, Map<String, Object> data) {
         return parseWithPrefix(string, true, data);
     }
 
@@ -150,7 +151,7 @@ public class TextUtil {
      * Core logic for parsing strings with prefix support and placeholder resolution.
      */
     @NotNull
-    public Component parseWithPrefix(@NotNull String string, boolean withPrefix, Map<String, String> data) {
+    public Component parseWithPrefix(@NotNull String string, boolean withPrefix, Map<String, Object> data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
@@ -176,7 +177,7 @@ public class TextUtil {
      */
     @NotNull
     @Contract(value = "_, _ -> new", pure = true)
-    public static List<Component> parseList(List<String> list, Map<String, String> data) {
+    public static List<Component> parseList(List<String> list, Map data) {
         return list.stream().map(string -> parse(string, data)).toList();
     }
 
@@ -194,7 +195,7 @@ public class TextUtil {
      */
     @NotNull
     @Contract(value = "_, _ -> new", pure = true)
-    public static Component parse(@NotNull String string, Map<String, String> data) {
+    public static Component parse(@NotNull String string, Map data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
@@ -225,7 +226,7 @@ public class TextUtil {
      */
     @NotNull
     @Contract(value = "_, _ -> new", pure = true)
-    public static List<Component> parseItemLore(List<String> list, Map<String, String> data) {
+    public static List<Component> parseItemLore(List<String> list, Map data) {
         return list.stream().map(string -> parseItem(string, data)).toList();
     }
 
@@ -247,7 +248,7 @@ public class TextUtil {
      */
     @NotNull
     @Contract(value = "_, _ -> new", pure = true)
-    public static Component parseItem(@NotNull String string, Map<String, String> data) {
+    public static Component parseItem(@NotNull String string, Map data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
@@ -330,13 +331,19 @@ public class TextUtil {
      */
     @NotNull
     @Contract(value = "_ -> new", pure = true)
-    private static TagResolver resolvePlaceholders(@NotNull Map<String, String> data) {
+    private static TagResolver resolvePlaceholders(@NotNull Map<String, Object> data) {
         return TagResolver.resolver(data.entrySet().stream()
                 .map(entry -> {
                     @Subst("id")
                     String key = entry.getKey();
 
-                    return Placeholder.parsed(key, entry.getValue());
+                    Object value = entry.getValue();
+
+                    if (value instanceof Component component) {
+                        return Placeholder.component(key, component);
+                    } else {
+                        return Placeholder.parsed(key, value.toString());
+                    }
                 })
                 .toList());
     }
