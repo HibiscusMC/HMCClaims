@@ -37,16 +37,14 @@ public class MovementPermissionListener implements Listener {
         Location from = event.getFrom();
         Location to = event.getTo();
 
-        if (to == null || (from.getBlockX() == to.getBlockX()
-                && from.getBlockY() == to.getBlockY()
-                && from.getBlockZ() == to.getBlockZ())) {
+        if (from.getBlockX() == to.getBlockX()
+                && from.getBlockZ() == to.getBlockZ()) {
             return;
         }
 
-        Claim fromClaim = claimManager.getClaimAt(from).orElse(null);
         Claim toClaim = claimManager.getClaimAt(to).orElse(null);
 
-        if (toClaim == null || toClaim.equals(fromClaim) || !toClaim.locked()) {
+        if (toClaim == null || !toClaim.locked()) {
             return;
         }
 
@@ -62,14 +60,10 @@ public class MovementPermissionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onLockedClaimTeleport(PlayerTeleportEvent event) {
         Location to = event.getTo();
-        if (to == null) {
-            return;
-        }
 
-        Claim fromClaim = claimManager.getClaimAt(event.getFrom()).orElse(null);
         Claim toClaim = claimManager.getClaimAt(to).orElse(null);
 
-        if (toClaim == null || toClaim.equals(fromClaim) || !toClaim.locked()) {
+        if (toClaim == null || !toClaim.locked()) {
             return;
         }
 
@@ -113,13 +107,9 @@ public class MovementPermissionListener implements Listener {
         }
 
         Location to = event.getTo();
-        if (to == null) {
-            return;
-        }
 
         Location from = event.getFrom();
         if (from.getBlockX() == to.getBlockX()
-                && from.getBlockY() == to.getBlockY()
                 && from.getBlockZ() == to.getBlockZ()) {
             return;
         }
@@ -145,9 +135,6 @@ public class MovementPermissionListener implements Listener {
         }
 
         Location to = event.getTo();
-        if (to == null) {
-            return;
-        }
 
         Claim fromClaim = claimManager.getClaimAt(event.getFrom()).orElse(null);
         Claim toClaim = claimManager.getClaimAt(to).orElse(null);
