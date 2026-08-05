@@ -101,7 +101,7 @@ public class ClaimSerializer {
         for (Map.Entry<Setting<?>, SettingHolder<?>> settingEntry : settings.entrySet()) {
             settingsMessageBuilder.putSettings(
                     settingEntry.getKey().key().asString(),
-                    settingEntry.getValue().value().toString()
+                    String.valueOf(settingEntry.getValue().value())
             );
         }
 
@@ -196,10 +196,9 @@ public class ClaimSerializer {
         try {
             SettingsMessage message = SettingsMessage.parseFrom(bytes);
             message.getSettingsMap().forEach((keyStr, valStr) -> {
-                Setting<?> setting = SettingRegistry.getSetting(keyStr);
+                Setting<Object> setting = SettingRegistry.getSetting(keyStr);
                 if (setting != null) {
-                    // noinspection unchecked
-                    SettingHolder<Object> holder = (SettingHolder<Object>) SettingHolder.from(setting);
+                    SettingHolder<Object> holder = SettingHolder.from(setting);
                     holder.value(setting.parser().apply(valStr));
 
                     settingsMap.put(setting, holder);

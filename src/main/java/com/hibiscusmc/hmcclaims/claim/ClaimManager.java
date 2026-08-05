@@ -1,6 +1,9 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.setting.Setting;
+import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
+import com.hibiscusmc.hmcclaims.config.DefaultSettings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -78,6 +81,9 @@ public class ClaimManager {
     private ConfigHolder<DefaultRoles> rolesHolder;
 
     @Inject
+    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
+
+    @Inject
     private UserManager userManager;
 
     @Inject
@@ -141,6 +147,16 @@ public class ClaimManager {
                 )),
                 (int) totalMainClaims + 1
         );
+
+        for (Map.Entry<Setting<?>, String> entry : defaultSettingsHolder.get().defaultSettings().entrySet()) {
+            //noinspection unchecked
+            Setting<Object> setting = (Setting<Object>) entry.getKey();
+            String value = entry.getValue();
+            SettingHolder<Object> holder = SettingHolder.from(setting);
+            holder.value(setting.parser().apply(value));
+
+            newClaim.settings().put(setting, holder);
+        }
 
         if (main != null) {
             main.addSubClaim(newClaim);

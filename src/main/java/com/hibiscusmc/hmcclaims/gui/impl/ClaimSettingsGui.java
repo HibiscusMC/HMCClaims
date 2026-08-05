@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import com.hibiscusmc.hmcclaims.config.DefaultSettings;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
@@ -46,6 +47,8 @@ public class ClaimSettingsGui extends ClaimListGui {
     private ConfigHolder<ClaimSettingsConfig> configHolder;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+    @Inject
+    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -244,7 +247,12 @@ public class ClaimSettingsGui extends ClaimListGui {
         Setting<?> setting = toggleIcon.key();
         //noinspection unchecked
         SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings()
-                .computeIfAbsent(setting, (k) -> SettingHolder.from(setting));
+                .computeIfAbsent(setting, (k) -> {
+                    //noinspection unchecked
+                    SettingHolder<Object> h = (SettingHolder<Object>) SettingHolder.from(setting);
+                    h.value(defaultSettingsHolder.get().defaultSettings().getOrDefault(setting, null));
+                    return h;
+                });
 
         BiConsumer<Item, Click> action = (it, click) -> {
             if (click.clickType() == ClickType.DOUBLE_CLICK) {

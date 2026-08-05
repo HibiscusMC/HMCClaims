@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.module;
 
 import com.hibiscusmc.hmcclaims.config.DefaultRoles;
+import com.hibiscusmc.hmcclaims.config.DefaultSettings;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimBannedListConfig;
@@ -38,6 +39,7 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve("config.yml"), Settings.class);
             ConfigFactory.load(pluginPath.resolve("messages.yml"), Messages.class);
             ConfigFactory.load(pluginPath.resolve("default-roles.yml"), DefaultRoles.class);
+            ConfigFactory.load(pluginPath.resolve("default-settings.yml"), DefaultSettings.class);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-list.yml")), ClaimListConfig.class, true);
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-members.yml")), ClaimMemberListConfig.class, true);
@@ -66,6 +68,9 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<DefaultRoles>>() {
         }).toInstance(ConfigFactory.getHolder(DefaultRoles.class));
+
+        bind(new TypeReference<ConfigHolder<DefaultSettings>>() {
+        }).toInstance(ConfigFactory.getHolder(DefaultSettings.class));
 
         bind(new TypeReference<ConfigHolder<ClaimListConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimListConfig.class));

@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.config.gui;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -102,7 +103,7 @@ public class ClaimMemberPermissionsConfig extends ClaimMemberManageConfig {
 
             List<String> lore = Arrays.stream(("<gray>" + description).split("\n")).toList();
 
-            permissions.put(permission.key().value().toLowerCase() + "-permission", new TogglePermissionIcon<>(
+            permissions.put(RegistryUtil.serialize(permission.key()).replace(":", "-").toLowerCase() + "-permission", new TogglePermissionIcon<>(
                     permission, slot, name, lore,
                     new TogglePermissionIcon.TriStateToggleIcon(
                             slot + 9,

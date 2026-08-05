@@ -47,7 +47,7 @@ public class RegistryUtil {
     /**
      * Creates a new {@link Key} with a custom namespace.
      *
-     * @param namespace The namespace (e.g., "hmcjs").
+     * @param namespace The namespace (e.g., "hmc").
      * @param value     The value.
      * @return A newly constructed {@link Key}.
      */
@@ -55,5 +55,23 @@ public class RegistryUtil {
     @Contract(value = "_, _ -> new", pure = true)
     public static Key key(@NotNull @Subst("namespace") String namespace, @NotNull @Subst("id") String value) {
         return Key.key(namespace, value);
+    }
+
+    /**
+     * Serializes a {@link Key} into a string. If the {@link Key} namespace
+     * is equal to the plugin's namespace ({@link #PLUGIN_NAMESPACE}), it will only
+     * return the value of the key.
+     *
+     * @param key the key to serialize
+     * @return the serialized key with the format of {@code namespace:key} or {@code key}
+     */
+    @NotNull
+    @Contract(pure = true)
+    public static String serialize(@NotNull Key key) {
+        if (key.namespace().equals(PLUGIN_NAMESPACE)) {
+            return key.value();
+        }
+
+        return key.namespace() + ":" + key.value();
     }
 }

@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.config.internal.serializer;
 
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
+import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.intellij.lang.annotations.Subst;
@@ -27,9 +28,7 @@ public class PermissionSerializer implements TypeSerializer<Permission> {
             return null;
         }
 
-        Permission permission = rawPermission.contains(":")
-                ? PermissionRegistry.getPermission(Key.key(rawPermission))
-                : PermissionRegistry.getPermission(rawPermission);
+        Permission permission = PermissionRegistry.getPermission(rawPermission);
 
         if (permission == null) {
             throw new SerializationException("Could not find permission '" + rawPermission + "'");
@@ -46,6 +45,6 @@ public class PermissionSerializer implements TypeSerializer<Permission> {
         }
 
         Key key = permission.key();
-        node.set(key.namespace().equalsIgnoreCase("hmcclaims") ? key.value() : key.asString());
+        node.set(RegistryUtil.serialize(key));
     }
 }

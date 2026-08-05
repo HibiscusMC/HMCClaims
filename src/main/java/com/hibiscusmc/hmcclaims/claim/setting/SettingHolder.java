@@ -27,12 +27,11 @@ public class SettingHolder<T> {
      */
     private SettingHolder(Setting<T> setting) {
         this.setting = setting;
-        this.value = setting.defaultValue();
     }
 
     /**
      * Factory method to create a new {@code SettingHolder} instance for a given setting.
-     * The initial value will remain {@code null} until explicitly set using {@link #value(K)}.
+     * The initial value will remain {@code null} until explicitly set using {@link #value()}.
      *
      * @param <K>     The data type of the setting value.
      * @param setting The {@link Setting} definition to be held.

@@ -5,7 +5,6 @@ import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
-import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
@@ -148,10 +147,6 @@ public class Claim {
         this(claimId,
                 main == null ? owner.name() + "'s Claim " + totalClaims : "Sub Claim of " + main.name(),
                 main, owner, region, roles, null);
-
-        for (Setting<?> setting : SettingRegistry.getAllSettings()) {
-            settings.put(setting, SettingHolder.from(setting));
-        }
     }
 
     /**

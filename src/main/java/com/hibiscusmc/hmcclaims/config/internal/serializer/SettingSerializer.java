@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.config.internal.serializer;
 
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
+import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.intellij.lang.annotations.Subst;
@@ -27,9 +28,7 @@ public class SettingSerializer implements TypeSerializer<Setting> {
             return null;
         }
 
-        Setting<?> setting = rawSetting.contains(":")
-                ? SettingRegistry.getSetting(Key.key(rawSetting))
-                : SettingRegistry.getSetting(rawSetting);
+        Setting<?> setting = SettingRegistry.getSetting(rawSetting);
 
         if (setting == null) {
             throw new SerializationException("Could not find setting '" + rawSetting + "'");
@@ -46,6 +45,6 @@ public class SettingSerializer implements TypeSerializer<Setting> {
         }
 
         Key key = setting.key();
-        node.set(key.namespace().equalsIgnoreCase("hmcclaims") ? key.value() : key.asString());
+        node.set(RegistryUtil.serialize(key));
     }
 }
