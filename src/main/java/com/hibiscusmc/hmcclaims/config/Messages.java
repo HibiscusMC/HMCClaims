@@ -80,6 +80,8 @@ public class Messages {
 
         private Permissions permissions = new Permissions();
 
+        private Settings settings = new Settings();
+
         private Selecting selecting = new Selecting();
 
         private Resizing resizing = new Resizing();
@@ -153,6 +155,17 @@ public class Messages {
 
             @Setting("use-wind-charge")
             private String useWindCharge = "<prefix><red>You can't use wind charges in this claim.";
+        }
+
+        @Getter
+        @ConfigSerializable
+        public static class Settings {
+
+            @Setting("join-message")
+            private String joinMessage = "<prefix><gray>[Claim <claim_name>] <white><message>";
+
+            @Setting("leave-message")
+            private String leaveMessage = "<prefix><gray>[Claim <claim_name>] <white><message>";
         }
 
         @Getter

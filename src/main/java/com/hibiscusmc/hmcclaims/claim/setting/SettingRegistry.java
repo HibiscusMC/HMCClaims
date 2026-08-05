@@ -28,9 +28,11 @@ public class SettingRegistry {
     }
 
     static {
+        register(Setting.JOIN_MESSAGE);
+        register(Setting.LEAVE_MESSAGE);
+
         register(Setting.MOB_EXPLOSIONS);
         register(Setting.BLOCK_EXPLOSIONS);
-        register(Setting.JOIN_MESSAGE);
     }
 
     /**

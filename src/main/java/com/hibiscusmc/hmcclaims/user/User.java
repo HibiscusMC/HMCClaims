@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.user;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.selection.Selection;
 import lombok.Data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -47,6 +48,11 @@ public class User {
      * Marks if this user is already saved to the database.
      */
     private transient boolean persistent = false;
+
+    /**
+     * The current claim this user is standing in
+     */
+    private transient Claim currentClaim;
 
     /**
      * Constructs a new User with initial identity data.
