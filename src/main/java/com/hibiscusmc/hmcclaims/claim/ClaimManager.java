@@ -134,7 +134,11 @@ public class ClaimManager {
                 main,
                 new NameAndId(player.getUniqueId(), player.getName()),
                 region,
-                new ArrayList<>(rolesHolder.get().defaultRoles()),
+                new ArrayList<>(List.of(
+                        rolesHolder.get().defaultRoles().owner(),
+                        rolesHolder.get().defaultRoles().member(),
+                        rolesHolder.get().defaultRoles().everyone()
+                )),
                 (int) totalMainClaims + 1
         );
 

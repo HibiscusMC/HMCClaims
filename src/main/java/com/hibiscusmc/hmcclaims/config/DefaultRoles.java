@@ -8,7 +8,6 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -16,33 +15,40 @@ import java.util.Set;
 public class DefaultRoles {
 
     @Setting("default-roles")
-    private List<ClaimRole> defaultRoles = List.of(
-            new ClaimRole(null, "Owner", new HashSet<>(PermissionRegistry.getAllPermissions())),
-            new ClaimRole(null, "Member", Set.of(
-                    Permission.PLACE_BLOCK,
-                    Permission.BREAK_BLOCK,
-                    Permission.USE_CONTAINER,
-                    Permission.USE_ITEM,
-                    Permission.PICKUP_ITEM,
-                    Permission.DROP_ITEM,
-                    Permission.DAMAGE_ENTITY,
-                    Permission.INTERACT_ENTITY,
-                    Permission.DAMAGE_PLAYER,
-                    Permission.IGNITE_BLOCK,
-                    Permission.PLAYER_INTERACT,
-                    Permission.USE_REDSTONE,
-                    Permission.USE_DOOR,
-                    Permission.USE_TRAPDOOR,
-                    Permission.IGNORE_LOCKED,
-                    Permission.USE_VEHICLE,
-                    Permission.HARVEST_CROPS,
-                    Permission.PLANT_CROPS
-            )),
-            new ClaimRole(null, "Everyone", Set.of(
-                    Permission.USE_ITEM,
-                    Permission.DROP_ITEM,
-                    Permission.PICKUP_ITEM
-            ))
-    );
+    private List defaultRoles = new List();
 
+    @Getter
+    @ConfigSerializable
+    @SuppressWarnings({"FieldMayBeFinal"})
+    public static class List {
+
+        private ClaimRole owner = new ClaimRole(null, "Owner", new HashSet<>(PermissionRegistry.getAllPermissions()));
+
+        private ClaimRole member = new ClaimRole(null, "Member", Set.of(
+                Permission.PLACE_BLOCK,
+                Permission.BREAK_BLOCK,
+                Permission.USE_CONTAINER,
+                Permission.USE_ITEM,
+                Permission.PICKUP_ITEM,
+                Permission.DROP_ITEM,
+                Permission.DAMAGE_ENTITY,
+                Permission.INTERACT_ENTITY,
+                Permission.DAMAGE_PLAYER,
+                Permission.IGNITE_BLOCK,
+                Permission.PLAYER_INTERACT,
+                Permission.USE_REDSTONE,
+                Permission.USE_DOOR,
+                Permission.USE_TRAPDOOR,
+                Permission.IGNORE_LOCKED,
+                Permission.USE_VEHICLE,
+                Permission.HARVEST_CROPS,
+                Permission.PLANT_CROPS
+        ));
+
+        private ClaimRole everyone = new ClaimRole(null, "Everyone", Set.of(
+                Permission.USE_ITEM,
+                Permission.DROP_ITEM,
+                Permission.PICKUP_ITEM
+        ));
+    }
 }
