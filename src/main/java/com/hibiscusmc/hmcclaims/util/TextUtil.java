@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,17 @@ public class TextUtil {
 
     private final static MiniMessage MINI_MESSAGE
             = MiniMessage.miniMessage();
+
+    private final static MiniMessage SAFE_MINI_MESSAGE
+            = MiniMessage.builder()
+            .tags(TagResolver.resolver(
+                    StandardTags.color(),
+                    StandardTags.gradient(),
+                    StandardTags.rainbow(),
+                    StandardTags.decorations(),
+                    StandardTags.pride()
+            ))
+            .build();
 
     @Inject
     private ConfigHolder<Messages> messages;
@@ -279,6 +291,18 @@ public class TextUtil {
         }
 
         return serialized;
+    }
+
+    /**
+     * Parses only color + decoration related tags in a message
+     *
+     * @param unsafeText the input message to parse
+     * @return the output, with only the safe tags parsed
+     */
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static Component safe(String unsafeText) {
+        return SAFE_MINI_MESSAGE.deserialize(unsafeText);
     }
 
     /**

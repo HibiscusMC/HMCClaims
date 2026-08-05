@@ -288,7 +288,7 @@ public class ClaimSettingsGui extends ClaimListGui {
                             return;
                         }
 
-                        holder.value(setting.parser().apply(TextUtil.strip(newValue)));
+                        holder.value(setting.parser().apply(newValue));
 
                         it.notifyWindows();
                     })
