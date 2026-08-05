@@ -22,6 +22,9 @@ import team.unnamed.inject.Inject;
 
 import java.util.Map;
 
+/**
+ * Join & Leave message
+ */
 public class MovementSettingListener implements Listener {
 
     @Inject

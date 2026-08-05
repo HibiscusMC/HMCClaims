@@ -51,11 +51,7 @@ public class PlayerDataListener implements Listener {
         }
 
         try {
-            manager.getOrLoadUser(uuid).thenAccept(user -> {
-                if (user == null) {
-                    user = new User(uuid, playerName, 0L);
-                }
-
+            manager.getOrLoadUser(uuid, playerName).thenAccept(user -> {
                 if (!user.lastKnownName().equals(playerName)) {
                     user.lastKnownName(playerName);
                 }

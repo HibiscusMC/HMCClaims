@@ -139,7 +139,7 @@ public class UserManager {
      * caching the result. Concurrent calls for the same UUID share a single load.
      */
     @NotNull
-    public CompletableFuture<@Nullable User> getOrLoadUser(@NotNull UUID uuid) {
+    public CompletableFuture<@NotNull User> getOrLoadUser(@NotNull UUID uuid, @NotNull String lastKnownName) {
         User cached = userMap.get(uuid);
         if (cached != null) {
             touch(uuid);
@@ -150,10 +150,11 @@ public class UserManager {
             Storage storage = storageHolder.get();
 
             return storage.users().getUser(id).thenApply(user -> {
-                if (user != null) {
-                    cacheUser(user);
+                if (user == null) {
+                    user = new User(uuid, lastKnownName, 0L);
                 }
 
+                cacheUser(user);
                 return user;
             }).whenComplete((user, throwable) -> loadingUsers.remove(id));
         });

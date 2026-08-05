@@ -19,6 +19,7 @@ import team.unnamed.commandflow.annotated.annotation.Usage;
 import team.unnamed.inject.Inject;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Command(names = {"claimblocks", "cbs"}, permission = "hmcclaims.commands.claimblocks")
 public class ClaimBlocksCommand implements CommandClass {
@@ -67,7 +68,7 @@ public class ClaimBlocksCommand implements CommandClass {
     public void set(CommandSender sender, @PlayerOrOffline OfflinePlayer target, int amount) {
         Messages messages = messagesHolder.get();
 
-        if (target == null) {
+        if (target == null || !target.hasPlayedBefore()) {
             text.send(sender, messages.commands().playerNotFound());
             return;
         }
@@ -77,7 +78,7 @@ public class ClaimBlocksCommand implements CommandClass {
             return;
         }
 
-        userManager.getOrLoadUser(target.getUniqueId())
+        userManager.getOrLoadUser(target.getUniqueId(), Objects.requireNonNull(target.getName(), "target name cannot be null"))
                 .thenAccept(user -> {
                     if (user == null) {
                         text.send(sender, messages.commands().playerNotFound());
@@ -110,7 +111,7 @@ public class ClaimBlocksCommand implements CommandClass {
             return;
         }
 
-        userManager.getOrLoadUser(target.getUniqueId())
+        userManager.getOrLoadUser(target.getUniqueId(), Objects.requireNonNull(target.getName(), "target name cannot be null"))
                 .thenAccept(user -> {
                     if (user == null) {
                         text.send(sender, messages.commands().playerNotFound());
@@ -151,7 +152,7 @@ public class ClaimBlocksCommand implements CommandClass {
             return;
         }
 
-        userManager.getOrLoadUser(target.getUniqueId())
+        userManager.getOrLoadUser(target.getUniqueId(), Objects.requireNonNull(target.getName(), "target name cannot be null"))
                 .thenAccept(user -> {
                     if (user == null) {
                         text.send(sender, messages.commands().playerNotFound());
