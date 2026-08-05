@@ -65,8 +65,8 @@ public class MovementSettingListener implements Listener {
 
         if (userClaim != null && toClaim == null) {
             // Player left claim
-            user.currentClaim(null);
             sendLeaveMessage(player, userClaim);
+            user.currentClaim(null);
         } else {
             // Player join claim
             user.currentClaim(toClaim);
@@ -77,7 +77,7 @@ public class MovementSettingListener implements Listener {
     private void sendJoinMessage(@NotNull Player player, @NotNull Claim claim) {
         SettingHolder<String> setting = (SettingHolder<String>) claim.settings().get(Setting.JOIN_MESSAGE);
 
-        if (setting == null || setting.value() == null) {
+        if (setting == null || setting.value() == null || setting.value().equals("null")) {
             return;
         }
 
@@ -90,7 +90,7 @@ public class MovementSettingListener implements Listener {
     private void sendLeaveMessage(@NotNull Player player, @NotNull Claim claim) {
         SettingHolder<String> setting = (SettingHolder<String>) claim.settings().get(Setting.LEAVE_MESSAGE);
 
-        if (setting == null || setting.value() == null) {
+        if (setting == null || setting.value() == null || setting.value().equals("null")) {
             return;
         }
 
