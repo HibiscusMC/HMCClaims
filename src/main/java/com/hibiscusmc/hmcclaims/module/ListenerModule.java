@@ -10,6 +10,7 @@ import com.hibiscusmc.hmcclaims.listener.permission.ItemPermissionListener;
 import com.hibiscusmc.hmcclaims.listener.permission.MovementPermissionListener;
 import com.hibiscusmc.hmcclaims.listener.permission.VanillaBlockListener;
 import com.hibiscusmc.hmcclaims.listener.setting.MovementSettingListener;
+import com.hibiscusmc.hmcclaims.listener.setting.VanillaBlockSettingListener;
 import org.bukkit.event.Listener;
 import team.unnamed.inject.AbstractModule;
 
@@ -32,6 +33,7 @@ public class ListenerModule extends AbstractModule {
                 .to(ItemPermissionListener.class)
 
                 /* Setting Listeners */
-                .to(MovementSettingListener.class);
+                .to(MovementSettingListener.class)
+                .to(VanillaBlockSettingListener.class);
     }
 }
