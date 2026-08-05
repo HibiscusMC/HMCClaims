@@ -61,6 +61,7 @@ public class UserManager {
      */
     public void cacheUser(@NotNull User user) {
         userMap.put(user.uuid(), user);
+        touch(user.uuid());
     }
 
     /**
@@ -70,6 +71,7 @@ public class UserManager {
      */
     public void invalidateUser(@NotNull UUID uuid) {
         userMap.remove(uuid);
+        lastAccess.removeLong(uuid);
     }
 
     /**
