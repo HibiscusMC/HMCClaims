@@ -153,7 +153,8 @@ public class ClaimManager {
             Setting<Object> setting = (Setting<Object>) entry.getKey();
             String value = entry.getValue();
             SettingHolder<Object> holder = SettingHolder.from(setting);
-            holder.value(setting.parser().apply(value));
+            Object parsedValue = setting.parser().apply(value);
+            holder.value(parsedValue == null || parsedValue.equals("null") ? null : parsedValue);
 
             newClaim.settings().put(setting, holder);
         }
