@@ -87,7 +87,7 @@ public class ClaimCommand implements CommandClass {
         gui.open(sender, new GuiMetadata(claim));
     }
 
-    @Command(names = {"add", "trust"}, permission = "hmcclaims.commands.claim.add")
+    @Command(names = {"add", "trust"})
     @Usage("<player>")
     public void add(@Sender Player sender, @PlayerOrOffline OfflinePlayer player) {
         Messages messages = messagesHolder.get();
