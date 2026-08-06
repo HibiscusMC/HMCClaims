@@ -47,8 +47,8 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.12.3")
 
     // Configurate
-    implementation("org.spongepowered:configurate-core:4.4.0-HMC")
-    implementation("org.spongepowered:configurate-yaml:4.4.0-HMC")
+    implementation("org.spongepowered:configurate-core:4.4.4-HMC")
+    implementation("org.spongepowered:configurate-yaml:4.4.4-HMC")
 
     // HikariCP
     compileOnly("com.zaxxer:HikariCP:7.0.2")

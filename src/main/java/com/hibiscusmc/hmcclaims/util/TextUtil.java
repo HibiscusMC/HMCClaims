@@ -342,7 +342,7 @@ public class TextUtil {
                     if (value instanceof Component component) {
                         return Placeholder.component(key, component);
                     } else {
-                        return Placeholder.parsed(key, value.toString());
+                        return Placeholder.parsed(key, value == null ? "" : value.toString());
                     }
                 })
                 .toList());

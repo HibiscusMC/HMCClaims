@@ -22,8 +22,10 @@ public class DefaultRoles {
     @SuppressWarnings({"FieldMayBeFinal"})
     public static class List {
 
+        @Setting(required = true)
         private ClaimRole owner = new ClaimRole(null, "Owner", new HashSet<>(PermissionRegistry.getAllPermissions()));
 
+        @Setting(required = true)
         private ClaimRole member = new ClaimRole(null, "Member", Set.of(
                 Permission.PLACE_BLOCK,
                 Permission.BREAK_BLOCK,
@@ -45,6 +47,7 @@ public class DefaultRoles {
                 Permission.PLANT_CROPS
         ));
 
+        @Setting(required = true)
         private ClaimRole everyone = new ClaimRole(null, "Everyone", Set.of(
                 Permission.USE_ITEM,
                 Permission.DROP_ITEM,

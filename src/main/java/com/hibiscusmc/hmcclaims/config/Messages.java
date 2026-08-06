@@ -13,7 +13,7 @@ public class Messages {
 
     private String prefix = "<b><gradient:#49fc4f:#3ffcb4:#49fc4f>HMCClaims</gradient> <dark_gray>|</dark_gray></b> ";
 
-    @Setting("reload")
+    @Setting(value = "reload", required = true)
     private String pluginReload = "<prefix><gray>Plugin reloaded!";
 
     private Claims claims = new Claims();
@@ -28,54 +28,58 @@ public class Messages {
     @ConfigSerializable
     public static class Claims {
 
+        @Setting(required = true)
         private String disabled = "<prefix><red>Claims are disabled in this world!";
 
-        @Setting("owned-by")
+        @Setting(value = "owned-by", required = true)
         private String ownedBy = "<prefix><gray>Claim <#d24c9f><name> <gray>is owned by <#d24c9f><owner>";
 
+        @Setting(required = true)
         private String created = "<prefix><gray>The claim <#d24c9f><name> <gray>has been created! Price: <#d24c9f><price>";
 
+        @Setting(required = true)
         private String resized = "<prefix><gray>The claim <#d24c9f><name> <gray>has been resized! Price: <#d24c9f><price>";
 
+        @Setting(required = true)
         private String deleted = "<prefix><green>Claim <white><claim_name></white> deleted successfully!";
 
-        @Setting("dont-have-any")
+        @Setting(value = "dont-have-any", required = true)
         private String dontHaveAny = "<prefix><red>You don't have any claims";
 
-        @Setting("sub-claim-created")
+        @Setting(value = "sub-claim-created", required = true)
         private String subCreated = "<prefix><gray>The sub claim <#d24c9f><name> <gray>has been created!";
 
-        @Setting("sub-claim-resized")
+        @Setting(value = "sub-claim-resized", required = true)
         private String subResized = "<prefix><gray>The sub claim <#d24c9f><name> <gray>has been resized!";
 
-        @Setting("member-added")
+        @Setting(value = "member-added", required = true)
         private String memberAdded = "<prefix><green>Player <white><player_head> <name></white> <green>added to <white><claim></white>!";
 
-        @Setting("member-remove")
+        @Setting(value = "member-remove", required = true)
         private String memberRemoved = "<prefix><red>Player <white><player_head> <name></white> <red>removed from <white><claim></white>!";
 
-        @Setting("member-already-added")
+        @Setting(value = "member-already-added", required = true)
         private String memberAlreadyAdded = "<prefix><red>This player is already in the claim!";
 
-        @Setting("member-already-banned")
+        @Setting(value = "member-already-banned", required = true)
         private String memberAlreadyBanned = "<prefix><red>This player is already banned!";
 
-        @Setting("cant-ban-member")
+        @Setting(value = "cant-ban-member", required = true)
         private String cantBanMember = "<prefix><red>You can't ban this member!";
 
-        @Setting("player-not-member")
+        @Setting(value = "player-not-member", required = true)
         private String playerNotMember = "<prefix><red>This player is not a member of this claim!";
 
-        @Setting("self-already-owner")
+        @Setting(value = "self-already-owner", required = true)
         private String selfAlreadyOwner = "<prefix><red>You're already the owner of this claim!";
 
-        @Setting("member-already-owner")
+        @Setting(value = "member-already-owner", required = true)
         private String memberAlreadyOwner = "<prefix><red>This member is already the owner of this claim!";
 
-        @Setting("claim-transferred")
+        @Setting(value = "claim-transferred", required = true)
         private String claimTransferred = "<prefix><green>Claim <white><claim></white> transferred to <white><player_head> <name></white>!";
 
-        @Setting("member-banned")
+        @Setting(value = "member-banned", required = true)
         private String memberBanned = "<prefix><green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
 
         private Permissions permissions = new Permissions();
@@ -90,70 +94,70 @@ public class Messages {
         @ConfigSerializable
         public static class Permissions {
 
-            @Setting("block-break")
+            @Setting(value = "block-break", required = true)
             private String breakBlock = "<prefix><red>You can't break blocks in this claim.";
 
-            @Setting("block-place")
+            @Setting(value = "block-place", required = true)
             private String placeBlock = "<prefix><red>You can't place blocks in this claim.";
 
-            @Setting("block-interact")
+            @Setting(value = "block-interact", required = true)
             private String interactBlock = "<prefix><red>You can't interact with blocks in this claim.";
 
-            @Setting("entity-interact")
+            @Setting(value = "entity-interact", required = true)
             private String interactEntity = "<prefix><red>You can't interact with entities in this claim.";
 
-            @Setting("entity-damage")
+            @Setting(value = "entity-damage", required = true)
             private String damageEntity = "<prefix><red>You can't damage entities in this claim.";
 
-            @Setting("item-use")
+            @Setting(value = "item-use", required = true)
             private String useItem = "<prefix><red>You can't use items in this claim.";
 
-            @Setting("item-pickup")
+            @Setting(value = "item-pickup", required = true)
             private String pickupItem = "<prefix><red>You can't pick up items in this claim.";
 
-            @Setting("item-drop")
+            @Setting(value = "item-drop", required = true)
             private String dropItem = "<prefix><red>You can't drop items in this claim.";
 
-            @Setting("damage-player")
+            @Setting(value = "damage-player", required = true)
             private String damagePlayer = "<prefix><red>You can't attack players in this claim.";
 
-            @Setting("ignite-block")
+            @Setting(value = "ignite-block", required = true)
             private String igniteBlock = "<prefix><red>You can't ignite blocks in this claim.";
 
-            @Setting("player-interact")
+            @Setting(value = "player-interact", required = true)
             private String playerInteract = "<prefix><red>You can't interact with that in this claim.";
 
-            @Setting("use-redstone")
+            @Setting(value = "use-redstone", required = true)
             private String useRedstone = "<prefix><red>You can't use redstone in this claim.";
 
-            @Setting("use-door")
+            @Setting(value = "use-door", required = true)
             private String useDoor = "<prefix><red>You can't use doors in this claim.";
 
-            @Setting("use-trapdoor")
+            @Setting(value = "use-trapdoor", required = true)
             private String useTrapdoor = "<prefix><red>You can't use trapdoors in this claim.";
 
-            @Setting("allow-flight")
+            @Setting(value = "allow-flight", required = true)
             private String allowFlight = "<prefix><red>You can't fly in this claim.";
 
-            @Setting("use-elytra")
+            @Setting(value = "use-elytra", required = true)
             private String useElytra = "<prefix><red>You can't use elytras in this claim.";
 
-            @Setting("ignore-locked")
+            @Setting(value = "ignore-locked", required = true)
             private String ignoreLocked = "<prefix><red>You can't enter this locked claim.";
 
-            @Setting("use-vehicle")
+            @Setting(value = "use-vehicle", required = true)
             private String useVehicle = "<prefix><red>You can't use vehicles in this claim.";
 
-            @Setting("trample-soil")
+            @Setting(value = "trample-soil", required = true)
             private String trampleSoil = "<prefix><red>You can't trample farmland in this claim.";
 
-            @Setting("harvest-crops")
+            @Setting(value = "harvest-crops", required = true)
             private String harvestCrops = "<prefix><red>You can't harvest crops in this claim.";
 
-            @Setting("plant-crops")
+            @Setting(value = "plant-crops", required = true)
             private String plantCrops = "<prefix><red>You can't plant crops in this claim.";
 
-            @Setting("use-wind-charge")
+            @Setting(value = "use-wind-charge", required = true)
             private String useWindCharge = "<prefix><red>You can't use wind charges in this claim.";
         }
 
@@ -161,10 +165,10 @@ public class Messages {
         @ConfigSerializable
         public static class Settings {
 
-            @Setting("join-message")
+            @Setting(value = "join-message", required = true)
             private String joinMessage = "<prefix><gray>[Claim <claim_name>] <white><message>";
 
-            @Setting("leave-message")
+            @Setting(value = "leave-message", required = true)
             private String leaveMessage = "<prefix><gray>[Claim <claim_name>] <white><message>";
         }
 
@@ -172,43 +176,43 @@ public class Messages {
         @ConfigSerializable
         public static class Selecting {
 
-            @Setting("first-selection")
+            @Setting(value = "first-selection", required = true)
             private String firstSelection = "<prefix><gray>Selected <#d24c9f>first corner <gray>at location <#d24c9f><location><gray>.";
 
-            @Setting("second-selection")
+            @Setting(value = "second-selection", required = true)
             private String secondSelection = "<prefix><gray>Selected <#d24c9f>second corner <gray>at location <#d24c9f><location><gray>. <#d24c9f>Left-Click <gray>to create your claim!";
 
-            @Setting("selection-removed")
+            @Setting(value = "selection-removed", required = true)
             private String selectionRemoved = "<prefix><gray>Your selection has been removed!";
 
-            @Setting("corner-unselected")
+            @Setting(value = "corner-unselected", required = true)
             private String cornerUnselected = "<prefix><gray>Corner at location <#d24c9f><location> <gray>has been unselected.";
 
-            @Setting("must-select-region")
+            @Setting(value = "must-select-region", required = true)
             private String mustSelectRegion = "<prefix><red>You must select a region with <#d24c9f>Left-Click<red>!";
 
-            @Setting("must-select-points")
+            @Setting(value = "must-select-points", required = true)
             private String mustSelectPoints = "<prefix><red>You must select two points!";
 
-            @Setting("claim-overlaps")
+            @Setting(value = "claim-overlaps", required = true)
             private String claimOverlaps = "<prefix><red>There's already a claim on this area!";
 
-            @Setting("selection-too-small")
+            @Setting(value = "selection-too-small", required = true)
             private String selectionTooSmall = "<prefix><red>The selected region is too small! <gray>(Should be at least 5x5)";
 
-            @Setting("not-enough-claimblocks")
+            @Setting(value = "not-enough-claimblocks", required = true)
             private String notEnoughClaimBlocks = "<prefix><red>You don't have enough claim blocks! <gray>Required: <white><required_blocks></white>, <gray>Current: <white><current_blocks>";
 
-            @Setting("land-already-claimed")
+            @Setting(value = "land-already-claimed", required = true)
             private String landAlreadyClaimed = "<prefix><red>Someone already claimed this land!";
 
-            @Setting("resizing-wrong-claim")
+            @Setting(value = "resizing-wrong-claim", required = true)
             private String resizingWrongClaim = "<prefix><red>You are not resizing this claim!";
 
-            @Setting("claim-within-sub")
+            @Setting(value = "claim-within-sub", required = true)
             private String claimWithinSub = "<prefix><red>Can't create a claim within a sub claim";
 
-            @Setting("sub-outside-boundaries")
+            @Setting(value = "sub-outside-boundaries", required = true)
             private String subOutsideBoundaries = "<prefix><red>Sub claim can't be outside of main claim boundaries";
         }
 
@@ -216,16 +220,16 @@ public class Messages {
         @ConfigSerializable
         public static class Resizing {
 
-            @Setting("select-a-corner")
+            @Setting(value = "select-a-corner", required = true)
             private String selectACorner = "<prefix><red>You should select a corner";
 
-            @Setting("enclose-claim-boundaries")
+            @Setting(value = "enclose-claim-boundaries", required = true)
             private String encloseClaimBoundaries = "<prefix><red>The new region must completely enclose the original claim boundaries!";
 
-            @Setting("within-main-claim")
+            @Setting(value = "within-main-claim", required = true)
             private String withinMainClaim = "<prefix><red>The new region must be inside of the main claim boundaries!";
 
-            @Setting("sub-within-sub")
+            @Setting(value = "sub-within-sub", required = true)
             private String subWithinSub = "<prefix><red>There's already a sub claim here!";
         }
     }
@@ -234,33 +238,35 @@ public class Messages {
     @ConfigSerializable
     public static class Commands {
 
-        @Setting("no-permission")
+        @Setting(value = "no-permission", required = true)
         private String noPermission = "<prefix><red>No permissions.";
 
+        @Setting(required = true)
         private String usage = "<prefix><gray>Command usage: <white>/<command> <usage>";
 
-        @Setting("invalid-argument")
+        @Setting(value = "invalid-argument", required = true)
         private String invalidArgument = "<prefix><red>Invalid argument provided!";
 
-        @Setting("missing-player")
+        @Setting(value = "missing-player", required = true)
         private String missingPlayer = "<prefix><red>You need to specify a player!";
 
-        @Setting("player-not-found")
+        @Setting(value = "player-not-found", required = true)
         private String playerNotFound = "<prefix><red>Player not found";
 
-        @Setting("not-your-claim")
+        @Setting(value = "not-your-claim", required = true)
         private String notYourClaim = "<prefix><red>This is not your claim!";
 
-        @Setting("not-in-claim")
+        @Setting(value = "not-in-claim", required = true)
         private String notInClaim = "<prefix><red>You're not standing in a claim!";
 
-        @Setting("claim-blocks")
+        @Setting(value = "claim-blocks", required = true)
         private ClaimBlocks claimBlocks = new ClaimBlocks();
 
         @Getter
         @ConfigSerializable
         public static class ClaimBlocks {
 
+            @Setting(required = true)
             private String summary = """
                     <prefix><gray><white><player_name></white>'s claim blocks breakdown:
                     
@@ -271,16 +277,16 @@ public class Messages {
                     <dark_gray><b>»</b> <gray>Used Blocks: <white><used_blocks>
                     <dark_gray><b>»</b> <gray>Available Blocks: <white><available_blocks>""";
 
-            @Setting("set-amount")
+            @Setting(value = "set-amount", required = true)
             private String setAmount = "<prefix><gray>You set <white><amount></white> claim blocks to <white><name></white>!";
 
-            @Setting
+            @Setting(required = true)
             private String invalid = "<prefix><red>Invalid amount of claim blocks!";
 
-            @Setting("add-amount")
+            @Setting(value = "add-amount", required = true)
             private String addAmount = "<prefix><gray>You added <white><amount></white> claim blocks to <white><name></white>!\n<gray>New amount: <white><new_amount>";
 
-            @Setting("remove-amount")
+            @Setting(value = "remove-amount", required = true)
             private String removeAmount = "<prefix><gray>You removed <white><amount></white> claim blocks from <white><name></white>!\n<gray>New amount: <white><new_amount>";
         }
     }
@@ -289,9 +295,10 @@ public class Messages {
     @ConfigSerializable
     public static class Dialogs {
 
+        @Setting(required = true)
         private Search search = new Search();
 
-        @Setting("rename-claim")
+        @Setting(value = "rename-claim", required = true)
         private SingleInput renameClaim = new SingleInput(
                 "Rename Your Claim", "Input the new name",
                 Map.of(
@@ -304,7 +311,7 @@ public class Messages {
                 )
         );
 
-        @Setting("rename-role")
+        @Setting(value = "rename-role", required = true)
         private SingleInput renameRole = new SingleInput(
                 "Rename | <role_name>", "Input the new name",
                 Map.of(
@@ -317,6 +324,7 @@ public class Messages {
                 )
         );
 
+        @Setting(required = true)
         private SingleInput setting = new SingleInput(
                 "Change Setting | <claim_name>", "<setting_name>",
                 Map.of(
@@ -329,7 +337,7 @@ public class Messages {
                 )
         );
 
-        @Setting("create-role")
+        @Setting(value = "create-role", required = true)
         private SingleInput createRole = new SingleInput(
                 "Create New Role", "Role Name",
                 Map.of(
@@ -346,13 +354,16 @@ public class Messages {
         @ConfigSerializable
         public static class Search {
 
+            @Setting(required = true)
             private String title = "Search";
 
+            @Setting(required = true)
             private String query = "Query";
 
-            @Setting("option-title")
+            @Setting(value = "option-title", required = true)
             private String optionTitle = "Search by";
 
+            @Setting(required = true)
             private Map<String, String> options = Map.of(
                     "name", "Claim Name",
                     "id", "Claim Id",
@@ -360,6 +371,7 @@ public class Messages {
                     "member", "Member Name"
             );
 
+            @Setting(required = true)
             private Map<String, Button> buttons = Map.of(
                     "submit", new Button(
                             "Search", "Click to search"
@@ -374,10 +386,13 @@ public class Messages {
         @ConfigSerializable
         public static class SingleInput {
 
+            @Setting(required = true)
             private String title;
 
+            @Setting(required = true)
             private String input;
 
+            @Setting(required = true)
             private Map<String, Button> buttons;
 
             public SingleInput(String title, String input, Map<String, Button> buttons) {
@@ -394,8 +409,10 @@ public class Messages {
         @ConfigSerializable
         public static class Button {
 
+            @Setting(required = true)
             private String label = "Button Label";
 
+            @Setting(required = true)
             private String tooltip = "Button Tooltip";
 
             public Button() {
@@ -418,6 +435,7 @@ public class Messages {
     @ConfigSerializable
     public static class Inputs {
 
+        @Setting(required = true)
         private String cancelled = "<prefix><red>Input cancelled.";
 
         private Title title = new Title();
@@ -429,10 +447,13 @@ public class Messages {
         @ConfigSerializable
         public static class Title {
 
+            @Setting(required = true)
             private boolean enabled = true;
 
+            @Setting(required = true)
             private String title = "<yellow>Enter Input";
 
+            @Setting(required = true)
             private String subtitle = "<green>Type in chat <gray>• <#ff0000>Sneak <red>to cancel";
         }
 
@@ -440,8 +461,10 @@ public class Messages {
         @ConfigSerializable
         public static class ActionBar {
 
+            @Setting(required = true)
             private boolean enabled = true;
 
+            @Setting(required = true)
             private String text = "<green>Type in chat <gray>• <#ff0000>Sneak <red>to cancel";
         }
     }
