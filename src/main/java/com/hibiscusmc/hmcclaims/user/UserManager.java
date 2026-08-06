@@ -148,18 +148,20 @@ public class UserManager {
             return CompletableFuture.completedFuture(cached);
         }
 
-        return loadingUsers.computeIfAbsent(uuid, id -> {
-            Storage storage = storageHolder.get();
+        CompletableFuture<User> future = loadingUsers.computeIfAbsent(uuid, id ->
+                storageHolder.get().users().getUser(id).thenApply(user -> {
+                    if (user == null) {
+                        user = new User(uuid, lastKnownName, 0L);
+                    }
 
-            return storage.users().getUser(id).thenApply(user -> {
-                if (user == null) {
-                    user = new User(uuid, lastKnownName, 0L);
-                }
+                    cacheUser(user);
+                    return user;
+                })
+        );
 
-                cacheUser(user);
-                return user;
-            }).whenComplete((user, throwable) -> loadingUsers.remove(id));
-        });
+        future.whenComplete((user, throwable) -> loadingUsers.remove(uuid, future));
+
+        return future;
     }
 
     private void touch(UUID uuid) {
