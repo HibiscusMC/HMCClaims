@@ -40,8 +40,10 @@ public final class HMCClaims extends JavaPlugin implements Module {
 
     @Override
     public void onEnable() {
-        Injector.create(this)
-                .injectMembers(this);
+        Injector injector = Injector.create(this);
+        injector.injectMembers(this);
+
+        HMCClaimsAPI.instance(injector.getInstance(HMCClaimsAPI.class));
 
         for (Service service : services) {
             service.start();

@@ -1,5 +1,9 @@
 package com.hibiscusmc.hmcclaims.listener;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimCreateEvent;
+import com.hibiscusmc.hmcclaims.api.event.ClaimResizeEvent;
+import com.hibiscusmc.hmcclaims.api.event.PreClaimCreateEvent;
+import com.hibiscusmc.hmcclaims.api.event.PreClaimResizeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
@@ -15,6 +19,7 @@ import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import me.lojosho.hibiscuscommons.hooks.Hooks;
@@ -186,7 +191,10 @@ public class PlayerSelectionListener implements Listener {
                         return;
                     }
 
-                    Claim claim = getClaimAndUpdate(player, selection, region, resizingClaim, storage);
+                    Claim claim = createOrUpdateClaim(player, selection, region, resizingClaim, storage);
+                    if (claim == null) {
+                        return;
+                    }
 
                     text.send(player, resizingClaim == null ? messages.claims().created() : messages.claims().resized(), Map.of(
                             "name", claim.name(),
@@ -195,7 +203,10 @@ public class PlayerSelectionListener implements Listener {
 
                     marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
                 } else {
-                    Claim claim = getClaimAndUpdate(player, selection, region, resizingClaim, storage);
+                    Claim claim = createOrUpdateClaim(player, selection, region, resizingClaim, storage);
+                    if (claim == null) {
+                        return;
+                    }
 
                     text.send(player, resizingClaim == null ? messages.claims().subCreated() : messages.claims().subResized(), Map.of(
                             "name", claim.name()
@@ -279,12 +290,32 @@ public class PlayerSelectionListener implements Listener {
      * @param resizingClaim The existing {@link Claim} currently being resized, or {@code null}
      *                      if a new claim should be created.
      * @param storage       The {@link Storage} system used to persist claim data.
-     * @return The newly created or updated {@link Claim} instance.
+     * @return The newly created or updated {@link Claim} instance, or {@code null} if the event was cancelled.
      */
-    private Claim getClaimAndUpdate(Player player, Selection selection, ClaimRegion region, Claim resizingClaim, Storage storage) {
-        Claim claim = resizingClaim == null ? claimManager.createClaim(player, region, selection.main()) : resizingClaim;
-        if (resizingClaim != null) {
-            resizingClaim.region(region);
+    private Claim createOrUpdateClaim(Player player, Selection selection, ClaimRegion region, Claim resizingClaim, Storage storage) {
+        Claim claim;
+        if (resizingClaim == null) {
+            PreClaimCreateEvent event = new PreClaimCreateEvent(player, region, selection.main());
+            EventUtil.call(event);
+
+            if (event.isCancelled()) {
+                return null;
+            }
+
+            claim = claimManager.createClaim(player, region, selection.main());
+            EventUtil.call(new ClaimCreateEvent(player, claim));
+        } else {
+            claim = resizingClaim;
+            PreClaimResizeEvent event = new PreClaimResizeEvent(player, claim);
+            EventUtil.call(event);
+
+            if (event.isCancelled()) {
+                return null;
+            }
+
+            EventUtil.call(new ClaimResizeEvent(player, claim, claim.region(), region));
+
+            claim.region(region);
             claimManager.addClaimToCache(claim);
 
             ClaimRepository claimRepository = storage.claims();
