@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import lombok.Getter;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -11,10 +12,13 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
+import team.unnamed.inject.Singleton;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
+@Singleton
 public class PAPIExpansion extends PlaceholderExpansion {
 
     @Inject
@@ -25,6 +29,9 @@ public class PAPIExpansion extends PlaceholderExpansion {
 
     @Inject
     private ClaimManager claimManager;
+
+    @Getter
+    private static PAPIExpansion instance;
 
     @NotNull
     @Override
@@ -44,9 +51,28 @@ public class PAPIExpansion extends PlaceholderExpansion {
         return plugin.getPluginMeta().getVersion();
     }
 
+    @NotNull
+    @Override
+    public List<String> getPlaceholders() {
+        return Arrays.asList(
+                // Claim Placeholders
+                "%hmcclaims_claim_name%",
+
+                // User Placeholders
+                "%hmcclaims_user_claims%",
+                "%hmcclaims_user_claim_blocks%"
+        );
+    }
+
     @Override
     public boolean persist() {
         return true;
+    }
+
+    @Override
+    public boolean register() {
+        instance = this;
+        return super.register();
     }
 
     @Override

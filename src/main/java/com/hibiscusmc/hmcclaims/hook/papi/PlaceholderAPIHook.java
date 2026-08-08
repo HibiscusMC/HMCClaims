@@ -10,8 +10,6 @@ public class PlaceholderAPIHook implements Hook {
     @Inject
     private Injector injector;
 
-    private PAPIExpansion expansion;
-
     @Override
     public @NotNull String dependsOn() {
         return "PlaceholderAPI";
@@ -24,13 +22,15 @@ public class PlaceholderAPIHook implements Hook {
 
     @Override
     public void register() {
-        expansion = injector.getInstance(PAPIExpansion.class);
+        PAPIExpansion expansion = injector.getInstance(PAPIExpansion.class);
 
         expansion.register();
     }
 
     @Override
     public void unregister() {
+        PAPIExpansion expansion = PAPIExpansion.instance();
+
         if (expansion != null) {
             expansion.unregister();
         }
