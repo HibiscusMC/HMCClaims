@@ -18,8 +18,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
-import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
@@ -123,24 +123,30 @@ public class ClaimLifecycleListener implements Listener {
     }
 
     @EventHandler
-    public void onWorldLoad(WorldLoadEvent event) {
-        String worldName = event.getWorld().getName();
+    public void onServerLoad(ServerLoadEvent event) {
+        if (event.getType() != ServerLoadEvent.LoadType.STARTUP) {
+            return;
+        }
 
-        Storage storage = storageHolder.get();
+        for (World world : Bukkit.getWorlds()) {
+            String worldName = world.getName();
 
-        long start = System.currentTimeMillis();
-        storage.claims().getAllClaims(worldName).thenAccept(holder -> {
-                    tempChunksHolder.put(worldName, holder.chunks());
+            Storage storage = storageHolder.get();
 
-                    for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
-                        tempPlayersHolder.computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
-                                .addAll(playerEntry.getValue());
+            long start = System.currentTimeMillis();
+            storage.claims().getAllClaims(worldName).thenAccept(holder -> {
+                        tempChunksHolder.put(worldName, holder.chunks());
+
+                        for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
+                            tempPlayersHolder.computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
+                                    .addAll(playerEntry.getValue());
+                        }
                     }
-                }
-        ).join();
-        long end = System.currentTimeMillis() - start;
+            ).join();
+            long end = System.currentTimeMillis() - start;
 
-        Logger.log("Loaded " + tempChunksHolder.get(worldName).size() + " chunks for world " + worldName + " in " + end + "ms");
+            Logger.log("Loaded " + tempChunksHolder.get(worldName).size() + " chunks for world '" + worldName + "' in " + end + "ms");
+        }
     }
 
     @EventHandler

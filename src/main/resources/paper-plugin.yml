@@ -4,7 +4,6 @@ api-version: "${serverVersion}"
 description: "A modern claims engine designed for performance, flexibility, and reliability."
 authors:
   - Sqlace
-load: STARTUP
 
 main: com.hibiscusmc.hmcclaims.HMCClaims
 loader: com.hibiscusmc.hmcclaims.HMCClaimsLoader
