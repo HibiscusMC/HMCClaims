@@ -45,7 +45,7 @@ public class MovementPermissionListener implements Listener {
 
         Claim claim = claimManager.getClaimAt(to).orElse(null);
 
-        if (claim == null || !claim.locked()) {
+        if (claim == null) {
             return;
         }
 
@@ -64,8 +64,10 @@ public class MovementPermissionListener implements Listener {
 
         if (banned) {
             text.sendNotification(player, messagesHolder.get().claims().permissions().memberBanned());
-        } else {
+        } else if (claim.locked()) {
             text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        } else {
+            return;
         }
 
         event.setTo(from);
@@ -77,7 +79,7 @@ public class MovementPermissionListener implements Listener {
 
         Claim claim = claimManager.getClaimAt(to).orElse(null);
 
-        if (claim == null || !claim.locked()) {
+        if (claim == null) {
             return;
         }
 
@@ -95,8 +97,10 @@ public class MovementPermissionListener implements Listener {
 
         if (banned) {
             text.sendNotification(player, messagesHolder.get().claims().permissions().memberBanned());
-        } else {
+        } else if (claim.locked()) {
             text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        } else {
+            return;
         }
 
         event.setCancelled(true);
