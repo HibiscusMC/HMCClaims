@@ -106,7 +106,7 @@ public class SQLClaimRepository implements ClaimRepository {
                             UUID parentId = ByteUtil.bytesToUUID(rs.getBytes("parent_uuid"));
                             Set<RawClaim> claims = subClaims.computeIfAbsent(parentId, k -> new HashSet<>());
 
-                            claims.add(buildRawClaim(rs, Set.of()));
+                            claims.add(buildRawClaim(rs, new HashSet<>()));
                         }
                     }
                 }
@@ -128,7 +128,7 @@ public class SQLClaimRepository implements ClaimRepository {
                             int minChunkZ = minZ >> 4;
                             int maxChunkZ = maxZ >> 4;
 
-                            RawClaim claim = buildRawClaim(rs, subClaims.getOrDefault(claimId, Set.of()));
+                            RawClaim claim = buildRawClaim(rs, subClaims.getOrDefault(claimId, new HashSet<>()));
 
                             players.computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet())
                                     .add(claim);
@@ -168,7 +168,7 @@ public class SQLClaimRepository implements ClaimRepository {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        claims.add(buildRawClaim(rs, Set.of()));
+                        claims.add(buildRawClaim(rs, new HashSet<>()));
                     }
                 }
 
@@ -189,7 +189,7 @@ public class SQLClaimRepository implements ClaimRepository {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        return buildRawClaim(rs, Set.of());
+                        return buildRawClaim(rs, new HashSet<>());
                     }
 
                     return null;

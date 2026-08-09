@@ -26,7 +26,7 @@ public class DefaultRoles {
         private ClaimRole owner = new ClaimRole(null, "Owner", new HashSet<>(PermissionRegistry.getAllPermissions()));
 
         @Setting(required = true)
-        private ClaimRole member = new ClaimRole(null, "Member", Set.of(
+        private ClaimRole member = new ClaimRole(null, "Member", new HashSet<>(Set.of(
                 Permission.PLACE_BLOCK,
                 Permission.BREAK_BLOCK,
                 Permission.USE_CONTAINER,
@@ -45,13 +45,13 @@ public class DefaultRoles {
                 Permission.USE_VEHICLE,
                 Permission.HARVEST_CROPS,
                 Permission.PLANT_CROPS
-        ));
+        )));
 
         @Setting(required = true)
-        private ClaimRole everyone = new ClaimRole(null, "Everyone", Set.of(
+        private ClaimRole everyone = new ClaimRole(null, "Everyone", new HashSet<>(Set.of(
                 Permission.USE_ITEM,
                 Permission.DROP_ITEM,
                 Permission.PICKUP_ITEM
-        ));
+        )));
     }
 }
