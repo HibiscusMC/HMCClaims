@@ -9,7 +9,6 @@ import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.user.User;
-import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
@@ -19,7 +18,6 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.Getter;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -84,9 +82,6 @@ public class ClaimManager {
     private ConfigHolder<DefaultSettings> defaultSettingsHolder;
 
     @Inject
-    private UserManager userManager;
-
-    @Inject
     private StorageHolder storageHolder;
 
     /**
@@ -120,17 +115,14 @@ public class ClaimManager {
     /**
      * Creates a new claim, registers it in the cache, and updates user claim blocks.
      *
-     * @param player The owner of the claim.
+     * @param user The owner of the claim.
      * @param region The physical bounds.
      * @param main   The main claim, if creating a sub-claim.
      * @return The newly created {@link Claim} instance.
      */
     @Contract("_, _, _ -> new")
-    public Claim createClaim(@NotNull Player player, @NotNull ClaimRegion region, @Nullable Claim main) {
-        User user = userManager.getUser(player.getUniqueId())
-                .orElseThrow(() -> new IllegalStateException("User is not loaded"));
-
-        long totalMainClaims = playerClaims.getOrDefault(player.getUniqueId(), new HashSet<>())
+    public Claim createClaim(@NotNull User user, @NotNull ClaimRegion region, @Nullable Claim main) {
+        long totalMainClaims = playerClaims.getOrDefault(user.uuid(), new HashSet<>())
                 .stream()
                 .filter(claim -> claim.main() == null)
                 .count();
@@ -138,7 +130,7 @@ public class ClaimManager {
         Claim newClaim = new Claim(
                 UUID.randomUUID(),
                 main,
-                new NameAndId(player.getUniqueId(), player.getName()),
+                new NameAndId(user.uuid(), user.lastKnownName()),
                 region,
                 new ArrayList<>(List.of(
                         rolesHolder.get().defaultRoles().owner(),
