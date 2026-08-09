@@ -6,6 +6,7 @@ import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -84,6 +85,10 @@ public class PlayerDataListener implements Listener {
                     if (ex != null) {
                         Logger.error("Couldn't save player data.", ex);
 
+                        return;
+                    }
+
+                    if (Bukkit.getPlayer(uuid) != null) {
                         return;
                     }
 
