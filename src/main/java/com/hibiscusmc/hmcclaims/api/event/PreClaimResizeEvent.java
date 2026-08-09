@@ -3,7 +3,6 @@ package com.hibiscusmc.hmcclaims.api.event;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -11,7 +10,6 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-@RequiredArgsConstructor
 public class PreClaimResizeEvent extends Event implements Cancellable {
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
@@ -23,6 +21,12 @@ public class PreClaimResizeEvent extends Event implements Cancellable {
 
     @NotNull
     private final Claim claim;
+
+    public PreClaimResizeEvent(@NotNull Player player, @NotNull Claim claim) {
+        super(true);
+        this.player = player;
+        this.claim = claim;
+    }
 
     @Override
     public boolean isCancelled() {
