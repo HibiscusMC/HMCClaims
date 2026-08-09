@@ -166,7 +166,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = rootProject.group.toString()
             artifactId = project.name
-            version = rootProject.version.toString()
+            version = version(rootProject.version.toString())
 
             artifact(tasks.shadowJar)
             artifact(tasks.named("javadocJar"))
