@@ -159,6 +159,9 @@ public class Messages {
 
             @Setting(value = "use-wind-charge", required = true)
             private String useWindCharge = "<prefix><red>You can't use wind charges in this claim.";
+
+            @Setting(value = "member-banned", required = true)
+            private String memberBanned = "<prefix><red>You're banned from this claim.";
         }
 
         @Getter

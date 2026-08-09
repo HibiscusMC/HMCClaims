@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.listener.permission;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
@@ -42,18 +43,31 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        Claim toClaim = claimManager.getClaimAt(to).orElse(null);
+        Claim claim = claimManager.getClaimAt(to).orElse(null);
 
-        if (toClaim == null || !toClaim.locked()) {
+        if (claim == null || !claim.locked()) {
             return;
         }
 
         Player player = event.getPlayer();
-        if (toClaim.hasPermission(player.getUniqueId(), Permission.IGNORE_LOCKED)) {
+
+        ClaimMember member = claim.getMember(player.getUniqueId())
+                .orElse(null);
+        boolean banned = member != null && member.banned();
+        boolean hasPermission = member != null ?
+                member.hasPermission(Permission.IGNORE_LOCKED) :
+                claim.roleRegistry().everyoneRole().hasPermission(Permission.IGNORE_LOCKED);
+
+        if (!banned && hasPermission) {
             return;
         }
 
-        text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        if (banned) {
+            text.sendNotification(player, messagesHolder.get().claims().permissions().memberBanned());
+        } else {
+            text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        }
+
         event.setTo(from);
     }
 
@@ -61,18 +75,30 @@ public class MovementPermissionListener implements Listener {
     public void onLockedClaimTeleport(PlayerTeleportEvent event) {
         Location to = event.getTo();
 
-        Claim toClaim = claimManager.getClaimAt(to).orElse(null);
+        Claim claim = claimManager.getClaimAt(to).orElse(null);
 
-        if (toClaim == null || !toClaim.locked()) {
+        if (claim == null || !claim.locked()) {
             return;
         }
 
         Player player = event.getPlayer();
-        if (toClaim.hasPermission(player.getUniqueId(), Permission.IGNORE_LOCKED)) {
+        ClaimMember member = claim.getMember(player.getUniqueId())
+                .orElse(null);
+        boolean banned = member != null && member.banned();
+        boolean hasPermission = member != null ?
+                member.hasPermission(Permission.IGNORE_LOCKED) :
+                claim.roleRegistry().everyoneRole().hasPermission(Permission.IGNORE_LOCKED);
+
+        if (!banned && hasPermission) {
             return;
         }
 
-        text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        if (banned) {
+            text.sendNotification(player, messagesHolder.get().claims().permissions().memberBanned());
+        } else {
+            text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
+        }
+
         event.setCancelled(true);
     }
 
