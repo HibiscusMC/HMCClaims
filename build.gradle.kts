@@ -11,7 +11,7 @@ plugins {
 group = "com.hibiscusmc"
 version = "0.2.2"
 
-val serverVersion = "26.1.2"
+val serverVersion = "26.2"
 val serverSnapshot = "build.+"
 
 repositories {
@@ -39,16 +39,16 @@ dependencies {
     }
 
     // InvUI
-    implementation("xyz.xenondevs.invui:invui:2.0.0")
+    implementation("xyz.xenondevs.invui:invui:2.3.0")
 
     // HibiscusCommons
-    compileOnly("me.lojosho:HibiscusCommons:0.9.1")
+    compileOnly("me.lojosho:HibiscusCommons:0.9.3")
     // PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.12.3")
 
     // Configurate
-    implementation("org.spongepowered:configurate-core:4.4.4-HMC")
-    implementation("org.spongepowered:configurate-yaml:4.4.4-HMC")
+    implementation("org.spongepowered:configurate-core:4.4.5-HMC")
+    implementation("org.spongepowered:configurate-yaml:4.4.5-HMC")
 
     // HikariCP
     compileOnly("com.zaxxer:HikariCP:7.0.2")
@@ -120,9 +120,9 @@ tasks {
 
     runServer {
         downloadPlugins {
-            modrinth("placeholderapi", "2.12.2")
+            modrinth("placeholderapi", "pIvQcXW8")
             modrinth("luckperms", "v5.5.17-bukkit")
-            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.1/HibiscusCommons-0.9.1.jar")
+            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.3/HibiscusCommons-0.9.3.jar")
         }
 
         minecraftVersion(serverVersion)

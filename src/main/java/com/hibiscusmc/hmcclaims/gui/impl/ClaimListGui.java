@@ -257,6 +257,7 @@ public class ClaimListGui implements BaseGui {
                 .setItemProvider(player -> {
                     ItemStack item = searchIcon.item();
                     item.editMeta(meta -> {
+                        meta.itemName(TextUtil.parseItem(searchIcon.name()));
                         Query searchQuery = metadata.searchQuery().get();
                         String query = searchIcon.noQuery();
 

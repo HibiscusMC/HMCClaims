@@ -402,6 +402,8 @@ public class ClaimMemberListGui extends ClaimListGui {
     private ItemStack buildSearchIcon(@NotNull AtomicReference<String> searchQuery) {
         ItemStack item = searchIcon.item();
         item.editMeta(meta -> {
+            meta.itemName(TextUtil.parseItem(searchIcon.name()));
+
             String query = searchQuery.get();
             if (query == null || query.isEmpty()) {
                 query = searchIcon.noQuery();
