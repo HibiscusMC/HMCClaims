@@ -1,5 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener.setting;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimEnterEvent;
+import com.hibiscusmc.hmcclaims.api.event.ClaimLeaveEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
@@ -8,6 +10,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -68,10 +71,12 @@ public class MovementSettingListener implements Listener {
 
         if (userClaim != null && toClaim == null) {
             // Player left claim
+            EventUtil.call(new ClaimLeaveEvent(player, userClaim));
             sendLeaveMessage(player, userClaim);
             user.currentClaim(null);
         } else {
             // Player join claim
+            EventUtil.call(new ClaimEnterEvent(player, toClaim));
             user.currentClaim(toClaim);
             sendJoinMessage(player, toClaim);
         }
