@@ -8,8 +8,8 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
 
-group = "com.hibiscusmc"
-version = "0.2.2"
+group = "com.hibiscusmc.hmcclaims"
+version = "0.2.3"
 
 val serverVersion = "26.2"
 val serverSnapshot = "build.+"
