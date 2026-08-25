@@ -168,7 +168,7 @@ public class ClaimSettingsGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 gui.addIngredient(entry.getCharKey(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -189,7 +189,7 @@ public class ClaimSettingsGui extends ClaimListGui {
             }
 
             gui.addIngredient('(', Item.builder()
-                    .setItemProvider(previousPage.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(previousPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage - 1;
                         if (!settingPages.containsKey(page)) {
@@ -201,7 +201,7 @@ public class ClaimSettingsGui extends ClaimListGui {
                     .build());
 
             gui.addIngredient(')', Item.builder()
-                    .setItemProvider(nextPage.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(nextPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage + 1;
                         if (!settingPages.containsKey(page)) {
@@ -214,7 +214,7 @@ public class ClaimSettingsGui extends ClaimListGui {
 
             if (isValidIcon(backIcon)) {
                 gui.addIngredient('$', Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
                         .build()
                 );
@@ -224,7 +224,7 @@ public class ClaimSettingsGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui)
@@ -279,8 +279,8 @@ public class ClaimSettingsGui extends ClaimListGui {
             ItemStack settingItem = toggleIcon.icon().item();
             if (settingItem.hasItemMeta()) {
                 ItemMeta meta = settingItem.getItemMeta();
-                if (meta.hasCustomName()) {
-                    settingName = TextUtil.unparse(meta.customName());
+                if (meta.hasItemName()) {
+                    settingName = TextUtil.unparse(meta.itemName());
                 }
             }
 
@@ -305,7 +305,7 @@ public class ClaimSettingsGui extends ClaimListGui {
 
         return new SettingItem(
                 Item.builder()
-                        .setItemProvider(p -> new ItemWrapper(buildSettingIcon(holder, toggleIcon.icon(), toggleIcon.notSet())))
+                        .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(buildSettingIcon(holder, toggleIcon.icon(), toggleIcon.notSet()), player)))
                         .addClickHandler((it, click) -> {
                             if (toggleIcon.hasModifyIcon()) {
                                 return;
@@ -328,7 +328,7 @@ public class ClaimSettingsGui extends ClaimListGui {
                                         icon = modifyIcon.disabled();
                                     }
 
-                                    return new ItemWrapper(buildSettingIcon(holder, icon, toggleIcon.notSet()));
+                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(buildSettingIcon(holder, icon, toggleIcon.notSet()), player));
                                 })
                                 .addClickHandler(action)
                                 .build()

@@ -78,7 +78,7 @@ public class SubClaimManageGui extends ClaimManageGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui)
@@ -101,7 +101,7 @@ public class SubClaimManageGui extends ClaimManageGui {
         AtomicBoolean processed = new AtomicBoolean(false);
 
         return Item.builder()
-                .setItemProvider(p -> new ItemWrapper(processed.get() ? inheritPermissionsSuccessIcon : inheritPermissionsIcon.item()))
+                .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(processed.get() ? inheritPermissionsSuccessIcon : inheritPermissionsIcon.item(), p)))
                 .addClickHandler((it, click) -> {
                     if (processed.getAndSet(true)) {
                         return;

@@ -63,7 +63,7 @@ public class CustomItemSerializer implements TypeSerializer<ItemStack> {
 
         String name = get(node.node(NAME), String.class);
         if (name != null) {
-            meta.customName(TextUtil.parseItem(name));
+            meta.itemName(TextUtil.parseItem(name));
         }
 
         List<String> lore = getList(node.node(LORE), String.class);
@@ -150,8 +150,8 @@ public class CustomItemSerializer implements TypeSerializer<ItemStack> {
         }
 
         String name = null;
-        if (meta != null && meta.hasCustomName()) {
-            name = TextUtil.unparse(meta.customName());
+        if (meta != null && meta.hasItemName()) {
+            name = TextUtil.unparse(meta.itemName());
         }
 
         List<String> lore = null;

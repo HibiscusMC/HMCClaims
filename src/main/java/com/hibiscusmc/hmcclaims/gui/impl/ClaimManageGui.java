@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Singleton
-@SuppressWarnings({"UnstableApiUsage"})
 public class ClaimManageGui extends ClaimListGui {
 
     @Inject
@@ -161,7 +160,7 @@ public class ClaimManageGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split windowBuilder = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui)
@@ -218,7 +217,7 @@ public class ClaimManageGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 gui.addIngredient((char) entry.getKey().intValue(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -230,9 +229,9 @@ public class ClaimManageGui extends ClaimListGui {
             tabsBuilder.accept(gui, guis, player);
 
             gui.addIngredient('(', buildRenameIcon(player, claim, metadata));
-            gui.addIngredient(')', buildLockUnlockIcon(claim));
+            gui.addIngredient(')', buildLockUnlockIcon(claim, player));
             gui.addIngredient('%', Item.builder()
-                    .setItemProvider(bannedIcon.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(bannedIcon.item(), player))
                     .addClickHandler(click ->
                             guis.get(ClaimBannedListGui.class)
                                     .open(player, metadata)
@@ -240,7 +239,7 @@ public class ClaimManageGui extends ClaimListGui {
                     .build());
             gui.addIngredient('&', buildResizeIcon(player, claim));
             gui.addIngredient('*', Item.builder()
-                    .setItemProvider(deleteIcon.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(deleteIcon.item(), player))
                     .addClickHandler(click ->
                             guis.get(ClaimDeleteGui.class)
                                     .open(player, metadata)
@@ -249,7 +248,7 @@ public class ClaimManageGui extends ClaimListGui {
 
             if (isValidIcon(backIcon)) {
                 gui.addIngredient('$', Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
                         .build()
                 );
@@ -259,7 +258,7 @@ public class ClaimManageGui extends ClaimListGui {
 
     private Item buildTransferIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
-                .setItemProvider(transferIcon.item())
+                .setItemProvider(TextUtil.parseItemPlaceholders(transferIcon.item(), player))
                 .addClickHandler(click -> {
                     Input<?> currentInput = inputManager.fetch(player);
 
@@ -312,7 +311,7 @@ public class ClaimManageGui extends ClaimListGui {
 
     private Item buildRenameIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
-                .setItemProvider(renameIcon.item())
+                .setItemProvider(TextUtil.parseItemPlaceholders(renameIcon.item(), player))
                 .addClickHandler(click -> new SingleInputDialog()
                         .create(
                                 messagesHolder.get().dialogs().renameClaim(),
@@ -333,9 +332,9 @@ public class ClaimManageGui extends ClaimListGui {
                 .build();
     }
 
-    private Item buildLockUnlockIcon(@NotNull Claim claim) {
+    private Item buildLockUnlockIcon(@NotNull Claim claim, Player player) {
         return Item.builder()
-                .setItemProvider(p -> new ItemWrapper(claim.locked() ? unlockIcon : lockIcon.item()))
+                .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(claim.locked() ? unlockIcon : lockIcon.item(), player)))
                 .addClickHandler((it, click) -> {
                     claim.locked(!claim.locked());
                     it.notifyWindows();
@@ -345,7 +344,7 @@ public class ClaimManageGui extends ClaimListGui {
 
     private Item buildResizeIcon(@NotNull Player player, @NotNull Claim claim) {
         return Item.builder()
-                .setItemProvider(resizeIcon.item())
+                .setItemProvider(TextUtil.parseItemPlaceholders(resizeIcon.item(), player))
                 .addClickHandler(click -> {
                     User user = userManager.getUser(player.getUniqueId())
                             .orElseThrow(() -> new IllegalStateException("User not loaded!"));

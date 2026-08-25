@@ -192,7 +192,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -202,11 +202,11 @@ public class ClaimMemberListGui extends ClaimListGui {
             }
 
             pagedGui.addIngredient('(', BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(previousPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
                     .build());
             pagedGui.addIngredient(')', BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(nextPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                     .build());
 
@@ -214,7 +214,7 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             if (isValidIcon(backIcon)) {
                 pagedGui.addIngredient('$', Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
                         .build()
                 );
@@ -247,7 +247,7 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split builder = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui);
@@ -313,13 +313,13 @@ public class ClaimMemberListGui extends ClaimListGui {
             ItemStack head = ItemUtil.buildHeadWithName(member.lastKnownName());
             if (canManage) {
                 ItemUtil.applyDisplay(head,
-                        TextUtil.parseItem(memberIcon.name(), data),
-                        TextUtil.parseItemLore(memberIcon.lore(), data)
+                        TextUtil.parseItem(memberIcon.name(), player, data),
+                        TextUtil.parseItemLore(memberIcon.lore(), player, data)
                 );
             } else {
                 ItemUtil.applyDisplay(head,
-                        TextUtil.parseItem(unmanageableMemberIcon.name(), data),
-                        TextUtil.parseItemLore(unmanageableMemberIcon.lore(), data)
+                        TextUtil.parseItem(unmanageableMemberIcon.name(), player, data),
+                        TextUtil.parseItemLore(unmanageableMemberIcon.lore(), player, data)
                 );
             }
 
@@ -337,7 +337,7 @@ public class ClaimMemberListGui extends ClaimListGui {
 
     private Item buildSearch(@NotNull Metadata metadata, Runnable update) {
         return Item.builder()
-                .setItemProvider(player -> new ItemWrapper(buildSearchIcon(metadata.searchQuery())))
+                .setItemProvider(player -> new ItemWrapper(buildSearchIcon(metadata.searchQuery(), player)))
                 .addClickHandler((it, click) -> new SearchDialog()
                         .create(messagesHolder.get().dialogs())
                         .onSubmit(view -> {
@@ -367,7 +367,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                 .toList();
 
         return Item.builder()
-                .setItemProvider(player -> new ItemWrapper(buildFilterIcon(metadata.filter(), roles)))
+                .setItemProvider(player -> new ItemWrapper(buildFilterIcon(metadata.filter(), player, roles)))
                 .addClickHandler((it, click) -> {
                     boolean isNext = click.clickType() == ClickType.LEFT;
 
@@ -399,17 +399,17 @@ public class ClaimMemberListGui extends ClaimListGui {
     }
 
     @NotNull
-    private ItemStack buildSearchIcon(@NotNull AtomicReference<String> searchQuery) {
+    private ItemStack buildSearchIcon(@NotNull AtomicReference<String> searchQuery, Player player) {
         ItemStack item = searchIcon.item();
         item.editMeta(meta -> {
-            meta.itemName(TextUtil.parseItem(searchIcon.name()));
+            meta.itemName(TextUtil.parseItem(searchIcon.name(), player));
 
             String query = searchQuery.get();
             if (query == null || query.isEmpty()) {
                 query = searchIcon.noQuery();
             }
 
-            meta.lore(TextUtil.parseItemLore(searchIcon.lore(), Map.of(
+            meta.lore(TextUtil.parseItemLore(searchIcon.lore(), player, Map.of(
                     "query", query
             )));
         });
@@ -418,10 +418,10 @@ public class ClaimMemberListGui extends ClaimListGui {
     }
 
     @NotNull
-    private ItemStack buildFilterIcon(@NotNull AtomicReference<String> filterQuery, @NotNull List<ClaimRole> roles) {
+    private ItemStack buildFilterIcon(@NotNull AtomicReference<String> filterQuery, Player player, @NotNull List<ClaimRole> roles) {
         ItemStack item = filterIcon.item();
         item.editMeta(meta -> {
-            meta.customName(TextUtil.parseItem(filterIcon.name()));
+            meta.itemName(TextUtil.parseItem(filterIcon.name(), player));
 
             List<Component> lore = new ArrayList<>();
             for (String line : filterIcon.lore()) {
@@ -443,7 +443,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                         boolean selected = (id.equalsIgnoreCase("ALL") && filterQuery.get() == null) || id.equals(filter);
 
                         String base = line.replace("<filter_list>", selected ? filterIcon.selected() : filterIcon.unselected());
-                        lore.add(TextUtil.parseItem(base, Map.of(
+                        lore.add(TextUtil.parseItem(base, player, Map.of(
                                 "name", name
                         )));
                     }
@@ -451,7 +451,7 @@ public class ClaimMemberListGui extends ClaimListGui {
                     continue;
                 }
 
-                lore.add(TextUtil.parseItem(line));
+                lore.add(TextUtil.parseItem(line, player));
             }
 
             meta.lore(lore);
@@ -462,7 +462,7 @@ public class ClaimMemberListGui extends ClaimListGui {
 
     private Item buildAddMemberIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
-                .setItemProvider(addMemberIcon.item())
+                .setItemProvider(TextUtil.parseItemPlaceholders(addMemberIcon.item(), player))
                 .addClickHandler(click -> {
                     Input<?> currentInput = inputManager.fetch(player);
 

@@ -7,6 +7,7 @@ import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimRolesGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimSettingsGui;
 import com.hibiscusmc.hmcclaims.gui.impl.SubClaimManageGui;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharList;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.xenondevs.invui.gui.Gui;
 import xyz.xenondevs.invui.item.Item;
+import xyz.xenondevs.invui.item.ItemWrapper;
 import xyz.xenondevs.invui.util.TriConsumer;
 
 import java.util.HashSet;
@@ -140,7 +142,7 @@ public interface BaseGui {
                 TabIcon tab = entry.getValue();
 
                 gui.addIngredient(entry.getCharKey(), Item.builder()
-                        .setItemProvider(tab.item())
+                        .setItemProvider((p) -> new ItemWrapper(TextUtil.parseItemPlaceholders(tab.item(), player)))
                         .addClickHandler(click -> {
                             if (tab.iconTab().equals(currentTab)) {
                                 return;
@@ -167,7 +169,7 @@ public interface BaseGui {
 
         for (GuiTemplate.Icon icon : icons.values()) {
             items.put(icon.slot(), Item.builder()
-                    .setItemProvider(icon.item())
+                    .setItemProvider(player -> new ItemWrapper(TextUtil.parseItemPlaceholders(icon.item(), player)))
                     .addClickHandler(click -> (switch (click.clickType()) {
                         case LEFT -> icon.leftClickActions();
                         case RIGHT -> icon.rightClickActions();

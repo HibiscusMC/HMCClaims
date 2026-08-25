@@ -8,6 +8,7 @@ import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
@@ -110,7 +111,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         if (isValidIcon(backIcon)) {
             guiBuilder.addIngredient((char) 2, Item.builder()
-                    .setItemProvider(backIcon.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                     .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
                     .build());
         }
@@ -130,9 +131,9 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(
-                        canKick ?
+                        TextUtil.parseItemPlaceholders(canKick ?
                                 kickIcon.item() :
-                                cantKickIcon
+                                cantKickIcon, player)
                 ))
                 .addClickHandler(click -> {
                     if (!canKick) {
@@ -159,9 +160,9 @@ public abstract class ClaimMemberManageGui implements BaseGui {
 
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(
-                        canBan ?
+                        TextUtil.parseItemPlaceholders(canBan ?
                                 banIcon.item() :
-                                cantBanIcon
+                                cantBanIcon, player)
                 ))
                 .addClickHandler(click -> {
                     if (!canBan) {

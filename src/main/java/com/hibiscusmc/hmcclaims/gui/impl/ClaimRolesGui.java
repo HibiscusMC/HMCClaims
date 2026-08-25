@@ -170,7 +170,7 @@ public class ClaimRolesGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -180,11 +180,11 @@ public class ClaimRolesGui extends ClaimListGui {
             }
 
             pagedGui.addIngredient('(', BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(previousPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
                     .build());
             pagedGui.addIngredient(')', BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(nextPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                     .build());
 
@@ -194,7 +194,7 @@ public class ClaimRolesGui extends ClaimListGui {
 
             if (isValidIcon(backIcon)) {
                 pagedGui.addIngredient('$', Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
                         .build()
                 );
@@ -213,7 +213,7 @@ public class ClaimRolesGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split builder = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui)
@@ -275,7 +275,7 @@ public class ClaimRolesGui extends ClaimListGui {
                     .setItemProvider(p -> {
                         ItemStack stack = roleIcon.icon();
                         stack.editMeta(meta -> {
-                            meta.itemName(TextUtil.parseItem(roleIcon.name(), Map.of(
+                            meta.itemName(TextUtil.parseItem(roleIcon.name(), player, Map.of(
                                     "name", role.name()
                             )));
 
@@ -284,7 +284,7 @@ public class ClaimRolesGui extends ClaimListGui {
                                     .count();
 
                             ClaimRolesConfig.RoleIcon.RoleIconLore lore = roleIcon.lore();
-                            meta.lore(TextUtil.parseItemLore(lore.base(), Map.of(
+                            meta.lore(TextUtil.parseItemLore(lore.base(), player, Map.of(
                                     "members", roleMembers + "",
                                     "creation_date", StringUtil.formatDate(role.creationTimestamp()),
                                     "manage", (canManage || canManagePermissions) ? lore.manage() : lore.cantManage(),
@@ -360,7 +360,7 @@ public class ClaimRolesGui extends ClaimListGui {
 
     private Item buildCreateRoleIcon(@NotNull Player player, @NotNull Claim claim, AtomicReference<PagedGui<Item>> gui, GuiMetadata metadata) {
         return Item.builder()
-                .setItemProvider(createRoleIcon.item())
+                .setItemProvider(TextUtil.parseItemPlaceholders(createRoleIcon.item(), player))
                 .addClickHandler(click ->
                         new SingleInputDialog()
                                 .create(

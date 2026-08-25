@@ -50,7 +50,7 @@ public class ItemUtil {
         ItemMeta meta = item.getItemMeta();
 
         if (meta != null) {
-            meta.customName(TextUtil.parseItem(name));
+            meta.itemName(TextUtil.parseItem(name));
 
             if (lore != null) {
                 meta.lore(lore.stream().map(TextUtil::parseItem).toList());
@@ -128,7 +128,7 @@ public class ItemUtil {
      */
     public static void applyDisplay(@NotNull ItemStack item, @NotNull Component name, @Nullable List<Component> lore) {
         item.editMeta(meta -> {
-            meta.customName(name);
+            meta.itemName(name);
 
             if (lore != null) {
                 meta.lore(lore);

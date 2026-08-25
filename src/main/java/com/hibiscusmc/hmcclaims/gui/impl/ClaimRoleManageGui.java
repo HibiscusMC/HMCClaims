@@ -169,7 +169,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 gui.addIngredient(entry.getCharKey(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -185,7 +185,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
             }
 
             gui.addIngredient('*', Item.builder()
-                    .setItemProvider(metadata.canManageRole() ? deleteIcon.item() : cantDeleteIcon)
+                    .setItemProvider(TextUtil.parseItemPlaceholders(metadata.canManageRole() ? deleteIcon.item() : cantDeleteIcon, player))
                     .addClickHandler(click -> {
                         ClaimRoleRegistry registry = claim.roleRegistry();
 
@@ -200,7 +200,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                     .build());
 
             gui.addIngredient('(', Item.builder()
-                    .setItemProvider(previousPage.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(previousPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage - 1;
                         if (!permissionPages.containsKey(page)) {
@@ -212,7 +212,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                     .build());
 
             gui.addIngredient(')', Item.builder()
-                    .setItemProvider(nextPage.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(nextPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage + 1;
                         if (!permissionPages.containsKey(page)) {
@@ -225,7 +225,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
             if (isValidIcon(backIcon)) {
                 gui.addIngredient('$', Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimRolesGui.class).open(player, metadata))
                         .build());
             }
@@ -239,7 +239,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "role_name", parseName(role.name(), title.maxLength())
                         )))
                         .setUpperGui(upperGui)
@@ -282,7 +282,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
         return new PermissionItem(
                 Item.builder()
-                        .setItemProvider(p -> new ItemWrapper(buildPermissionIcon(metadata.canManageRolePermissions() ? toggleIcon.icon() : toggleIcon.noPermsIcon(), role.hasPermission(permission))))
+                        .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(metadata.canManageRolePermissions() ? toggleIcon.icon() : toggleIcon.noPermsIcon(), role.hasPermission(permission)), p)))
                         .addClickHandler((it, click) -> {
                             if (toggleIcon.hasModifyIcon()) {
                                 return;
@@ -304,7 +304,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                                         icon = modifyIcon.disabled();
                                     }
 
-                                    return new ItemWrapper(buildPermissionIcon(icon, metadata, hasPermission));
+                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(icon, metadata, hasPermission), p));
                                 })
                                 .addClickHandler(action)
                                 .build()

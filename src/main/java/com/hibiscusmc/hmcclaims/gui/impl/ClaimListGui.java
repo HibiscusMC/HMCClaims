@@ -21,6 +21,8 @@ import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -83,8 +85,8 @@ public class ClaimListGui implements BaseGui {
     @Inject
     private TextUtil text;
 
-    private final List<Integer> slots = new ArrayList<>();
-    private Component title;
+    private final IntList slots = new IntArrayList();
+    private String title;
     private int rows = 4;
 
     private BaseListGuiConfig.ClaimsIcon claimsIcon;
@@ -108,7 +110,7 @@ public class ClaimListGui implements BaseGui {
             throw new NullPointerException("Config is not initialized yet!");
         }
 
-        title = TextUtil.parse(config.title());
+        title = config.title();
         rows = config.rows();
 
         loadConfig(config);
@@ -153,7 +155,7 @@ public class ClaimListGui implements BaseGui {
 
         scheduler.scheduleAsync(() -> {
             Window.Builder.Normal.Split window = Window.builder()
-                    .setTitle(title)
+                    .setTitle(TextUtil.parse(title, player))
                     .setUpperGui(buildLowerGui(player, null));
 
             scheduler.schedule(() -> window.open(player));
@@ -203,7 +205,7 @@ public class ClaimListGui implements BaseGui {
             GuiTemplate.Icon icon = entry.getValue();
 
             pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
-                    .setItemProvider(icon.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                     .addClickHandler(click -> (switch (click.clickType()) {
                         case LEFT -> icon.leftClickActions();
                         case RIGHT -> icon.rightClickActions();
@@ -213,17 +215,17 @@ public class ClaimListGui implements BaseGui {
         }
 
         pagedGui.addIngredient('(', BoundItem.pagedBuilder()
-                .setItemProvider(new ItemBuilder(previousPage.item()))
+                .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                 .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
                 .build());
         pagedGui.addIngredient(')', BoundItem.pagedBuilder()
-                .setItemProvider(new ItemBuilder(nextPage.item()))
+                .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                 .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                 .build());
 
         if (isValidIcon(backIcon)) {
             pagedGui.addIngredient('$', Item.builder()
-                    .setItemProvider(backIcon.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                     .addClickHandler(click -> guis.get(ClaimListGui.class).open(player))
                     .build());
         }
@@ -257,7 +259,7 @@ public class ClaimListGui implements BaseGui {
                 .setItemProvider(player -> {
                     ItemStack item = searchIcon.item();
                     item.editMeta(meta -> {
-                        meta.itemName(TextUtil.parseItem(searchIcon.name()));
+                        meta.itemName(TextUtil.parseItem(searchIcon.name(), player));
                         Query searchQuery = metadata.searchQuery().get();
                         String query = searchIcon.noQuery();
 
@@ -265,7 +267,7 @@ public class ClaimListGui implements BaseGui {
                             query = searchQuery.query();
                         }
 
-                        meta.lore(TextUtil.parseItemLore(searchIcon.lore(), Map.of(
+                        meta.lore(TextUtil.parseItemLore(searchIcon.lore(), player, Map.of(
                                 "query", query
                         )));
                     });
@@ -315,7 +317,7 @@ public class ClaimListGui implements BaseGui {
 
                                 String parsedName = option.equals(currentOption) ? filterIcon.selected() : filterIcon.unselected();
 
-                                lore.add(TextUtil.parseItem(line.replace("<filter_list>", parsedName), Map.of(
+                                lore.add(TextUtil.parseItem(line.replace("<filter_list>", parsedName), player, Map.of(
                                         "name", name
                                 )));
                             }
@@ -323,11 +325,11 @@ public class ClaimListGui implements BaseGui {
                             continue;
                         }
 
-                        lore.add(TextUtil.parseItem(line));
+                        lore.add(TextUtil.parseItem(line, player));
                     }
 
                     meta.lore(lore);
-                    meta.customName(TextUtil.parseItem(filterIcon.name()));
+                    meta.itemName(TextUtil.parseItem(filterIcon.name(), player));
 
                     stack.setItemMeta(meta);
 
@@ -407,7 +409,7 @@ public class ClaimListGui implements BaseGui {
 
         for (Claim claim : claims) {
             parsedClaims.put(claim, Item.builder()
-                    .setItemProvider(stack -> new ItemWrapper(buildClaimIcon(claim)))
+                    .setItemProvider(player -> new ItemWrapper(buildClaimIcon(claim, player)))
                     .addClickHandler((it, click) -> {
                         Player player = click.player();
 
@@ -446,7 +448,7 @@ public class ClaimListGui implements BaseGui {
     }
 
     @NotNull
-    private ItemStack buildClaimIcon(@NotNull Claim claim) {
+    private ItemStack buildClaimIcon(@NotNull Claim claim, Player player) {
         int totalMembers = claim.members().size();
 
         List<ClaimMember> sortedList = claim.members()
@@ -468,11 +470,11 @@ public class ClaimListGui implements BaseGui {
         for (String line : icon.lore()) {
             if (line.toLowerCase().contains("<member_list>")) {
                 for (ClaimMember member : sortedList) {
-                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(claim.owner())))));
+                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(claim.owner()))), player));
                 }
 
                 if (totalMembers > sortedList.size()) {
-                    lore.add(TextUtil.parseItem(line.replace("<member_list>", "<remaining> more..."), Map.of(
+                    lore.add(TextUtil.parseItem(line.replace("<member_list>", "<remaining> more..."), player, Map.of(
                             "remaining", totalMembers - sortedList.size() + ""
                     )));
                 }
@@ -480,10 +482,10 @@ public class ClaimListGui implements BaseGui {
                 continue;
             }
 
-            lore.add(TextUtil.parseItem(line, claimPlaceholders));
+            lore.add(TextUtil.parseItem(line, player, claimPlaceholders));
         }
 
-        meta.customName(TextUtil.parseItem(icon.name(), claimPlaceholders));
+        meta.itemName(TextUtil.parseItem(icon.name(), player, claimPlaceholders));
         meta.lore(lore);
 
         stack.setItemMeta(meta);

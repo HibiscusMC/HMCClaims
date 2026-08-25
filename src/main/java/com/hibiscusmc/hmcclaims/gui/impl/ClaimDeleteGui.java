@@ -129,7 +129,7 @@ public class ClaimDeleteGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 gui.addIngredient(entry.getCharKey(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -144,7 +144,7 @@ public class ClaimDeleteGui extends ClaimListGui {
             }
 
             gui.addIngredient('(', Item.builder()
-                    .setItemProvider(confirm.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(confirm.item(), player))
                     .addClickHandler(click -> {
                         claimManager.deleteClaim(claim);
                         text.send(player, messagesHolder.get().claims().deleted(), Map.of(
@@ -161,7 +161,7 @@ public class ClaimDeleteGui extends ClaimListGui {
                     .build());
 
             gui.addIngredient(')', Item.builder()
-                    .setItemProvider(cancel.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(cancel.item(), player))
                     .addClickHandler(click -> {
                         if (metadata.previousPage() != null) {
                             Class<? extends BaseGui> manage = claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class;
@@ -176,14 +176,14 @@ public class ClaimDeleteGui extends ClaimListGui {
                     .build());
 
             gui.addIngredient('*', Item.builder()
-                    .setItemProvider(buildClaimIcon(claim))
+                    .setItemProvider(buildClaimIcon(claim, player))
                     .build());
 
             Gui upperGui = gui.build();
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title))
+                        .setTitle(TextUtil.parse(title, player))
                         .setUpperGui(upperGui);
 
                 if (metadata.previousPage() != null) {
@@ -200,7 +200,7 @@ public class ClaimDeleteGui extends ClaimListGui {
     }
 
     @NotNull
-    private ItemStack buildClaimIcon(@NotNull Claim claim) {
+    private ItemStack buildClaimIcon(@NotNull Claim claim, Player player) {
         int totalMembers = claim.members().size();
 
         List<ClaimMember> sortedList = claim.members()
@@ -222,11 +222,14 @@ public class ClaimDeleteGui extends ClaimListGui {
         for (String line : icon.lore()) {
             if (line.toLowerCase().contains("<member_list>")) {
                 for (ClaimMember member : sortedList) {
-                    lore.add(TextUtil.parseItem(line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(claim.owner())))));
+                    lore.add(TextUtil.parseItem(
+                            line.replace("<member_list>", buildMemberRow(icon, member, member.uuid().equals(claim.owner()))),
+                            player
+                    ));
                 }
 
                 if (totalMembers > sortedList.size()) {
-                    lore.add(TextUtil.parseItem(line.replace("<member_list>", "<remaining> more..."), Map.of(
+                    lore.add(TextUtil.parseItem(line.replace("<member_list>", "<remaining> more..."), player, Map.of(
                             "remaining", totalMembers - sortedList.size() + ""
                     )));
                 }
@@ -234,10 +237,10 @@ public class ClaimDeleteGui extends ClaimListGui {
                 continue;
             }
 
-            lore.add(TextUtil.parseItem(line, claimPlaceholders));
+            lore.add(TextUtil.parseItem(line, player, claimPlaceholders));
         }
 
-        meta.customName(TextUtil.parseItem(icon.name(), claimPlaceholders));
+        meta.itemName(TextUtil.parseItem(icon.name(), player, claimPlaceholders));
         meta.lore(lore);
 
         stack.setItemMeta(meta);

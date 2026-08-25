@@ -180,7 +180,7 @@ public class ClaimBannedListGui extends ClaimListGui {
                 GuiTemplate.Icon icon = entry.getValue();
 
                 pagedGui.addIngredient((char) entry.getKey().intValue(), Item.builder()
-                        .setItemProvider(icon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(icon.item(), player))
                         .addClickHandler(click -> (switch (click.clickType()) {
                             case LEFT -> icon.leftClickActions();
                             case RIGHT -> icon.rightClickActions();
@@ -190,11 +190,11 @@ public class ClaimBannedListGui extends ClaimListGui {
             }
 
             pagedGui.addIngredient('(', BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(previousPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
                     .build());
             pagedGui.addIngredient(')', BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(nextPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                     .build());
 
@@ -202,7 +202,7 @@ public class ClaimBannedListGui extends ClaimListGui {
 
             if (isValidIcon(backIcon)) {
                 pagedGui.addIngredient('$', Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click ->
                                 guis.get((Class<? extends BaseGui>) (claim.main() == null ? ClaimManageGui.class : SubClaimManageGui.class))
                                         .open(player, metadata)
@@ -230,7 +230,7 @@ public class ClaimBannedListGui extends ClaimListGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
                         .setFallbackWindow(metadata.previousPage())
@@ -287,7 +287,7 @@ public class ClaimBannedListGui extends ClaimListGui {
 
     private Item buildBanMemberIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
-                .setItemProvider(banMemberIcon.item())
+                .setItemProvider(TextUtil.parseItemPlaceholders(banMemberIcon.item(), player))
                 .addClickHandler(click -> {
                     Input<?> currentInput = inputManager.fetch(player);
 

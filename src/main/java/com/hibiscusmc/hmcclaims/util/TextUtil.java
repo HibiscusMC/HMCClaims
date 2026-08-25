@@ -5,6 +5,8 @@ import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import me.clip.placeholderapi.PAPIComponents;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -14,6 +16,8 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +62,7 @@ public class TextUtil {
     /**
      * Sends a MiniMessage-formatted string to an audience.
      *
-     * @param audience The recipient (Player, Console, etc.).
+     * @param audience The recipient.
      * @param string   The message content.
      */
     public void send(Audience audience, String string) {
@@ -77,7 +81,7 @@ public class TextUtil {
             return;
         }
 
-        audience.sendMessage(parseWithPrefix(string, data));
+        audience.sendMessage(parseWithPrefix(string, audience, data));
     }
 
     /**
@@ -120,44 +124,47 @@ public class TextUtil {
             }
         }
 
-        audience.sendMessage(parseWithPrefix(string, data));
+        audience.sendMessage(parseWithPrefix(string, audience, data));
     }
 
     /**
      * Parses a string into a {@link Component}, including the configured prefix.
      */
     @NotNull
-    public Component parseWithPrefix(String string) {
-        return parseWithPrefix(string, false);
+    public Component parseWithPrefix(String string, Audience player) {
+        return parseWithPrefix(string, player, false);
     }
 
     /**
      * Parses a string with placeholders into a {@link Component}, including the configured prefix.
      */
     @NotNull
-    public Component parseWithPrefix(String string, Map<String, Object> data) {
-        return parseWithPrefix(string, true, data);
+    public Component parseWithPrefix(String string, Audience player, Map<String, Object> data) {
+        return parseWithPrefix(string, player, true, data);
     }
 
     /**
      * Parses a string into a {@link Component}, optionally including the configured prefix.
      */
     @NotNull
-    public Component parseWithPrefix(String string, boolean withPrefix) {
-        return parseWithPrefix(string, withPrefix, Map.of());
+    public Component parseWithPrefix(String string, Audience player, boolean withPrefix) {
+        return parseWithPrefix(string, player, withPrefix, Map.of());
     }
 
     /**
      * Core logic for parsing strings with prefix support and placeholder resolution.
      */
     @NotNull
-    public Component parseWithPrefix(@NotNull String string, boolean withPrefix, Map<String, Object> data) {
+    public Component parseWithPrefix(@NotNull String string, Audience audience, boolean withPrefix, Map<String, Object> data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
 
+        Player player = audience instanceof Player ? (Player) audience : null;
+
         return parse(
-                string, withPrefix ?
+                string, player,
+                withPrefix ?
                         MapUtil.add(new HashMap<>(data), "prefix", messages.get().prefix()) :
                         data
         );
@@ -169,16 +176,25 @@ public class TextUtil {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static List<Component> parseList(List<String> list) {
-        return parseList(list, Map.of());
+        return parseList(list, null, Map.of());
+    }
+
+    /**
+     * Static helper to parse a list of MiniMessage strings.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static List<Component> parseList(List<String> list, Player player) {
+        return parseList(list, player, Map.of());
     }
 
     /**
      * Static helper to parse a list of MiniMessage strings with placeholders.
      */
     @NotNull
-    @Contract(value = "_, _ -> new", pure = true)
-    public static List<Component> parseList(List<String> list, Map data) {
-        return list.stream().map(string -> parse(string, data)).toList();
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static List<Component> parseList(List<String> list, Player player, Map data) {
+        return list.stream().map(string -> parse(string, player, data)).toList();
     }
 
     /**
@@ -187,15 +203,34 @@ public class TextUtil {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static Component parse(String string) {
-        return parse(string, Map.of());
+        return parse(string, null, Map.of());
     }
+
+    /**
+     * Static helper to parse a simple MiniMessage string.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static Component parse(String string, Player player) {
+        return parse(string, player, Map.of());
+    }
+
+    /**
+     * Static helper to parse a simple MiniMessage string.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static Component parse(String string, Map data) {
+        return parse(string, null, data);
+    }
+
 
     /**
      * Static helper to parse a MiniMessage string with placeholders.
      */
     @NotNull
-    @Contract(value = "_, _ -> new", pure = true)
-    public static Component parse(@NotNull String string, Map data) {
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static Component parse(@NotNull String string, Player player, Map data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
@@ -216,7 +251,18 @@ public class TextUtil {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static List<Component> parseItemLore(List<String> list) {
-        return parseItemLore(list, Map.of());
+        return parseItemLore(list, null, Map.of());
+    }
+
+    /**
+     * Specialized parser for Item lores.
+     * <p>
+     * Ensures items are not italicized by default and uses white as a base color.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static List<Component> parseItemLore(List<String> list, Player player) {
+        return parseItemLore(list, player, Map.of());
     }
 
     /**
@@ -227,7 +273,18 @@ public class TextUtil {
     @NotNull
     @Contract(value = "_, _ -> new", pure = true)
     public static List<Component> parseItemLore(List<String> list, Map data) {
-        return list.stream().map(string -> parseItem(string, data)).toList();
+        return list.stream().map(string -> parseItem(string, null, data)).toList();
+    }
+
+    /**
+     * Specialized parser for Item lores with placeholders.
+     * <p>
+     * Ensures items are not italicized by default and uses white as a base color.
+     */
+    @NotNull
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static List<Component> parseItemLore(List<String> list, Player player, Map data) {
+        return list.stream().map(string -> parseItem(string, player, data)).toList();
     }
 
     /**
@@ -238,7 +295,29 @@ public class TextUtil {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static Component parseItem(String string) {
-        return parseItem(string, Map.of());
+        return parseItem(string, null, Map.of());
+    }
+
+    /**
+     * Specialized parser for Item display names and lore.
+     * <p>
+     * Ensures items are not italicized by default and uses white as a base color.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static Component parseItem(String string, Player player) {
+        return parseItem(string, player, Map.of());
+    }
+
+    /**
+     * Specialized parser for Item display names and lore.
+     * <p>
+     * Ensures items are not italicized by default and uses white as a base color.
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new", pure = true)
+    public static Component parseItem(String string, Map data) {
+        return parseItem(string, null, data);
     }
 
     /**
@@ -247,14 +326,14 @@ public class TextUtil {
      * Ensures items are not italicized by default and uses white as a base color.
      */
     @NotNull
-    @Contract(value = "_, _ -> new", pure = true)
-    public static Component parseItem(@NotNull String string, Map data) {
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static Component parseItem(@NotNull String string, Player player, Map data) {
         if (string.isEmpty()) {
             return Component.empty();
         }
 
         if (data.isEmpty()) {
-            return MINI_MESSAGE.deserialize(string)
+            return MINI_MESSAGE.deserialize(player == null ? string : PlaceholderAPI.setPlaceholders(player, string))
                     .colorIfAbsent(NamedTextColor.WHITE)
                     .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
         }
@@ -262,9 +341,32 @@ public class TextUtil {
         TagResolver resolver = resolvePlaceholders(data);
 
         return MINI_MESSAGE
-                .deserialize(string, resolver)
+                .deserialize(player == null ? string : PlaceholderAPI.setPlaceholders(player, string), resolver)
                 .colorIfAbsent(NamedTextColor.WHITE)
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
+
+    /**
+     * Parses PlaceholderAPI placeholders for the name and lore of the given {@link ItemStack}.
+     *
+     * @param stack  the item stack to process
+     * @param player the player to parse placeholders for
+     * @return the modified item stack
+     */
+    @NotNull
+    @Contract(value = "_, _ -> param1")
+    public static ItemStack parseItemPlaceholders(@NotNull ItemStack stack, Player player) {
+        stack.editMeta(meta -> {
+            if (meta.hasItemName()) {
+                meta.itemName(PAPIComponents.setPlaceholders(player, meta.itemName()));
+            }
+
+            if (meta.hasLore()) { // noinspection DataFlowIssue
+                meta.lore(PAPIComponents.setPlaceholders(player, meta.lore()));
+            }
+        });
+
+        return stack;
     }
 
     /**

@@ -158,7 +158,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                 structure.set(slot, (char) currentPoint);
 
                 tabsMap.put((char) currentPoint, Item.builder()
-                        .setItemProvider(rolesTab.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(rolesTab.item(), player))
                         .addClickHandler(click -> guis.get(ClaimMemberRoleGui.class).open(player, metadata))
                         .build());
                 currentPoint++;
@@ -167,7 +167,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                 structure.set(slot, (char) currentPoint);
 
                 tabsMap.put((char) currentPoint, Item.builder()
-                        .setItemProvider(permissionsTab.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(permissionsTab.item(), player))
                         .build());
                 currentPoint++;
             }
@@ -211,7 +211,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
             ));
 
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 4), Item.builder()
-                    .setItemProvider(new ItemBuilder(previousPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                     .addClickHandler((item, click) -> {
                         int page = currentPage - 1;
                         if (!permissionPages.containsKey(page)) {
@@ -222,7 +222,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                     })
                     .build());
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 5), Item.builder()
-                    .setItemProvider(new ItemBuilder(nextPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                     .addClickHandler((item, click) -> {
                         int page = currentPage + 1;
                         if (!permissionPages.containsKey(page)) {
@@ -252,7 +252,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "member_name", parseName(member.lastKnownName(), title.maxLength())
                         )))
                         .setUpperGui(builder)
@@ -321,10 +321,10 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                                 state = permissions.getBoolean(permission) ? enabledState : disabledState;
                             }
 
-                            return new ItemWrapper(buildPermissionIcon(
+                            return new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(
                                     hasPermission ? toggleIcon.icon() : toggleIcon.noPermsIcon(),
                                     state
-                            ));
+                            ), player));
                         })
                         .addClickHandler((it, click) -> {
                             if (!toggleIcon.hasModifyIcon()) {
@@ -348,7 +348,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                                         state = permissions.getBoolean(permission) ? enabledState : disabledState;
                                     }
 
-                                    return new ItemWrapper(buildPermissionIcon(icon, hasPermission, state));
+                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(icon, hasPermission, state), player));
                                 })
                                 .addClickHandler(action)
                                 .build()

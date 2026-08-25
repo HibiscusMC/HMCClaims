@@ -166,7 +166,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                 structure.set(slot, (char) currentPoint);
 
                 tabsMap.put((char) currentPoint, Item.builder()
-                        .setItemProvider(rolesTab.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(rolesTab.item(), player))
                         .build());
                 currentPoint++;
             }
@@ -174,7 +174,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                 structure.set(slot, (char) currentPoint);
 
                 tabsMap.put((char) currentPoint, Item.builder()
-                        .setItemProvider(permissionsTab.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(permissionsTab.item(), player))
                         .addClickHandler(click -> guis.get(ClaimMemberPermissionsGui.class).open(player, metadata))
                         .build());
                 currentPoint++;
@@ -199,19 +199,19 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             ));
 
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 2), Item.builder()
-                    .setItemProvider(rolesTab.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(rolesTab.item(), player))
                     .build());
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 3), Item.builder()
-                    .setItemProvider(permissionsTab.item())
+                    .setItemProvider(TextUtil.parseItemPlaceholders(permissionsTab.item(), player))
                     .addClickHandler(click -> guis.get(ClaimMemberPermissionsGui.class).open(player, metadata))
                     .build());
 
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 4), BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(previousPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() - 1))
                     .build());
             builder.addIngredient((char) (FIRST_SAFE_CHAR + 5), BoundItem.pagedBuilder()
-                    .setItemProvider(new ItemBuilder(nextPage.item()))
+                    .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                     .addClickHandler((item, gui, click) -> gui.setPage(gui.getPage() + 1))
                     .build());
 
@@ -225,7 +225,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
 
             if (isValidIcon(backIcon)) {
                 builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
                         .build());
             }
@@ -241,7 +241,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
 
             scheduler.schedule(() -> {
                 Window.Builder.Normal.Split window = Window.builder()
-                        .setTitle(TextUtil.parse(title.text(), Map.of(
+                        .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "member_name", parseName(member.lastKnownName(), title.maxLength())
                         )))
                         .setUpperGui(gui)
@@ -289,13 +289,13 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                         ItemStack stack = icon.item();
 
                         stack.editMeta(meta -> {
-                            meta.itemName(TextUtil.parseItem(icon.name(), Map.of("name", role.name())));
+                            meta.itemName(TextUtil.parseItem(icon.name(), player, Map.of("name", role.name())));
 
                             long roleMembers = claim.members().stream()
                                     .filter(m -> m.role().equals(role))
                                     .count();
 
-                            meta.lore(TextUtil.parseItemLore(icon.lore(), Map.of(
+                            meta.lore(TextUtil.parseItemLore(icon.lore(), player, Map.of(
                                     "members", String.valueOf(roleMembers),
                                     "creation_date", StringUtil.formatDate(role.creationTimestamp()),
                                     "player_name", targetMember.lastKnownName()
