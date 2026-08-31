@@ -67,8 +67,8 @@ public class ClaimDeleteGui extends ClaimListGui {
 
     private ClaimDeleteConfig.ClaimIcon claimIcon;
     private ClaimDeleteConfig.SubClaimIcon subClaimIcon;
-    private GuiTemplate.SimpleIcon confirm;
-    private GuiTemplate.SimpleIcon cancel;
+    private GuiTemplate.SimpleMultiIcon confirm;
+    private GuiTemplate.SimpleMultiIcon cancel;
 
     @Override
     public void loadConfig() {
@@ -112,9 +112,9 @@ public class ClaimDeleteGui extends ClaimListGui {
                 mappedIcons.put(codePoint, icon);
             }
 
-            structure.set(confirm.slot(), '(');
+            confirm.slots().forEach(slot -> structure.set((char) slot.intValue(), '('));
+            cancel.slots().forEach(slot -> structure.set((char) slot.intValue(), ')'));
             structure.set(claimIcon.slot(), '*');
-            structure.set(cancel.slot(), ')');
 
             String[] structureArray = new String[rows];
             for (int r = 0; r < rows; r++) {
