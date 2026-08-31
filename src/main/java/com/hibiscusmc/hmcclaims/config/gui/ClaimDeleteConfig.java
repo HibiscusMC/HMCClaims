@@ -26,12 +26,12 @@ public class ClaimDeleteConfig extends GuiTemplate {
     @Setting("subclaim-icon")
     private SubClaimIcon subClaimIcon = new SubClaimIcon();
 
-    private SimpleIcon confirm = new SimpleIcon(
-            ItemUtil.build(Material.LIME_STAINED_GLASS_PANE, "<green>Confirm"), 2
+    private SimpleMultiIcon confirm = new SimpleMultiIcon(
+            ItemUtil.build(Material.LIME_STAINED_GLASS_PANE, "<green>Confirm"), List.of(2)
     );
 
-    private SimpleIcon cancel = new SimpleIcon(
-            ItemUtil.build(Material.RED_STAINED_GLASS_PANE, "<red>Cancel"), 6
+    private SimpleMultiIcon cancel = new SimpleMultiIcon(
+            ItemUtil.build(Material.RED_STAINED_GLASS_PANE, "<red>Cancel"), List.of(6)
     );
 
     @Setting("extra-icons")
