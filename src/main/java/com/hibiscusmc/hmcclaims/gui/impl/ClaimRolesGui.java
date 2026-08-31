@@ -294,7 +294,7 @@ public class ClaimRolesGui extends ClaimListGui {
                             )));
                         });
 
-                        return new ItemWrapper(stack);
+                        return new ItemWrapper(TextUtil.parseItemPlaceholders(stack, player));
                     })
                     .addClickHandler((it, click) -> {
                         switch (click.clickType()) {

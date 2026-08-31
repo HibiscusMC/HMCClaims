@@ -36,6 +36,7 @@ import xyz.xenondevs.invui.gui.PagedGui;
 import xyz.xenondevs.invui.item.BoundItem;
 import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.item.ItemBuilder;
+import xyz.xenondevs.invui.item.ItemWrapper;
 import xyz.xenondevs.invui.util.TriConsumer;
 import xyz.xenondevs.invui.window.Window;
 
@@ -274,7 +275,7 @@ public class ClaimBannedListGui extends ClaimListGui {
             );
 
             parsedMembers.put(member, Item.builder()
-                    .setItemProvider(head)
+                    .setItemProvider(player -> new ItemWrapper(TextUtil.parseItemPlaceholders(head, player)))
                     .addClickHandler(click -> {
                         claim.removeMember(member.uuid());
                         open(click.player(), metadata);

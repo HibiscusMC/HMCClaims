@@ -243,7 +243,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
             if (isValidIcon(backIcon)) {
                 builder.addIngredient((char) (FIRST_SAFE_CHAR + 8), Item.builder()
-                        .setItemProvider(backIcon.item())
+                        .setItemProvider(TextUtil.parseItemPlaceholders(backIcon.item(), player))
                         .addClickHandler(click -> guis.get(ClaimMemberListGui.class).open(player, metadata))
                         .build());
             }
