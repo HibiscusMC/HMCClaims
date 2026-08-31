@@ -128,13 +128,12 @@ public class ItemUtil {
      */
     public static void applyDisplay(@NotNull ItemStack item, @NotNull Component name, @Nullable List<Component> lore) {
         item.editMeta(meta -> {
+            meta.customName(name);
             meta.itemName(name);
 
             if (lore != null) {
                 meta.lore(lore);
             }
-
-            item.setItemMeta(meta);
         });
     }
 }
