@@ -34,7 +34,7 @@ dependencies {
     // Inject
     implementation("team.unnamed:inject:2.0.1")
     // Command-Flow
-    implementation("team.unnamed:commandflow-bukkit-commandmap:0.7.2") {
+    implementation("team.unnamed:commandflow-bukkit-commandmap:0.8.0") {
         exclude("net.kyori")
     }
 
