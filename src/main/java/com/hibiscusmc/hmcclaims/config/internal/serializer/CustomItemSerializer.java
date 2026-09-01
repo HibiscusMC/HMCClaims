@@ -169,6 +169,13 @@ public class CustomItemSerializer implements TypeSerializer<ItemStack> {
             node.node(LORE).setList(String.class, lore);
         }
 
+        if (meta != null && !meta.getItemFlags().isEmpty()) {
+            List<String> flags = meta.getItemFlags().stream().map(Enum::name).sorted().toList();
+            node.node(ITEM_FLAGS).setList(String.class, flags);
+        } else {
+            node.removeChild(ITEM_FLAGS);
+        }
+
         boolean hasComponents = false;
         ConfigurationNode componentsNode = node.node(COMPONENTS);
 
