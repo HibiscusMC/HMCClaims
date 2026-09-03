@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.hibiscusmc.hmcclaims"
-version = "0.2.3"
+version = "0.3.0"
 
 val serverVersion = "26.2"
 val serverSnapshot = "build.+"
