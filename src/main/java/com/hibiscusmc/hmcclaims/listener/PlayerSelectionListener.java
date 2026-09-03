@@ -22,7 +22,6 @@ import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
-import me.lojosho.hibiscuscommons.hooks.Hooks;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -35,6 +34,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -230,10 +230,36 @@ public class PlayerSelectionListener implements Listener {
         ItemStack oldItem = player.getInventory().getItem(event.getPreviousSlot());
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
 
-        if ((newItem == null || !isValidTool(newItem)) &&
-                (oldItem != null && isValidTool(oldItem))) {
-            removeSelection(player, false);
+        boolean holdsTool = isValidTool(newItem);
+        if (holdsTool == isValidTool(oldItem)) {
+            return;
         }
+
+        if (holdsTool) {
+            selectionManager.activatePendingResize(player);
+            return;
+        }
+
+        removeSelection(player, false);
+    }
+
+    /**
+     * Lets players leave resize mode by sneaking.
+     */
+    @EventHandler
+    public void onPlayerSneak(PlayerToggleSneakEvent event) {
+        if (!event.isSneaking()) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        Selection selection = selectionManager.currentResize(player);
+        if (selection == null || !selection.active()) {
+            return;
+        }
+
+        selectionManager.cancelResize(player);
     }
 
     /**
@@ -265,14 +291,8 @@ public class PlayerSelectionListener implements Listener {
     /**
      * Checks if the item stack is a valid claiming tool
      */
-    private boolean isValidTool(@NotNull ItemStack tool) {
-        Settings settings = settingsHolder.get();
-
-        if (settings.claiming().claimToolStrict()) {
-            return tool.isSimilar(settings.claiming().claimTool());
-        } else {
-            return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(settings.claiming().claimTool()));
-        }
+    private boolean isValidTool(ItemStack tool) {
+        return selectionManager.isClaimTool(tool);
     }
 
     /**
@@ -348,6 +368,7 @@ public class PlayerSelectionListener implements Listener {
                 }
 
                 if (selection.resizingClaim() != null) {
+                    selectionManager.suspendResize(player, selection);
                     return;
                 }
             }

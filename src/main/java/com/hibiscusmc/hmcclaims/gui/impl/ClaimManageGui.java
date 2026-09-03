@@ -15,10 +15,9 @@ import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
-import com.hibiscusmc.hmcclaims.selection.Selection;
+import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
-import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -59,6 +58,9 @@ public class ClaimManageGui extends ClaimListGui {
 
     @Inject
     protected BlockMarker marker;
+
+    @Inject
+    protected SelectionManager selectionManager;
 
     @Inject
     protected ClaimManager claimManager;
@@ -346,14 +348,9 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(resizeIcon.item(), player))
                 .addClickHandler(click -> {
-                    User user = userManager.getUser(player.getUniqueId())
-                            .orElseThrow(() -> new IllegalStateException("User not loaded!"));
-
-                    Selection selection = new Selection(player, marker, claim.main(), claim.region(), claim);
-                    user.currentSelection(selection);
-                    selection.refreshVisuals(true);
-
                     player.closeInventory();
+
+                    selectionManager.beginResize(player, claim);
                 })
                 .build();
     }

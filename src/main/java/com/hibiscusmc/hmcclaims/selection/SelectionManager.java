@@ -4,27 +4,49 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
+import com.hibiscusmc.hmcclaims.task.ResizeDisplayTask;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import me.lojosho.hibiscuscommons.hooks.Hooks;
+import net.kyori.adventure.audience.Audience;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Orchestrates the selection process for creating or resizing claims.
  */
 @Singleton
 public class SelectionManager {
+
+    /**
+     * Every player currently in an active resize mode, mapped by their unique id.
+     * <p>
+     * These are the recipients of the persistent resize instructions displayed by
+     * the {@link ResizeDisplayTask}.
+     */
+    private final Map<UUID, Player> resizingPlayers = new ConcurrentHashMap<>();
+
+    private ResizeDisplayTask displayTask;
+
+    @Inject
+    private Plugin plugin;
 
     @Inject
     private BlockMarker blockMarker;
@@ -36,6 +58,8 @@ public class SelectionManager {
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+    @Inject
+    private ConfigHolder<Settings> settingsHolder;
     @Inject
     private TextUtil text;
 
@@ -70,6 +94,13 @@ public class SelectionManager {
 
         Claim resizingClaim = selection.resizingClaim();
         boolean isResizing = resizingClaim != null;
+
+        // The player is holding the claiming tool if we got here, so a resize that
+        // was still waiting for it can now go live.
+        if (isResizing && !selection.active()) {
+            activateResize(player, selection);
+        }
+
         if (claim != null) {
             if (isResizing) {
                 Claim mainClaim = resizingClaim.main();
@@ -184,6 +215,194 @@ public class SelectionManager {
     }
 
     /**
+     * Puts a player into resize mode for the given claim.
+     * <p>
+     * The session is created immediately, but it only becomes live once the player
+     * holds the claiming tool. Until then no markers are shown and no corner can be
+     * grabbed, so players are never dropped into a mode they cannot use.
+     *
+     * @param player The player resizing the claim.
+     * @param claim  The claim being resized.
+     */
+    public void beginResize(@NotNull Player player, @NotNull Claim claim) {
+        User user = userManager.getUser(player.getUniqueId())
+                .orElseThrow(() -> new IllegalStateException("User not loaded!"));
+
+        // Drop whatever the player had going on, so no stale markers are left behind.
+        destroySelection(player);
+
+        Selection selection = new Selection(player, blockMarker, claim.main(), claim.region(), claim);
+        user.currentSelection(selection);
+
+        Messages.Claims.Resizing messages = messagesHolder.get().claims().resizing();
+        Map<String, String> placeholder = Map.of("name", claim.name());
+
+        if (isHoldingClaimTool(player)) {
+            activateResize(player, selection);
+        } else {
+            text.send(player, messages.grabClaimTool(), placeholder);
+        }
+
+        text.send(player, messages.tutorial(), placeholder);
+    }
+
+    /**
+     * Makes a pending resize session live: markers are rendered and the persistent
+     * on-screen instructions start being displayed.
+     *
+     * @param player    The player resizing the claim.
+     * @param selection The player's current resize selection.
+     */
+    public void activateResize(@NotNull Player player, @NotNull Selection selection) {
+        Claim resizingClaim = selection.resizingClaim();
+        if (resizingClaim == null || selection.active()) {
+            return;
+        }
+
+        selection.active(true);
+        selection.refreshVisuals(selection.points().isEmpty());
+
+        resizingPlayers.put(player.getUniqueId(), player);
+        if (displayTask == null) {
+            displayTask = ResizeDisplayTask.start(plugin, this, messagesHolder);
+        }
+
+        text.send(player, messagesHolder.get().claims().resizing().started(), Map.of(
+                "name", resizingClaim.name()
+        ));
+    }
+
+    /**
+     * Activates the resize session of a player, if they have one still waiting for
+     * the claiming tool.
+     *
+     * @param player The player that just grabbed the claiming tool.
+     */
+    public void activatePendingResize(@NotNull Player player) {
+        Selection selection = currentResize(player);
+        if (selection == null || selection.active()) {
+            return;
+        }
+
+        activateResize(player, selection);
+    }
+
+    /**
+     * Pauses a resize session without discarding it.
+     * <p>
+     * Used when the player stops holding the claiming tool: the selection is kept
+     * so they can pick up where they left off, but the instructions are hidden.
+     *
+     * @param player    The player resizing the claim.
+     * @param selection The player's current resize selection.
+     */
+    public void suspendResize(@NotNull Player player, @NotNull Selection selection) {
+        if (selection.resizingClaim() == null || !selection.active()) {
+            return;
+        }
+
+        selection.active(false);
+        clearResizeDisplay(player);
+    }
+
+    /**
+     * Leaves resize mode entirely, discarding the session and its markers.
+     *
+     * @param player The player leaving resize mode.
+     * @return {@code true} if the player was resizing a claim.
+     */
+    public boolean cancelResize(@NotNull Player player) {
+        if (currentResize(player) == null) {
+            return false;
+        }
+
+        destroySelection(player);
+        text.send(player, messagesHolder.get().claims().resizing().cancelled());
+
+        return true;
+    }
+
+    /**
+     * Retrieves the resize session of a player.
+     *
+     * @param player The player to check.
+     * @return The player's {@link Selection} if they are resizing a claim, otherwise {@code null}.
+     */
+    @Nullable
+    public Selection currentResize(@NotNull Player player) {
+        User user = userManager.getUser(player.getUniqueId())
+                .orElse(null);
+
+        if (user == null || !user.hasActiveSelection()) {
+            return null;
+        }
+
+        Selection selection = user.currentSelection();
+        return selection.resizingClaim() == null ? null : selection;
+    }
+
+    /**
+     * @return An {@link Audience} of every player currently in an active resize mode.
+     */
+    @NotNull
+    public Audience resizingAudiences() {
+        return Audience.audience(resizingPlayers.values());
+    }
+
+    /**
+     * Stops displaying the resize instructions to a player and shuts the display task
+     * down once nobody is resizing anymore.
+     *
+     * @param player The player to clear the display for.
+     */
+    public void clearResizeDisplay(@NotNull Player player) {
+        if (resizingPlayers.remove(player.getUniqueId()) == null) {
+            return;
+        }
+
+        if (displayTask == null) {
+            return;
+        }
+
+        displayTask.clear(player);
+
+        if (resizingPlayers.isEmpty()) {
+            displayTask.cancel();
+            displayTask = null;
+        }
+    }
+
+    /**
+     * Checks if the player is holding the configured claiming tool in their main hand.
+     *
+     * @param player The player to check.
+     * @return {@code true} if the main hand holds a valid claiming tool.
+     */
+    public boolean isHoldingClaimTool(@NotNull Player player) {
+        return isClaimTool(player.getInventory().getItemInMainHand());
+    }
+
+    /**
+     * Checks if the item stack is a valid claiming tool.
+     *
+     * @param tool The item to check.
+     * @return {@code true} if the item is the configured claiming tool.
+     */
+    public boolean isClaimTool(@Nullable ItemStack tool) {
+        if (tool == null || tool.getType() == Material.AIR) {
+            return false;
+        }
+
+        Settings.Claiming claiming = settingsHolder.get().claiming();
+
+        if (claiming.claimToolStrict()) {
+            return tool.isSimilar(claiming.claimTool());
+        }
+
+        return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(claiming.claimTool()));
+    }
+
+    /**
      * Checks if a player currently has an active selection session.
      *
      * @param player The player to check.
@@ -202,6 +421,8 @@ public class SelectionManager {
      * @param player The player whose selection should be destroyed.
      */
     public void destroySelection(Player player) {
+        clearResizeDisplay(player);
+
         User user = userManager.getUser(player.getUniqueId())
                 .orElseThrow(() -> new IllegalStateException("User not loaded!"));
 

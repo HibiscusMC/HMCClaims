@@ -10,6 +10,7 @@ import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimDeleteGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
+import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -39,6 +40,9 @@ public class ClaimCommand implements CommandClass {
 
     @Inject
     private GuiRegistry guis;
+
+    @Inject
+    private SelectionManager selectionManager;
 
     @Inject
     private TextUtil text;
@@ -167,5 +171,15 @@ public class ClaimCommand implements CommandClass {
                 "name", playerName,
                 "claim", claim.name()
         ));
+    }
+
+    /**
+     * Leaves resize mode. Backs the clickable cancel button of the resize tutorial.
+     */
+    @Command(names = {"cancelresize", "resizecancel"})
+    public void cancelResize(@Sender Player sender) {
+        if (!selectionManager.cancelResize(sender)) {
+            text.send(sender, messagesHolder.get().claims().resizing().notResizing());
+        }
     }
 }

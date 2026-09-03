@@ -234,6 +234,56 @@ public class Messages {
 
             @Setting(value = "sub-within-sub", required = true)
             private String subWithinSub = "<prefix><red>There's already a sub claim here!";
+
+            @Setting(value = "grab-claim-tool", required = true)
+            private String grabClaimTool = "<prefix><gray>Hold your <#d24c9f>claim tool <gray>to start resizing <#d24c9f><name><gray>!";
+
+            @Setting(required = true)
+            private String started = "<prefix><gray>Resize mode <green>enabled <gray>for <#d24c9f><name><gray>!";
+
+            @Setting(required = true)
+            private String cancelled = "<prefix><gray>Resize mode <red>disabled<gray>.";
+
+            @Setting(value = "not-resizing", required = true)
+            private String notResizing = "<prefix><red>You're not resizing any claim!";
+
+            @Setting(required = true)
+            private String tutorial = """
+                    <prefix><#d24c9f><b>How to resize <name></b>
+                    <dark_gray><b>»</b> <gray>Right-Click one of the <white>glowing corners</white> to grab it.
+                    <dark_gray><b>»</b> <gray>Right-Click where you want that corner to end up to <white>expand</white> the claim.
+                    <dark_gray><b>»</b> <gray>Left-Click any block to <green>save</green> the new size.
+                    <dark_gray><b>»</b> <gray>Sneak or click <click:run_command:'/claim cancelresize'><hover:show_text:'<red>Click to leave resize mode'><red>[Cancel]</red></hover></click> <gray>to leave resize mode.""";
+
+            private Title title = new Title();
+
+            @Setting("action-bar")
+            private ActionBar actionBar = new ActionBar();
+
+            @Getter
+            @ConfigSerializable
+            public static class Title {
+
+                @Setting(required = true)
+                private boolean enabled = true;
+
+                @Setting(required = true)
+                private String title = "<#ff8000><b>RESIZE MODE";
+
+                @Setting(required = true)
+                private String subtitle = "<white>Right-Click <gray>to resize <dark_gray>| <white>Left-Click <gray>to save <dark_gray>| <#ff0000>Sneak <red>to cancel";
+            }
+
+            @Getter
+            @ConfigSerializable
+            public static class ActionBar {
+
+                @Setting(required = true)
+                private boolean enabled = false;
+
+                @Setting(required = true)
+                private String text = "<white>Right-Click <gray>to resize <dark_gray>| <white>Left-Click <gray>to save <dark_gray>| <#ff0000>Sneak <red>to cancel";
+            }
         }
     }
 

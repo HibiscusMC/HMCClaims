@@ -39,6 +39,17 @@ public class Selection {
     @Getter
     private ClaimRegion region;
 
+    /**
+     * Whether this selection is currently live.
+     * <p>
+     * Resize selections start out inactive: they only become active once the player
+     * actually holds the claiming tool, so no markers or instructions are shown until
+     * the player is able to interact with the claim.
+     */
+    @Setter
+    @Getter
+    private boolean active;
+
     public Selection(Player player, BlockMarker marker, Claim main) {
         this(player, marker, main, null, null);
     }
@@ -61,6 +72,10 @@ public class Selection {
         this.region = Objects.requireNonNullElseGet(region, () ->
                 new ClaimRegion(player.getWorld().getName())
         );
+
+        // Only resize selections have a "pending" phase, every other selection
+        // is started by the claiming tool itself and is therefore live already.
+        this.active = resizingClaim == null;
     }
 
     /**
