@@ -35,7 +35,6 @@ public class DefaultRoles {
                 Permission.DROP_ITEM,
                 Permission.DAMAGE_ENTITY,
                 Permission.INTERACT_ENTITY,
-                Permission.DAMAGE_PLAYER,
                 Permission.IGNITE_BLOCK,
                 Permission.PLAYER_INTERACT,
                 Permission.USE_REDSTONE,

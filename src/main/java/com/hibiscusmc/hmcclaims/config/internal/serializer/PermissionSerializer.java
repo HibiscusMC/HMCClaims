@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.config.internal.serializer;
 
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,7 +32,10 @@ public class PermissionSerializer implements TypeSerializer<Permission> {
         Permission permission = PermissionRegistry.getPermission(rawPermission);
 
         if (permission == null) {
-            throw new SerializationException("Could not find permission '" + rawPermission + "'");
+            // The permission was removed from the plugin, ignore it instead of
+            // failing to load the whole config file.
+            Logger.warning("Ignoring unknown permission '{}'", rawPermission);
+            return null;
         }
 
         return permission;

@@ -24,4 +24,7 @@ public record Setting<T>(Key key, String displayName, String description, Functi
             new Setting<>("mob_explosions", "Mob Explosions", "If mob explosions will damage the claim", Boolean::parseBoolean, true);
     public final static Setting<Boolean> BLOCK_EXPLOSIONS =
             new Setting<>("block_explosions", "Block Explosions", "If block explosions will damage the claim", Boolean::parseBoolean, true);
+
+    public final static Setting<Boolean> PVP =
+            new Setting<>("pvp", "PvP", "If players can attack each other within the claim.", Boolean::parseBoolean, false);
 }

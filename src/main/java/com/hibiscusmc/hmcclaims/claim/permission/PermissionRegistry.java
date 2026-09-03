@@ -46,7 +46,6 @@ public class PermissionRegistry {
         register(Permission.PICKUP_ITEM);
         register(Permission.DROP_ITEM);
 
-        register(Permission.DAMAGE_PLAYER);
         register(Permission.IGNITE_BLOCK);
         register(Permission.PLAYER_INTERACT);
         register(Permission.USE_REDSTONE);

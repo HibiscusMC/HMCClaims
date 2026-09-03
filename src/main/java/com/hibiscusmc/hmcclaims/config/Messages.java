@@ -118,9 +118,6 @@ public class Messages {
             @Setting(value = "item-drop", required = true)
             private String dropItem = "<prefix><red>You can't drop items in this claim.";
 
-            @Setting(value = "damage-player", required = true)
-            private String damagePlayer = "<prefix><red>You can't attack players in this claim.";
-
             @Setting(value = "ignite-block", required = true)
             private String igniteBlock = "<prefix><red>You can't ignite blocks in this claim.";
 
@@ -182,6 +179,9 @@ public class Messages {
 
             @Setting(value = "leave-message", required = true)
             private String leaveMessage = "<prefix><gray>[Claim <claim_name>] <white><message>";
+
+            @Setting(value = "pvp-disabled", required = true)
+            private String pvpDisabled = "<prefix><red>PvP is disabled in this claim.";
         }
 
         @Getter

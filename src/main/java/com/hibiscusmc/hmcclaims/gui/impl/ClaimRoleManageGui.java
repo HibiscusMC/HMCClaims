@@ -32,9 +32,11 @@ import xyz.xenondevs.invui.item.ItemWrapper;
 import xyz.xenondevs.invui.util.TriConsumer;
 import xyz.xenondevs.invui.window.Window;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 @Singleton
 public class ClaimRoleManageGui extends ClaimListGui {
@@ -93,7 +95,22 @@ public class ClaimRoleManageGui extends ClaimListGui {
         previousPage = config.pages().get("previous-page");
         nextPage = config.pages().get("next-page");
 
-        permissionPages = config.permissionPages();
+        permissionPages = new HashMap<>();
+        for (Map.Entry<Integer, Map<String, ClaimRoleManageConfig.TogglePermissionIcon<Permission>>> page : config.permissionPages().entrySet()) {
+            if (page.getValue() == null) {
+                continue;
+            }
+
+            Map<String, ClaimRoleManageConfig.TogglePermissionIcon<Permission>> icons = page.getValue().entrySet().stream()
+                    .filter(entry -> entry.getValue().key() != null)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            if (icons.isEmpty()) {
+                continue;
+            }
+
+            permissionPages.put(page.getKey(), icons);
+        }
 
         backIcon = config.backIcon();
 

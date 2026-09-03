@@ -47,8 +47,6 @@ public record Permission(Key key, String displayName, String description) {
     public final static Permission DROP_ITEM =
             new Permission("drop_item", "Item Drop", "Allows dropping items within the\nclaim.");
 
-    public final static Permission DAMAGE_PLAYER =
-            new Permission("damage_player", "Damage Players", "Allows attacking other players within the claim.");
     public final static Permission IGNITE_BLOCK =
             new Permission("ignite_block", "Ignite Blocks", "Allows igniting blocks and placing fire\nwithin the claim.");
     public final static Permission PLAYER_INTERACT =

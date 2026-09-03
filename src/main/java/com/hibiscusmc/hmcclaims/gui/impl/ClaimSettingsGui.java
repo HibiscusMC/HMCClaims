@@ -250,7 +250,11 @@ public class ClaimSettingsGui extends ClaimListGui {
                 .computeIfAbsent(setting, (k) -> {
                     //noinspection unchecked
                     SettingHolder<Object> h = (SettingHolder<Object>) SettingHolder.from(setting);
-                    h.value(defaultSettingsHolder.get().defaultSettings().getOrDefault(setting, null));
+
+                    String rawValue = defaultSettingsHolder.get().defaultSettings().getOrDefault(setting, null);
+                    Object value = rawValue != null ? setting.parser().apply(rawValue) : null;
+                    h.value(value == null || value.equals("null") ? null : value);
+
                     return h;
                 });
 

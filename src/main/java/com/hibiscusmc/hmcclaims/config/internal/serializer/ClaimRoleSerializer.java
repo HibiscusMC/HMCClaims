@@ -11,6 +11,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ClaimRoleSerializer implements TypeSerializer<ClaimRole> {
 
@@ -38,7 +40,13 @@ public class ClaimRoleSerializer implements TypeSerializer<ClaimRole> {
         String name = nameNode.getString();
         List<Permission> permissions = permissionsNode.getList(Permission.class);
 
-        return new ClaimRole(null, name, permissions == null ? new HashSet<>() : new HashSet<>(permissions));
+        if (permissions == null) {
+            return new ClaimRole(null, name, new HashSet<>());
+        }
+
+        return new ClaimRole(null, name, permissions.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new)));
     }
 
     @Override

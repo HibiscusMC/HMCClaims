@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 @Singleton
 public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
@@ -98,7 +99,19 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
         permissionPages = new Int2ObjectArrayMap<>();
         for (Map.Entry<Integer, Map<String, ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission>>> page : config.permissionPages().entrySet()) {
-            permissionPages.put(page.getKey().intValue(), new HashSet<>(page.getValue().values()));
+            if (page.getValue() == null) {
+                continue;
+            }
+
+            Set<ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission>> icons = page.getValue().values().stream()
+                    .filter(icon -> icon.key() != null)
+                    .collect(Collectors.toCollection(HashSet::new));
+
+            if (icons.isEmpty()) {
+                continue;
+            }
+
+            permissionPages.put(page.getKey().intValue(), icons);
         }
 
         kickIcon = config.kickIcon();
