@@ -255,7 +255,7 @@ public class PlayerSelectionListener implements Listener {
         Player player = event.getPlayer();
 
         Selection selection = selectionManager.currentResize(player);
-        if (selection == null || !selection.active()) {
+        if (selection == null || selection.active()) {
             return;
         }
 
