@@ -136,6 +136,15 @@ public class Messages {
             @Setting(value = "use-trapdoor", required = true)
             private String useTrapdoor = "<prefix><red>You can't use trapdoors in this claim.";
 
+            @Setting(value = "use-lectern", required = true)
+            private String useLectern = "<prefix><red>You can't use lecterns in this claim.";
+
+            @Setting(value = "take-lectern-book", required = true)
+            private String takeLecternBook = "<prefix><red>You can't take books from lecterns in this claim.";
+
+            @Setting(value = "put-lectern-book", required = true)
+            private String putLecternBook = "<prefix><red>You can't place books on lecterns in this claim.";
+
             @Setting(value = "allow-flight", required = true)
             private String allowFlight = "<prefix><red>You can't fly in this claim.";
 

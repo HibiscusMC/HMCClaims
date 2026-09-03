@@ -52,6 +52,7 @@ public class PermissionRegistry {
         register(Permission.USE_REDSTONE);
         register(Permission.USE_DOOR);
         register(Permission.USE_TRAPDOOR);
+        register(Permission.USE_LECTERN);
         register(Permission.ALLOW_FLIGHT);
         register(Permission.USE_ELYTRA);
         register(Permission.IGNORE_LOCKED);

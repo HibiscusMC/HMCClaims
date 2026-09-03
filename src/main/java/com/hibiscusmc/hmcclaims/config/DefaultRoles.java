@@ -41,6 +41,7 @@ public class DefaultRoles {
                 Permission.USE_REDSTONE,
                 Permission.USE_DOOR,
                 Permission.USE_TRAPDOOR,
+                Permission.USE_LECTERN,
                 Permission.IGNORE_LOCKED,
                 Permission.USE_VEHICLE,
                 Permission.HARVEST_CROPS,
@@ -51,7 +52,8 @@ public class DefaultRoles {
         private ClaimRole everyone = new ClaimRole(null, "Everyone", new HashSet<>(Set.of(
                 Permission.USE_ITEM,
                 Permission.DROP_ITEM,
-                Permission.PICKUP_ITEM
+                Permission.PICKUP_ITEM,
+                Permission.USE_LECTERN
         )));
     }
 }

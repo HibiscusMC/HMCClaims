@@ -59,6 +59,8 @@ public record Permission(Key key, String displayName, String description) {
             new Permission("use_door", "Use Doors", "Allows opening and closing doors within\nthe claim.");
     public final static Permission USE_TRAPDOOR =
             new Permission("use_trapdoor", "Use Trapdoors", "Allows opening and closing trapdoors\nwithin the claim.");
+    public final static Permission USE_LECTERN =
+            new Permission("use_lectern", "Use Lecterns", "Allows reading books placed on lecterns\nwithin the claim.");
     public final static Permission ALLOW_FLIGHT =
             new Permission("allow_flight", "Allow Flight", "Allows flying within the claim.");
     public final static Permission USE_ELYTRA =

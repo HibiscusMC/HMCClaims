@@ -12,6 +12,7 @@ import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
+import org.bukkit.block.data.type.Lectern;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -23,12 +24,13 @@ import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.inventory.ItemStack;
 import team.unnamed.inject.Inject;
 
 /**
- * Place Blocks, Break Blocks, Use Containers, Doors, Trapdoors, Redstone,
- * Player Interact, Ignite, Harvest, Plant, Trample Soil
+ * Place Blocks, Break Blocks, Use Containers, Doors, Trapdoors, Lecterns,
+ * Redstone, Player Interact, Ignite, Harvest, Plant, Trample Soil
  */
 public class VanillaBlockListener implements Listener {
 
@@ -128,6 +130,68 @@ public class VanillaBlockListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onUseLectern(PlayerInteractEvent event) {
+        if (!event.getAction().isRightClick()) {
+            return;
+        }
+
+        Block block = event.getClickedBlock();
+        if (block == null || block.getType() != Material.LECTERN) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(block.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        ItemStack item = event.getItem();
+
+        if (item != null && Tag.ITEMS_LECTERN_BOOKS.isTagged(item.getType()) && isEmptyLectern(block)) {
+            if (claim.hasPermission(player.getUniqueId(), Permission.USE_CONTAINER)) {
+                return;
+            }
+
+            text.sendNotification(player, messagesHolder.get().claims().permissions().putLecternBook());
+            event.setCancelled(true);
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.USE_LECTERN)) {
+            return;
+        }
+
+        if (item != null && isAllowedPlacement(claim, player, item.getType())) {
+            event.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useLectern());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onTakeLecternBook(PlayerTakeLecternBookEvent event) {
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(event.getLectern().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.USE_CONTAINER)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().takeLecternBook());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onUseRedstone(PlayerInteractEvent event) {
         Action action = event.getAction();
         Block block = event.getClickedBlock();
@@ -166,6 +230,7 @@ public class VanillaBlockListener implements Listener {
         if (block.getState() instanceof Container
                 || isDoor(type)
                 || Tag.TRAPDOORS.isTagged(type)
+                || type == Material.LECTERN
                 || isRedstone(type, event.getAction())) {
             return;
         }
@@ -373,6 +438,10 @@ public class VanillaBlockListener implements Listener {
 
         return type.asBlockType() != null
                 && claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK);
+    }
+
+    private static boolean isEmptyLectern(Block block) {
+        return block.getBlockData() instanceof Lectern lectern && !lectern.hasBook();
     }
 
     private static boolean isDoor(Material type) {
