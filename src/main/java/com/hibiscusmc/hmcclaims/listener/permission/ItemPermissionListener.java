@@ -6,6 +6,7 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.util.PlantUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -86,6 +87,12 @@ public class ItemPermissionListener implements Listener {
 
         Player player = event.getPlayer();
         if (claim.hasPermission(player.getUniqueId(), Permission.USE_ITEM)) {
+            return;
+        }
+
+        if (PlantUtil.isPlantableItem(item.getType())
+                && (claim.hasPermission(player.getUniqueId(), Permission.PLANT_CROPS)
+                || claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK))) {
             return;
         }
 

@@ -5,14 +5,15 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.util.PlantUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
-import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -181,6 +182,12 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
+        ItemStack item = event.getItem();
+        if (item != null && isAllowedPlacement(claim, player, item.getType())) {
+            event.setUseInteractedBlock(Event.Result.DENY);
+            return;
+        }
+
         text.sendNotification(player, messagesHolder.get().claims().permissions().playerInteract());
         event.setCancelled(true);
     }
@@ -256,7 +263,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (isPlantable(block.getType())) {
+        if (PlantUtil.isPlantableBlock(block.getType())) {
             if (claim.hasPermission(player.getUniqueId(), Permission.PLANT_CROPS)
                     || claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK)) {
                 return;
@@ -287,7 +294,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (isHarvestable(block)) {
+        if (PlantUtil.isHarvestable(block)) {
             if (claim.hasPermission(player.getUniqueId(), Permission.HARVEST_CROPS)
                     || claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
                 return;
@@ -358,6 +365,16 @@ public class VanillaBlockListener implements Listener {
         event.setCancelled(true);
     }
 
+    private static boolean isAllowedPlacement(Claim claim, Player player, Material type) {
+        if (PlantUtil.isPlantableItem(type)) {
+            return claim.hasPermission(player.getUniqueId(), Permission.PLANT_CROPS)
+                    || claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK);
+        }
+
+        return type.asBlockType() != null
+                && claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK);
+    }
+
     private static boolean isDoor(Material type) {
         return Tag.DOORS.isTagged(type) || Tag.FENCE_GATES.isTagged(type);
     }
@@ -380,40 +397,5 @@ public class VanillaBlockListener implements Listener {
                  TRIPWIRE_HOOK -> true;
             default -> false;
         };
-    }
-
-    private static boolean isPlantable(Material type) {
-        return Tag.CROPS.isTagged(type)
-                || Tag.SAPLINGS.isTagged(type)
-                || type == Material.MELON_STEM
-                || type == Material.PUMPKIN_STEM
-                || type == Material.ATTACHED_MELON_STEM
-                || type == Material.ATTACHED_PUMPKIN_STEM
-                || type == Material.SWEET_BERRY_BUSH
-                || type == Material.CAVE_VINES
-                || type == Material.CAVE_VINES_PLANT
-                || type == Material.NETHER_WART
-                || type == Material.COCOA
-                || type == Material.CHORUS_FLOWER;
-    }
-
-    private static boolean isHarvestable(Block block) {
-        Material type = block.getType();
-        if (Tag.CROPS.isTagged(type)
-                || type == Material.NETHER_WART
-                || type == Material.COCOA
-                || type == Material.SWEET_BERRY_BUSH
-                || type == Material.CAVE_VINES
-                || type == Material.CAVE_VINES_PLANT) {
-            return block.getBlockData() instanceof Ageable;
-        }
-
-        return type == Material.MELON
-                || type == Material.PUMPKIN
-                || type == Material.SUGAR_CANE
-                || type == Material.CACTUS
-                || type == Material.BAMBOO
-                || type == Material.KELP
-                || type == Material.KELP_PLANT;
     }
 }
