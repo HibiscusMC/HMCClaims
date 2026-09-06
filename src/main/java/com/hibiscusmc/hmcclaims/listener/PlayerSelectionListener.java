@@ -37,7 +37,6 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 
@@ -51,9 +50,6 @@ import java.util.regex.Pattern;
  * Handles all player-driven interactions related to claim selection and inspection.
  */
 public class PlayerSelectionListener implements Listener {
-
-    @Inject
-    private Plugin plugin;
 
     @Inject
     private BlockMarker marker;
@@ -328,8 +324,7 @@ public class PlayerSelectionListener implements Listener {
             }
 
             claim = claimManager.createClaim(user, region, selection.main());
-            Claim created = claim;
-            player.getScheduler().run(plugin, _ -> EventUtil.call(new ClaimCreateEvent(player, created)), null);
+            EventUtil.call(new ClaimCreateEvent(player, claim));
         } else {
             claim = resizingClaim;
             PreClaimResizeEvent event = new PreClaimResizeEvent(player, claim);
