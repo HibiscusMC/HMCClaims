@@ -148,6 +148,29 @@ public class Settings {
 
     private Guis guis = new Guis();
 
+    private Forms forms = new Forms();
+
+    @Getter
+    @ConfigSerializable
+    public static class Forms {
+
+        @Setting(required = true)
+        @Comment("""
+                Whether Bedrock players (detected through Floodgate) get native Bedrock
+                forms instead of the inventory GUIs.
+                
+                Disabling this makes Bedrock players fall back to the regular GUIs,
+                which Geyser translates into an inventory screen. The same fallback
+                applies whenever Floodgate isn't installed.""")
+        private boolean enabled = true;
+
+        @Setting(value = "material-image-fallback", required = true)
+        @Comment("""
+                Whether buttons without a configured image should fall back to the
+                Bedrock texture of the material used by the matching GUI icon.""")
+        private boolean materialImageFallback = true;
+    }
+
     @Getter
     @ConfigSerializable
     public static class Guis {

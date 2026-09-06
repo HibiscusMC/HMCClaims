@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.util.Logger;
@@ -32,6 +33,9 @@ public class HMCClaimsCommand implements CommandClass {
     private GuiRegistry guis;
 
     @Inject
+    private FormRegistry forms;
+
+    @Inject
     private TextUtil text;
 
     @Command(names = "reload", permission = "hmcclaims.commands.admin.reload")
@@ -48,6 +52,7 @@ public class HMCClaimsCommand implements CommandClass {
             Settings.INVALID_WORLDS.clear();
 
             guis.reload();
+            forms.reload();
 
             text.send(sender, messages.get().pluginReload());
         } catch (Exception e) {

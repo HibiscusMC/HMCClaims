@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.listener;
 
+import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.User;
@@ -27,6 +28,9 @@ public class PlayerDataListener implements Listener {
 
     @Inject
     private StorageHolder holder;
+
+    @Inject
+    private FormService forms;
 
     /**
      * Loads player data from storage before the player joins.
@@ -77,6 +81,8 @@ public class PlayerDataListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
+
+        forms.clear(uuid);
 
         Storage storage = holder.get();
 

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.hibiscusmc.hmcclaims"
-version = "0.3.0"
+version = "0.4.0"
 
 val serverVersion = "26.2"
 val serverSnapshot = "build.+"
@@ -20,6 +20,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.xenondevs.xyz/releases")
+    maven("https://repo.opencollab.dev/main/")
 
     mavenCentral()
 }
@@ -45,6 +46,8 @@ dependencies {
     compileOnly("me.lojosho:HibiscusCommons:0.9.3")
     // PlaceholderAPI
     compileOnly("me.clip:placeholderapi:2.12.3")
+    // Floodgate (Bedrock forms via Geyser)
+    compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
 
     // Configurate
     implementation("org.spongepowered:configurate-core:4.4.5-HMC")
@@ -122,6 +125,8 @@ tasks {
         downloadPlugins {
             modrinth("placeholderapi", "pIvQcXW8")
             modrinth("luckperms", "v5.5.17-bukkit")
+            url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
+            url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
             url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.3/HibiscusCommons-0.9.3.jar")
         }
 

@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener;
 
 import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
+import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -19,6 +20,9 @@ public class IntegrationListener implements Listener {
     private GuiRegistry guis;
 
     @Inject
+    private FormRegistry forms;
+
+    @Inject
     private SchedulerUtil scheduler;
 
     @EventHandler
@@ -33,6 +37,7 @@ public class IntegrationListener implements Listener {
             }
 
             guis.load();
+            forms.load();
         });
     }
 }

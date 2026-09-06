@@ -17,3 +17,7 @@ dependencies:
     PlaceholderAPI:
       load: BEFORE
       required: false
+
+    floodgate:
+      load: BEFORE
+      required: false

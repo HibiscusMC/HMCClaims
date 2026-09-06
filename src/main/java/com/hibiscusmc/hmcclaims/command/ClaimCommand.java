@@ -7,9 +7,9 @@ import com.hibiscusmc.hmcclaims.command.argument.PlayerOrOffline;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
-import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimDeleteGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
+import com.hibiscusmc.hmcclaims.menu.MenuService;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -39,7 +39,7 @@ public class ClaimCommand implements CommandClass {
     private StorageHolder storageHolder;
 
     @Inject
-    private GuiRegistry guis;
+    private MenuService menus;
 
     @Inject
     private SelectionManager selectionManager;
@@ -64,9 +64,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        ClaimMemberListGui gui = guis.get(ClaimMemberListGui.class);
-
-        gui.open(sender, new GuiMetadata(claim));
+        menus.open(ClaimMemberListGui.class, sender, new GuiMetadata(claim));
     }
 
     @Command(names = {"delete"})
@@ -86,9 +84,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        ClaimDeleteGui gui = guis.get(ClaimDeleteGui.class);
-
-        gui.open(sender, new GuiMetadata(claim));
+        menus.open(ClaimDeleteGui.class, sender, new GuiMetadata(claim));
     }
 
     @Command(names = {"add", "trust"})

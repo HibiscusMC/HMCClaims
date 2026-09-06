@@ -3,10 +3,13 @@ package com.hibiscusmc.hmcclaims;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
+import com.hibiscusmc.hmcclaims.form.FormRegistry;
+import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.hook.Hook;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
+import com.hibiscusmc.hmcclaims.menu.MenuService;
 import com.hibiscusmc.hmcclaims.module.CommandModule;
 import com.hibiscusmc.hmcclaims.module.ConfigModule;
 import com.hibiscusmc.hmcclaims.module.HookModule;
@@ -102,6 +105,10 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(PermissionRegistry.class).to(PermissionRegistry.class);
         binder.bind(SettingRegistry.class).to(SettingRegistry.class);
         binder.bind(GuiRegistry.class).to(GuiRegistry.class);
+
+        binder.bind(FormService.class).to(FormService.class);
+        binder.bind(FormRegistry.class).to(FormRegistry.class);
+        binder.bind(MenuService.class).to(MenuService.class);
 
         binder.bind(StorageHolder.class).to(StorageHolder.class);
         binder.bind(BlockMarker.class).to(BlockMarker.class);

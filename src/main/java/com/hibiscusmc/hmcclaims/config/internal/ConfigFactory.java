@@ -88,7 +88,7 @@ public class ConfigFactory {
      * @param loadLater If true, stores the path without performing the initial I/O.
      * @throws Exception If serialization fails.
      */
-    public static <T> void load(Path path, Class<T> clazz, boolean loadLater) throws Exception {
+    public static <T> void load(Path path, Class<T> clazz, boolean loadLater) {
         if (loadLater) {
             // noinspection unchecked
             ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.computeIfAbsent(clazz, k -> new ConfigHolder<>());
@@ -97,41 +97,45 @@ public class ConfigFactory {
             return;
         }
 
-        YamlConfigurationLoader.Builder builder = YamlConfigurationLoader.builder()
-                .path(path)
-                .defaultOptions(opts -> opts
-                        .shouldCopyDefaults(true)
-                        .header(CONFIG_HEADER)
-                        .serializers(build -> build
-                                .register(ItemStack.class, CustomItemSerializer.INSTANCE)
-                                .register(Permission.class, PermissionSerializer.INSTANCE)
-                                .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
-                                .register(Action.class, ActionSerializer.INSTANCE)
-                                .register(RangeUtil.class, RangeSerializer.INSTANCE)
-                                .register(Setting.class, SettingSerializer.INSTANCE)
-                        )
-                )
-                .indent(2)
-                .commentsEnabled(true)
-                .nodeStyle(NodeStyle.BLOCK);
+        try {
+            YamlConfigurationLoader.Builder builder = YamlConfigurationLoader.builder()
+                    .path(path)
+                    .defaultOptions(opts -> opts
+                            .shouldCopyDefaults(true)
+                            .header(CONFIG_HEADER)
+                            .serializers(build -> build
+                                    .register(ItemStack.class, CustomItemSerializer.INSTANCE)
+                                    .register(Permission.class, PermissionSerializer.INSTANCE)
+                                    .register(ClaimRole.class, ClaimRoleSerializer.INSTANCE)
+                                    .register(Action.class, ActionSerializer.INSTANCE)
+                                    .register(RangeUtil.class, RangeSerializer.INSTANCE)
+                                    .register(Setting.class, SettingSerializer.INSTANCE)
+                            )
+                    )
+                    .indent(2)
+                    .commentsEnabled(true)
+                    .nodeStyle(NodeStyle.BLOCK);
 
-        Field optsField = builder.getClass().getDeclaredField("options");
-        optsField.setAccessible(true);
+            Field optsField = builder.getClass().getDeclaredField("options");
+            optsField.setAccessible(true);
 
-        DumperOptions dumperOptions = (DumperOptions) optsField.get(builder);
-        dumperOptions.setWidth(Integer.MAX_VALUE);
+            DumperOptions dumperOptions = (DumperOptions) optsField.get(builder);
+            dumperOptions.setWidth(Integer.MAX_VALUE);
 
-        YamlConfigurationLoader loader = builder.build();
+            YamlConfigurationLoader loader = builder.build();
 
-        CommentedConfigurationNode node = loader.load();
-        T instance = node.get(clazz);
+            CommentedConfigurationNode node = loader.load();
+            T instance = node.get(clazz);
 
-        loader.save(node);
+            loader.save(node);
 
-        // noinspection unchecked
-        ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.computeIfAbsent(clazz, k -> new ConfigHolder<>());
-        holder.update(instance);
-        holder.path(path);
+            // noinspection unchecked
+            ConfigHolder<T> holder = (ConfigHolder<T>) CONFIG_FILES.computeIfAbsent(clazz, k -> new ConfigHolder<>());
+            holder.update(instance);
+            holder.path(path);
+        } catch (Exception e) {
+            throw new RuntimeException("Something happened while loading " + path.toString(), e);
+        }
     }
 
     /**

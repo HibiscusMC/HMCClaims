@@ -4,6 +4,18 @@ import com.hibiscusmc.hmcclaims.config.DefaultRoles;
 import com.hibiscusmc.hmcclaims.config.DefaultSettings;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.config.form.ClaimBannedListFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimDeleteFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimListFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimMemberListFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimMemberPermissionsFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimMemberRoleFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimRoleManageFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimRolesFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.ClaimSettingsFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.DialogsFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.MainClaimManageFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.SubClaimManageFormConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimBannedListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimDeleteConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
@@ -56,6 +68,23 @@ public class ConfigModule extends AbstractModule {
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "member-manage-permissions.yml")), ClaimMemberPermissionsConfig.class, true);
 
             ConfigFactory.load(pluginPath.resolve(Path.of("guis", "claim-delete-confirm.yml")), ClaimDeleteConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-list.yml")), ClaimListFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-members.yml")), ClaimMemberListFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-banlist.yml")), ClaimBannedListFormConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-roles.yml")), ClaimRolesFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-settings.yml")), ClaimSettingsFormConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-manage.yml")), MainClaimManageFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "sub-claim-manage.yml")), SubClaimManageFormConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "role-manage.yml")), ClaimRoleManageFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "member-manage-role.yml")), ClaimMemberRoleFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "member-manage-permissions.yml")), ClaimMemberPermissionsFormConfig.class, true);
+
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "claim-delete-confirm.yml")), ClaimDeleteFormConfig.class, true);
+            ConfigFactory.load(pluginPath.resolve(Path.of("forms", "dialogs.yml")), DialogsFormConfig.class, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -104,5 +133,41 @@ public class ConfigModule extends AbstractModule {
 
         bind(new TypeReference<ConfigHolder<ClaimDeleteConfig>>() {
         }).toInstance(ConfigFactory.getHolder(ClaimDeleteConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimListFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimListFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimMemberListFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimMemberListFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimBannedListFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimBannedListFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimRolesFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimRolesFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimSettingsFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimSettingsFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<MainClaimManageFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(MainClaimManageFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<SubClaimManageFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(SubClaimManageFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimRoleManageFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimRoleManageFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimMemberRoleFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimMemberRoleFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimMemberPermissionsFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimMemberPermissionsFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<ClaimDeleteFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(ClaimDeleteFormConfig.class));
+
+        bind(new TypeReference<ConfigHolder<DialogsFormConfig>>() {
+        }).toInstance(ConfigFactory.getHolder(DialogsFormConfig.class));
     }
 }

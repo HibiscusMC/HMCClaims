@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.command;
 
-import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimListGui;
+import com.hibiscusmc.hmcclaims.menu.MenuService;
 import org.bukkit.entity.Player;
 import team.unnamed.commandflow.annotated.CommandClass;
 import team.unnamed.commandflow.annotated.annotation.Command;
@@ -12,12 +12,10 @@ import team.unnamed.inject.Inject;
 public class ClaimListCommand implements CommandClass {
 
     @Inject
-    private GuiRegistry guis;
+    private MenuService menus;
 
     @Command(names = {""})
     public void list(@Sender Player sender) {
-        ClaimListGui gui = guis.get(ClaimListGui.class);
-
-        gui.open(sender);
+        menus.open(ClaimListGui.class, sender);
     }
 }
