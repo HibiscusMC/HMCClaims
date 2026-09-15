@@ -11,6 +11,7 @@ import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -47,6 +48,8 @@ public class ClaimDeleteGui extends ClaimListGui {
 
     @Inject
     private ClaimManager claimManager;
+    @Inject
+    private UserManager userManager;
 
     @Inject
     private GuiRegistry guis;
@@ -147,6 +150,8 @@ public class ClaimDeleteGui extends ClaimListGui {
                     .setItemProvider(TextUtil.parseItemPlaceholders(confirm.item(), player))
                     .addClickHandler(click -> {
                         claimManager.deleteClaim(claim);
+                        userManager.calculateUsedBlocks(player.getUniqueId());
+
                         text.send(player, messagesHolder.get().claims().deleted(), Map.of(
                                 "claim_name", claim.name()
                         ));

@@ -11,6 +11,7 @@ import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
@@ -35,6 +36,8 @@ public class ClaimDeleteForm implements BaseForm {
 
     @Inject
     private ClaimManager claimManager;
+    @Inject
+    private UserManager userManager;
 
     @Inject
     private PlaceholderUtil placeholders;
@@ -76,6 +79,7 @@ public class ClaimDeleteForm implements BaseForm {
                 FormText.line(config.cancel(), player, data),
                 () -> {
                     claimManager.deleteClaim(claim);
+                    userManager.calculateUsedBlocks(player.getUniqueId());
 
                     text.send(player, messagesHolder.get().claims().deleted(), Map.of(
                             "claim_name", claim.name()
