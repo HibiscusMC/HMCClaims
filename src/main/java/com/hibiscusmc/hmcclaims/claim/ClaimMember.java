@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,14 @@ import java.util.UUID;
 @Data
 @EqualsAndHashCode(of = {"uuid", "claim"})
 public class ClaimMember {
+
+    /**
+     * The order members are listed in: the claim owner first, then everyone else by the
+     * time they joined.
+     */
+    public final static Comparator<ClaimMember> DISPLAY_ORDER = Comparator
+            .comparing(ClaimMember::isOwner, Comparator.reverseOrder())
+            .thenComparing(member -> member.joinedTimestamp());
 
     private final UUID uuid;
     private final Claim claim;
@@ -69,6 +78,13 @@ public class ClaimMember {
 
         this.banned = false;
         this.joinedTimestamp = Instant.now();
+    }
+
+    /**
+     * @return {@code true} if this member owns the claim.
+     */
+    public boolean isOwner() {
+        return claim.owner().equals(uuid);
     }
 
     /**

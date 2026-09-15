@@ -32,7 +32,6 @@ import xyz.xenondevs.invui.item.Item;
 import xyz.xenondevs.invui.window.Window;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -208,9 +207,7 @@ public class ClaimDeleteGui extends ClaimListGui {
 
         List<ClaimMember> sortedList = claim.members()
                 .stream()
-                .sorted(Comparator.comparing(member -> member.equals(claim.owner()), Comparator.reverseOrder())
-                        .thenComparingLong(member -> ((ClaimMember) member).joinedTimestamp().getEpochSecond())
-                )
+                .sorted(ClaimMember.DISPLAY_ORDER)
                 .limit(4)
                 .toList();
 

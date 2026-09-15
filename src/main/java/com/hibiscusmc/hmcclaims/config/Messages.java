@@ -70,6 +70,9 @@ public class Messages {
         @Setting(value = "player-not-member", required = true)
         private String playerNotMember = "<prefix><red>This player is not a member of this claim!";
 
+        @Setting(value = "cant-remove-owner", required = true)
+        private String cantRemoveOwner = "<prefix><red>The owner can't be removed from their own claim!";
+
         @Setting(value = "self-already-owner", required = true)
         private String selfAlreadyOwner = "<prefix><red>You're already the owner of this claim!";
 

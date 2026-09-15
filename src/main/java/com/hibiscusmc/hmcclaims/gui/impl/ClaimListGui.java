@@ -45,7 +45,6 @@ import xyz.xenondevs.invui.window.Window;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -451,9 +450,7 @@ public class ClaimListGui implements BaseGui {
 
         List<ClaimMember> sortedList = claim.members()
                 .stream()
-                .sorted(Comparator.comparing(member -> member.equals(claim.owner()), Comparator.reverseOrder())
-                        .thenComparingLong(member -> ((ClaimMember) member).joinedTimestamp().getEpochSecond())
-                )
+                .sorted(ClaimMember.DISPLAY_ORDER)
                 .limit(4)
                 .toList();
 

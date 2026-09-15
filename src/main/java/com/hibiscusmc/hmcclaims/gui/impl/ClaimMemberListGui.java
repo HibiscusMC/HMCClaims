@@ -43,7 +43,6 @@ import xyz.xenondevs.invui.util.TriConsumer;
 import xyz.xenondevs.invui.window.Window;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -267,12 +266,7 @@ public class ClaimMemberListGui extends ClaimListGui {
         List<Item> items = new ArrayList<>();
 
         List<Map.Entry<ClaimMember, Item>> sortedMembers = parsedMembers.entrySet().stream()
-                .sorted(Comparator.<Map.Entry<ClaimMember, Item>, Boolean>comparing(
-                                        entry -> entry.getKey().uuid().equals(claim.owner()),
-                                        Comparator.reverseOrder()
-                                )
-                                .thenComparingLong(entry -> entry.getKey().joinedTimestamp().getEpochSecond())
-                )
+                .sorted(Map.Entry.comparingByKey(ClaimMember.DISPLAY_ORDER))
                 .toList();
 
         for (Map.Entry<ClaimMember, Item> entry : sortedMembers) {

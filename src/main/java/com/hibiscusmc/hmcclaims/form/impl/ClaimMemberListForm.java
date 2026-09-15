@@ -33,7 +33,6 @@ import team.unnamed.inject.Singleton;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -90,10 +89,7 @@ public class ClaimMemberListForm implements BaseForm {
             ClaimMember self = claim.getMember(player.getUniqueId()).orElse(null);
 
             List<ClaimMember> all = claim.members().stream()
-                    .sorted(Comparator.<ClaimMember, Boolean>comparing(
-                                    member -> member.uuid().equals(claim.owner()), Comparator.reverseOrder()
-                            )
-                            .thenComparingLong(member -> member.joinedTimestamp().getEpochSecond()))
+                    .sorted(ClaimMember.DISPLAY_ORDER)
                     .toList();
 
             List<ClaimMember> matching = all.stream()
