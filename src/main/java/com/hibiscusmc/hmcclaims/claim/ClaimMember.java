@@ -27,7 +27,12 @@ public class ClaimMember {
 
     private final UUID uuid;
     private final Claim claim;
-    private final String lastKnownName;
+
+    /**
+     * The player's name as of their last join, kept in sync by
+     * {@link ClaimManager#refreshMemberName(UUID, String)}.
+     */
+    private String lastKnownName;
 
     private ClaimRole role;
 

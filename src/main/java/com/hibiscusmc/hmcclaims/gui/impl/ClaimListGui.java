@@ -24,8 +24,6 @@ import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -495,8 +493,6 @@ public class ClaimListGui implements BaseGui {
 
     @NotNull
     private String buildMemberRow(@NotNull BaseListGuiConfig.ClaimsIcon icon, @NotNull ClaimMember member, boolean isOwner) {
-        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(member.lastKnownName());
-
         String name;
         if (isOwner) {
             name = icon.owner();
@@ -504,12 +500,12 @@ public class ClaimListGui implements BaseGui {
             name = icon.member();
         }
 
-        String playerName;
-        if (player == null || (playerName = player.getName()) == null || playerName.isEmpty()) {
+        String playerName = member.lastKnownName();
+        if (playerName.isEmpty()) {
             return buildHeadComponent(null) + " " + name.replace("<name>", "Unknown Player");
         }
 
-        return buildHeadComponent(member.lastKnownName()) + " " + name.replace("<name>", playerName);
+        return buildHeadComponent(playerName) + " " + name.replace("<name>", playerName);
     }
 
     @NotNull

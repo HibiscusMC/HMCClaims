@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.input;
 
 import com.hibiscusmc.hmcclaims.input.type.PlayerInput;
 import com.hibiscusmc.hmcclaims.input.type.StringInput;
+import com.hibiscusmc.hmcclaims.user.PlayerResolver;
 import net.minecraft.server.players.NameAndId;
 
 import java.util.HashMap;
@@ -18,9 +19,9 @@ public class InputRegistry {
     private final static Map<Class<?>, Input<?>> INPUT_MAP
             = new HashMap<>();
 
-    protected InputRegistry() {
+    protected InputRegistry(PlayerResolver resolver) {
         register(String.class, new StringInput());
-        register(NameAndId.class, new PlayerInput());
+        register(NameAndId.class, new PlayerInput(resolver));
     }
 
     /**

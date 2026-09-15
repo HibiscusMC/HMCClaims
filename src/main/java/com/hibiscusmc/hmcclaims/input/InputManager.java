@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.input;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.task.InputDisplayTask;
+import com.hibiscusmc.hmcclaims.user.PlayerResolver;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
@@ -33,8 +34,9 @@ public class InputManager {
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
-    public InputManager() {
-        this.registry = new InputRegistry();
+    @Inject
+    public InputManager(PlayerResolver resolver) {
+        this.registry = new InputRegistry(resolver);
     }
 
     /**

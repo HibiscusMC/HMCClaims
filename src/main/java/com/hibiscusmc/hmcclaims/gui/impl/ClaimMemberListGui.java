@@ -310,7 +310,7 @@ public class ClaimMemberListGui extends ClaimListGui {
             boolean canManage = selfMember != null && selfMember.canManage(member);
             Map<String, String> data = placeholders.memberInfo(member);
 
-            ItemStack head = ItemUtil.buildHeadWithName(member.lastKnownName());
+            ItemStack head = ItemUtil.buildHead(member.uuid(), member.lastKnownName());
             if (canManage) {
                 ItemUtil.applyDisplay(head,
                         TextUtil.parseItem(memberIcon.name(), player, data),

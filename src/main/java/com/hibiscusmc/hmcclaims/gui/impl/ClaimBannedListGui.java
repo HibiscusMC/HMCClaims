@@ -268,7 +268,7 @@ public class ClaimBannedListGui extends ClaimListGui {
                     "banned_date", StringUtil.formatDate(member.joinedTimestamp())
             );
 
-            ItemStack head = ItemUtil.buildHeadWithName(member.lastKnownName());
+            ItemStack head = ItemUtil.buildHead(member.uuid(), member.lastKnownName());
             ItemUtil.applyDisplay(head,
                     TextUtil.parseItem(memberIcon.name(), data),
                     TextUtil.parseItemLore(memberIcon.lore(), data)

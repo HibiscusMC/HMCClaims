@@ -45,7 +45,8 @@ public class SQLUserRepository implements UserRepository {
         String prefix = settings.prefix();
 
         this.getUserQuery = "SELECT * FROM " + prefix + "users WHERE uuid = ?;";
-        this.getUserByNameQuery = "SELECT * FROM " + prefix + "users WHERE last_known_name = ?;";
+        // Names are matched case-insensitively regardless of the column's collation (H2 is case-sensitive by default)
+        this.getUserByNameQuery = "SELECT * FROM " + prefix + "users WHERE LOWER(last_known_name) = LOWER(?);";
 
         this.saveUserQuery = "INSERT INTO " + prefix + "users (uuid, last_known_name, claim_blocks, last_online) " +
                 "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE " +

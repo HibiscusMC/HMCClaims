@@ -28,6 +28,8 @@ message MemberData {
   optional int64 join_date = 3;
 
   map<string, bool> permissions = 4;
+
+  optional string name = 5;
 }
 
 message SettingsMessage {

@@ -350,6 +350,21 @@ public class Messages {
 
             @Setting(value = "remove-amount", required = true)
             private String removeAmount = "<prefix><gray>You removed <white><amount></white> claim blocks from <white><name></white>!\n<gray>New amount: <white><new_amount>";
+
+            @Setting(required = true)
+            private String purchased = "<prefix><gray>You bought <white><amount></white> claim blocks for <white><cost></white>!\n<gray>New amount: <white><new_amount>";
+
+            @Setting(value = "purchase-disabled", required = true)
+            private String purchaseDisabled = "<prefix><red>Claim blocks can't be bought on this server.";
+
+            @Setting(value = "purchase-out-of-range", required = true)
+            private String purchaseOutOfRange = "<prefix><red>You can only buy between <white><min></white> and <white><max></white> claim blocks at once!";
+
+            @Setting(value = "not-enough-money", required = true)
+            private String notEnoughMoney = "<prefix><red>You don't have enough money! <gray>Cost: <white><cost></white>, <gray>Balance: <white><balance>";
+
+            @Setting(value = "purchase-failed", required = true)
+            private String purchaseFailed = "<prefix><red>The purchase couldn't be completed. Please try again later.";
         }
     }
 

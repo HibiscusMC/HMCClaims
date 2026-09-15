@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.listener;
 
+import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -12,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import team.unnamed.inject.Inject;
 
@@ -31,6 +33,9 @@ public class PlayerDataListener implements Listener {
 
     @Inject
     private FormService forms;
+
+    @Inject
+    private ClaimManager claimManager;
 
     /**
      * Loads player data from storage before the player joins.
@@ -70,6 +75,18 @@ public class PlayerDataListener implements Listener {
 
             Logger.error("Couldn't load player data.", ex);
         }
+    }
+
+    /**
+     * Brings the name stored with the player's claim memberships up to date.
+     *
+     * @param event The join event.
+     */
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        claimManager.refreshMemberName(player.getUniqueId(), player.getName());
     }
 
     /**

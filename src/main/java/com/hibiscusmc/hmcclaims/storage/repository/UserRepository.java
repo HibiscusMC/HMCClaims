@@ -24,7 +24,7 @@ public interface UserRepository {
     CompletableFuture<@Nullable User> getUser(@NotNull UUID uuid);
 
     /**
-     * Retrieves a user from storage by their last known username.
+     * Retrieves a user from storage by their last known username, ignoring case.
      * <p>
      * <strong>Note:</strong> This lookup is often used for administrative commands and may
      * return older data if the player has changed their name recently.

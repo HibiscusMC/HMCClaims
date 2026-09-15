@@ -64,18 +64,22 @@ public class ItemUtil {
 
     /**
      * Creates an {@link ItemStack} of a specific player's head.
+     * <p>
+     * The profile only carries the id and name; the server fills in the skin when the item
+     * is sent to a client, so this works for players the server's user cache has dropped.
      *
+     * @param playerId   The id of the player whose head is being created.
      * @param playerName The name of the player whose head is being created.
      * @return A new {@link Material#PLAYER_HEAD} ItemStack.
      * @noinspection UnstableApiUsage
      */
     @NotNull
-    @Contract(value = "_ -> new", pure = true)
-    public static ItemStack buildHeadWithName(@NotNull String playerName) {
+    @Contract(value = "_, _ -> new", pure = true)
+    public static ItemStack buildHead(@NotNull UUID playerId, @NotNull String playerName) {
         ItemStack head = ItemStack.of(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
-        meta.setOwningPlayer(Bukkit.getOfflinePlayerIfCached(playerName));
+        meta.setPlayerProfile(Bukkit.createProfile(playerId, playerName.isEmpty() ? null : playerName));
         head.setItemMeta(meta);
 
         TooltipDisplay display = TooltipDisplay.tooltipDisplay()

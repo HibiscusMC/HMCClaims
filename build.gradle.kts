@@ -21,6 +21,7 @@ repositories {
     maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.xenondevs.xyz/releases")
     maven("https://repo.opencollab.dev/main/")
+    maven("https://jitpack.io")
 
     mavenCentral()
 }
@@ -48,6 +49,10 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.12.3")
     // Floodgate (Bedrock forms via Geyser)
     compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
+    // Vault (claim block purchases)
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1") {
+        exclude("org.bukkit")
+    }
 
     // Configurate
     implementation("org.spongepowered:configurate-core:4.4.5-HMC")
@@ -128,6 +133,7 @@ tasks {
             url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
             url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
             url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.3/HibiscusCommons-0.9.3.jar")
+            url("https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar")
         }
 
         minecraftVersion(serverVersion)

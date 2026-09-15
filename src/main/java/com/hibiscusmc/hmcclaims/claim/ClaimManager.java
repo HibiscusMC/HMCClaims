@@ -362,6 +362,28 @@ public class ClaimManager {
     }
 
     /**
+     * Updates the stored name of a player across every claim they are a member of and
+     * persists the ones that changed. Names are stored with the membership, so this is
+     * what keeps them current after a player renames.
+     *
+     * @param uuid The player's id.
+     * @param name The player's current name.
+     */
+    public void refreshMemberName(@NotNull UUID uuid, @NotNull String name) {
+        Storage storage = storageHolder.get();
+
+        for (Claim claim : claims.values()) {
+            ClaimMember member = claim.getMember(uuid).orElse(null);
+            if (member == null || member.lastKnownName().equals(name)) {
+                continue;
+            }
+
+            member.lastKnownName(name);
+            storage.claims().saveMembers(claim);
+        }
+    }
+
+    /**
      * Gets all the player claims
      *
      * @param uuid the uuid of the owner of the claims

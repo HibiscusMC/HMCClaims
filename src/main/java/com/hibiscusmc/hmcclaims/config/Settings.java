@@ -103,9 +103,29 @@ public class Settings {
         @Comment("The amount of claim blocks every player will begin with")
         private int startingAmount = 100;
 
-        @Setting(required = true)
-        @Comment("How much every claim blocks will cost. You need Vault for this!")
-        private int price = 1;
+        @Comment("Lets players buy claim blocks with /claimblocks buy. You need Vault and an economy plugin for this!")
+        private Purchase purchase = new Purchase();
+
+        @Getter
+        @ConfigSerializable
+        public static class Purchase {
+
+            @Setting(required = true)
+            @Comment("Whether players are able to buy claim blocks at all")
+            private boolean enabled = true;
+
+            @Setting(required = true)
+            @Comment("How much a single claim block costs")
+            private double price = 1.0;
+
+            @Setting(value = "min-amount", required = true)
+            @Comment("The least amount of claim blocks a player can buy at once")
+            private int minAmount = 1;
+
+            @Setting(value = "max-amount", required = true)
+            @Comment("The most claim blocks a player can buy at once. Set to -1 for no limit.")
+            private int maxAmount = 10_000;
+        }
     }
 
     @Setting(value = "notification-cooldown", required = true)

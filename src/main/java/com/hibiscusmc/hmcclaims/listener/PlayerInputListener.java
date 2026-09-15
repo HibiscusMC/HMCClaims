@@ -3,7 +3,6 @@ package com.hibiscusmc.hmcclaims.listener;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.input.Input;
-import com.hibiscusmc.hmcclaims.input.InputErrorReason;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -42,9 +41,7 @@ public class PlayerInputListener implements Listener {
 
         event.setCancelled(true);
         Messages messages = messagesHolder.get();
-        scheduler.schedule(() -> {
-            InputErrorReason error = input.submit(PLAIN_TEXT.serialize(event.message()));
-
+        scheduler.schedule(() -> input.submit(PLAIN_TEXT.serialize(event.message())).thenAccept(error -> {
             if (error == null) {
                 manager.destroy(player);
                 return;
@@ -53,7 +50,7 @@ public class PlayerInputListener implements Listener {
             switch (error) {
                 case PLAYER_NOT_FOUND -> text.send(player, messages.commands().playerNotFound());
             }
-        });
+        }));
     }
 
     @EventHandler

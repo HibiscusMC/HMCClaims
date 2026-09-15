@@ -20,8 +20,6 @@ import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -255,8 +253,6 @@ public class ClaimDeleteGui extends ClaimListGui {
 
     @NotNull
     private String buildMemberRow(@NotNull ClaimDeleteConfig.ClaimIcon icon, @NotNull ClaimMember member, boolean isOwner) {
-        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(member.lastKnownName());
-
         String name;
         if (isOwner) {
             name = icon.owner();
@@ -264,12 +260,12 @@ public class ClaimDeleteGui extends ClaimListGui {
             name = icon.member();
         }
 
-        String playerName;
-        if (player == null || (playerName = player.getName()) == null || playerName.isEmpty()) {
+        String playerName = member.lastKnownName();
+        if (playerName.isEmpty()) {
             return buildHeadComponent(null) + " " + name.replace("<name>", "Unknown Player");
         }
 
-        return buildHeadComponent(member.lastKnownName()) + " " + name.replace("<name>", playerName);
+        return buildHeadComponent(playerName) + " " + name.replace("<name>", playerName);
     }
 
     @NotNull

@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.input;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -30,12 +31,17 @@ public interface Input<T> {
     }
 
     /**
-     * Submits this input with the raw response
+     * Submits this input with the raw response.
+     * <p>
+     * Parsing may need to leave the main thread (a player lookup, for instance), so the
+     * outcome is reported through a future. Implementations still invoke the submit
+     * callback on the main thread.
      *
      * @param raw The raw response sent by the player
-     * @return {@code true} if the input was parsed successfully.
+     * @return A future completing with {@code null} if the input was parsed successfully,
+     * otherwise with the reason it wasn't.
      */
-    default @Nullable InputErrorReason submit(String raw) {
+    default CompletableFuture<@Nullable InputErrorReason> submit(String raw) {
         throw new IllegalArgumentException("Input submit[String] is not implemented yet");
     }
 

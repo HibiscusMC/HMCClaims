@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputErrorReason;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class StringInput implements Input<String> {
@@ -13,10 +14,10 @@ public class StringInput implements Input<String> {
     private Runnable onCancel;
 
     @Override
-    public @Nullable InputErrorReason submit(String raw) {
+    public CompletableFuture<@Nullable InputErrorReason> submit(String raw) {
         onSubmit.accept(raw);
 
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override

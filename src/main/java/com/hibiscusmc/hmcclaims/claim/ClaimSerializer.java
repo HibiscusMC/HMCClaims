@@ -77,7 +77,8 @@ public class ClaimSerializer {
             MemberData.Builder memberDataBuilder = MemberData.newBuilder()
                     .setRoleId(ByteUtil.UUIDtoByteString(member.role().id()))
                     .setBanned(member.banned())
-                    .setJoinDate(System.currentTimeMillis());
+                    .setJoinDate(member.joinedTimestamp().toEpochMilli())
+                    .setName(member.lastKnownName());
 
             for (Object2BooleanMap.Entry<Permission> entry : member.permissions().object2BooleanEntrySet()) {
                 memberDataBuilder.putPermissions(entry.getKey().key().asString(), entry.getBooleanValue());
@@ -168,12 +169,14 @@ public class ClaimSerializer {
                     }
                 });
 
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
-
                 ClaimMember member = new ClaimMember(
-                        playerId, claim, offlinePlayer.hasPlayedBefore() ? offlinePlayer.getName() : "",
+                        playerId, claim, data.getName().isEmpty() ? legacyName(playerId) : data.getName(),
                         role.orElseThrow(), overrides);
                 member.banned(data.getBanned());
+
+                if (data.hasJoinDate()) {
+                    member.joinedTimestamp(Instant.ofEpochMilli(data.getJoinDate()));
+                }
 
                 members.add(member);
             });
@@ -182,6 +185,21 @@ public class ClaimSerializer {
         }
 
         return members;
+    }
+
+    /**
+     * Recovers a member's name from their player data file, the only place it lived before
+     * names were stored with the membership. Whatever is found is persisted the next time
+     * the members are saved (a join refreshes it too), so this is a one-off per legacy member.
+     *
+     * @return The name from the player data file, or an empty string if there is none.
+     */
+    @NotNull
+    private static String legacyName(@NotNull UUID playerId) {
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
+        String name = offlinePlayer.hasPlayedBefore() ? offlinePlayer.getName() : null;
+
+        return name == null ? "" : name;
     }
 
     /**

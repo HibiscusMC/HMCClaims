@@ -2,28 +2,43 @@ package com.hibiscusmc.hmcclaims.input.type;
 
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputErrorReason;
+import com.hibiscusmc.hmcclaims.user.PlayerResolver;
 import net.minecraft.server.players.NameAndId;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class PlayerInput implements Input<NameAndId> {
+
+    private final PlayerResolver resolver;
 
     private Consumer<NameAndId> onSubmit;
 
     private Runnable onCancel;
 
-    @Override
-    public @Nullable InputErrorReason submit(String raw) {
-        OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(raw);
-        if (player == null || player.getName() == null || !player.hasPlayedBefore()) {
-            return InputErrorReason.PLAYER_NOT_FOUND;
-        }
+    public PlayerInput(@NotNull PlayerResolver resolver) {
+        this.resolver = resolver;
+    }
 
-        onSubmit.accept(new NameAndId(player.getUniqueId(), player.getName()));
-        return null;
+    @Override
+    public CompletableFuture<@Nullable InputErrorReason> submit(String raw) {
+        CompletableFuture<InputErrorReason> result = new CompletableFuture<>();
+
+        // The resolver hands the result back on the main thread, so the callback (and with
+        // it the completion of this future) never runs on a storage thread
+        resolver.resolve(raw, player -> {
+            if (player == null) {
+                result.complete(InputErrorReason.PLAYER_NOT_FOUND);
+                return;
+            }
+
+            onSubmit.accept(player);
+            result.complete(null);
+        });
+
+        return result;
     }
 
     @Override

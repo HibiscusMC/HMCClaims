@@ -6,13 +6,11 @@ import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
+import com.hibiscusmc.hmcclaims.user.PlayerResolver;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import net.minecraft.server.players.NameAndId;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -35,6 +33,9 @@ public class FormInputs {
 
     @Inject
     private FormService forms;
+
+    @Inject
+    private PlayerResolver resolver;
 
     @Inject
     private TextUtil text;
@@ -116,9 +117,7 @@ public class FormInputs {
             @NotNull Map<String, ?> placeholders,
             @NotNull Consumer<NameAndId> onSubmit, @NotNull Runnable onCancel
     ) {
-        prompt(player, dialog, placeholders, "", submitted -> {
-            NameAndId resolved = resolve(submitted);
-
+        prompt(player, dialog, placeholders, "", submitted -> resolver.resolve(submitted, resolved -> {
             if (resolved == null) {
                 text.send(player, config().playerNotFound());
                 onCancel.run();
@@ -126,27 +125,7 @@ public class FormInputs {
             }
 
             onSubmit.accept(resolved);
-        }, onCancel);
-    }
-
-    /**
-     * Resolves a typed name into a known player.
-     * <p>
-     * Matches {@link com.hibiscusmc.hmcclaims.input.type.PlayerInput}: the player must
-     * have joined this server before.
-     *
-     * @param name The typed name.
-     * @return The resolved player, or {@code null} when there is no such player.
-     */
-    @Nullable
-    private NameAndId resolve(@NotNull String name) {
-        OfflinePlayer offline = Bukkit.getOfflinePlayerIfCached(name);
-
-        if (offline == null || offline.getName() == null || !offline.hasPlayedBefore()) {
-            return null;
-        }
-
-        return new NameAndId(offline.getUniqueId(), offline.getName());
+        }), onCancel);
     }
 
     /**
