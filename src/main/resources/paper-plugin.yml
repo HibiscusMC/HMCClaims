@@ -21,3 +21,7 @@ dependencies:
     floodgate:
       load: BEFORE
       required: false
+
+    Vault:
+      load: BEFORE
+      required: false

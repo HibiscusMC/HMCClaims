@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
+import com.hibiscusmc.hmcclaims.economy.EconomyService;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
@@ -106,6 +107,7 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(SettingRegistry.class).to(SettingRegistry.class);
         binder.bind(GuiRegistry.class).to(GuiRegistry.class);
 
+        binder.bind(EconomyService.class).to(EconomyService.class);
         binder.bind(FormService.class).to(FormService.class);
         binder.bind(FormRegistry.class).to(FormRegistry.class);
         binder.bind(MenuService.class).to(MenuService.class);
