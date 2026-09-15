@@ -330,11 +330,17 @@ public class Claim {
     }
 
     /**
-     * Removes a member to the claim.
+     * Removes a member from the claim. The owner can't be removed; transfer the claim
+     * instead.
      *
      * @param uuid the uuid of the member to remove
+     * @return {@code true} if the member was removed
      */
     public boolean removeMember(@NotNull UUID uuid) {
+        if (uuid.equals(owner)) {
+            return false;
+        }
+
         ClaimMember oldMember = members.remove(uuid);
 
         return oldMember != null;

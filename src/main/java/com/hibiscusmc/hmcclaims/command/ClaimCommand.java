@@ -154,6 +154,11 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
+        if (member.isOwner()) {
+            text.send(sender, messages.claims().cantRemoveOwner());
+            return;
+        }
+
         String playerName = member.lastKnownName();
         boolean removed = claim.removeMember(member.uuid());
         if (!removed) {
