@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.type.Lectern;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -23,10 +24,13 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.inventory.ItemStack;
 import team.unnamed.inject.Inject;
+
+import java.util.List;
 
 /**
  * Place Blocks, Break Blocks, Use Containers, Doors, Trapdoors, Lecterns,
@@ -412,6 +416,32 @@ public class VanillaBlockListener implements Listener {
         }
 
         if (event.getBlock().getType() != Material.FARMLAND) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getBlock().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.TRAMPLE_SOIL)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().trampleSoil());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onRiddenTrampleSoil(EntityInteractEvent event) {
+        if (event.getBlock().getType() != Material.FARMLAND) {
+            return;
+        }
+
+        List<Entity> passengers = event.getEntity().getPassengers();
+        if (passengers.isEmpty() || !(passengers.getFirst() instanceof Player player)) {
             return;
         }
 

@@ -33,6 +33,7 @@ public class SettingRegistry {
 
         register(Setting.MOB_EXPLOSIONS);
         register(Setting.BLOCK_EXPLOSIONS);
+        register(Setting.ENTITY_TRAMPLING);
 
         register(Setting.PVP);
     }
