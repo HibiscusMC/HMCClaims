@@ -4,7 +4,6 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.util.PlantUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Material;
@@ -28,6 +27,7 @@ import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.inventory.ItemStack;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 import java.util.List;

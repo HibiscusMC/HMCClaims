@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.listener;
 
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -12,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 public class PlayerInputListener implements Listener {

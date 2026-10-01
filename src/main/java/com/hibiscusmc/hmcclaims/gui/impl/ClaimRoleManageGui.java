@@ -4,11 +4,13 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRoleManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
+import com.hibiscusmc.hmcclaims.gui.EntryIcon;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
@@ -21,8 +23,8 @@ import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.Click;
@@ -32,17 +34,18 @@ import xyz.xenondevs.invui.item.ItemWrapper;
 import xyz.xenondevs.invui.util.TriConsumer;
 import xyz.xenondevs.invui.window.Window;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 @Singleton
 public class ClaimRoleManageGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<ClaimRoleManageConfig> configHolder;
+
+    @Inject
+    private ConfigHolder<Permissions> permissionsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -61,7 +64,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private Map<String, GuiTemplate.SimpleIcon> tabs;
 
     private GuiTemplate.SimpleIcon deleteIcon;
-    private ItemStack cantDeleteIcon;
+    private ConfigItem cantDeleteIcon;
 
     private List<GuiTemplate.Icon> icons;
 
@@ -73,7 +76,10 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private String enabledState;
     private String disabledState;
 
-    private Map<Integer, Map<String, ClaimRoleManageConfig.TogglePermissionIcon<Permission>>> permissionPages;
+    private Permissions permissions;
+    private ClaimRoleManageConfig.RolePermissionList permissionList;
+    private int[] permissionSlots;
+    private List<List<Permission>> permissionPages;
 
     @Override
     public void loadConfig() {
@@ -95,22 +101,10 @@ public class ClaimRoleManageGui extends ClaimListGui {
         previousPage = config.pages().get("previous-page");
         nextPage = config.pages().get("next-page");
 
-        permissionPages = new HashMap<>();
-        for (Map.Entry<Integer, Map<String, ClaimRoleManageConfig.TogglePermissionIcon<Permission>>> page : config.permissionPages().entrySet()) {
-            if (page.getValue() == null) {
-                continue;
-            }
-
-            Map<String, ClaimRoleManageConfig.TogglePermissionIcon<Permission>> icons = page.getValue().entrySet().stream()
-                    .filter(entry -> entry.getValue().key() != null)
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-            if (icons.isEmpty()) {
-                continue;
-            }
-
-            permissionPages.put(page.getKey(), icons);
-        }
+        permissions = permissionsHolder.get();
+        permissionList = config.permissionList();
+        permissionSlots = permissionList.allSlots();
+        permissionPages = permissionList.pages(permissions.visible());
 
         backIcon = config.backIcon();
 
@@ -161,15 +155,21 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
             Char2ObjectArrayMap<Item> permissionItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
-            for (ClaimRoleManageConfig.TogglePermissionIcon<Permission> toggleIcon : permissionPages.getOrDefault(currentPage, Map.of()).values()) {
-                PermissionItem item = buildPermission(role, toggleIcon, metadata);
+            List<Permission> currentPermissions = currentPage >= 1 && currentPage <= permissionPages.size()
+                    ? permissionPages.get(currentPage - 1)
+                    : List.of();
+
+            for (int i = 0; i < currentPermissions.size(); i++) {
+                int slot = permissionSlots[i];
+                PermissionItem item = buildPermission(role, currentPermissions.get(i), metadata);
 
                 permissionItems.put((char) currentSafeCode, item.item());
-                structure.set(toggleIcon.slot(), (char) currentSafeCode++);
+                structure.set(slot, (char) currentSafeCode++);
 
-                if (toggleIcon.hasModifyIcon()) {
+                int toggleSlot = slot + permissionList.toggleOffset();
+                if (permissionList.hasToggle() && toggleSlot < structure.size()) {
                     permissionItems.put((char) currentSafeCode, item.modifyItem());
-                    structure.set(toggleIcon.modifyIcon().slot(), (char) currentSafeCode++);
+                    structure.set(toggleSlot, (char) currentSafeCode++);
                 }
             }
 
@@ -220,7 +220,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                     .setItemProvider(TextUtil.parseItemPlaceholders(previousPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage - 1;
-                        if (!permissionPages.containsKey(page)) {
+                        if (page < 1 || page > permissionPages.size()) {
                             return;
                         }
 
@@ -232,7 +232,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                     .setItemProvider(TextUtil.parseItemPlaceholders(nextPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage + 1;
-                        if (!permissionPages.containsKey(page)) {
+                        if (page < 1 || page > permissionPages.size()) {
                             return;
                         }
 
@@ -276,8 +276,8 @@ public class ClaimRoleManageGui extends ClaimListGui {
         });
     }
 
-    private PermissionItem buildPermission(@NotNull ClaimRole role, @NotNull ClaimRoleManageConfig.TogglePermissionIcon<Permission> toggleIcon, @NotNull GuiMetadata metadata) {
-        Permission permission = toggleIcon.key();
+    private PermissionItem buildPermission(@NotNull ClaimRole role, @NotNull Permission permission, @NotNull GuiMetadata metadata) {
+        Permissions.Entry entry = permissions.entry(permission);
 
         BiConsumer<Item, Click> action = (it, click) -> {
             if (click.clickType() == ClickType.DOUBLE_CLICK) {
@@ -299,29 +299,35 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
         return new PermissionItem(
                 Item.builder()
-                        .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(metadata.canManageRolePermissions() ? toggleIcon.icon() : toggleIcon.noPermsIcon(), role.hasPermission(permission)), p)))
+                        .setItemProvider(p -> {
+                            GuiTemplate.DynamicIcon icon = metadata.canManageRolePermissions() ? permissionList.icon() : permissionList.noAccessIcon();
+
+                            return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
+                                    entry.icon(), icon.name(), icon.lore(),
+                                    "permission", entry.name(), entry.description(),
+                                    Map.of("permission_value", stateOf(role, permission))
+                            ), p));
+                        })
                         .addClickHandler((it, click) -> {
-                            if (toggleIcon.hasModifyIcon()) {
+                            if (permissionList.hasToggle()) {
                                 return;
                             }
 
                             action.accept(it, click);
                         })
                         .build(),
-                toggleIcon.hasModifyIcon() ?
+                permissionList.hasToggle() ?
                         Item.builder()
                                 .setItemProvider(p -> {
-                                    ClaimRoleManageConfig.TogglePermissionIcon.BiStateToggleIcon modifyIcon = toggleIcon.modifyIcon();
-                                    boolean hasPermission = role.hasPermission(permission);
+                                    ClaimRoleManageConfig.RoleToggles toggles = permissionList.toggle();
+                                    GuiTemplate.PermissionToggleIcon icon = role.hasPermission(permission) ? toggles.enabled() : toggles.disabled();
 
-                                    ClaimRoleManageConfig.PermissionIcon icon;
-                                    if (hasPermission) {
-                                        icon = modifyIcon.enabled();
-                                    } else {
-                                        icon = modifyIcon.disabled();
-                                    }
-
-                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(icon, metadata, hasPermission), p));
+                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
+                                            icon.item(), icon.name(),
+                                            metadata.canManageRolePermissions() ? icon.lore() : icon.cantChangeLore(),
+                                            "permission", entry.name(), entry.description(),
+                                            Map.of("permission_value", stateOf(role, permission))
+                                    ), p));
                                 })
                                 .addClickHandler(action)
                                 .build()
@@ -329,30 +335,9 @@ public class ClaimRoleManageGui extends ClaimListGui {
         );
     }
 
-    private ItemStack buildPermissionIcon(@NotNull GuiTemplate.DynamicIconWithStack icon, boolean hasPermission) {
-        ItemStack stack = icon.item();
-        stack.editMeta(meta -> {
-            meta.itemName(TextUtil.parse(icon.name()));
-
-            meta.lore(TextUtil.parseItemLore(icon.lore(), Map.of(
-                    "permission_value", hasPermission ? enabledState : disabledState
-            )));
-        });
-
-        return stack;
-    }
-
-    private ItemStack buildPermissionIcon(@NotNull ClaimRoleManageConfig.PermissionIcon icon, @NotNull GuiMetadata metadata, boolean hasPermission) {
-        ItemStack stack = icon.item();
-        stack.editMeta(meta -> {
-            meta.itemName(TextUtil.parse(icon.name()));
-
-            meta.lore(TextUtil.parseItemLore(metadata.canManageRolePermissions() ? icon.lore() : icon.cantChangeLore(), Map.of(
-                    "permission_value", hasPermission ? enabledState : disabledState
-            )));
-        });
-
-        return stack;
+    @NotNull
+    private String stateOf(@NotNull ClaimRole role, @NotNull Permission permission) {
+        return role.hasPermission(permission) ? enabledState : disabledState;
     }
 
     record PermissionItem(Item item, Item modifyItem) {

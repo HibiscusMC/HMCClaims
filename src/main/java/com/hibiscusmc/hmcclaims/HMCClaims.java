@@ -16,6 +16,7 @@ import com.hibiscusmc.hmcclaims.module.ConfigModule;
 import com.hibiscusmc.hmcclaims.module.HookModule;
 import com.hibiscusmc.hmcclaims.module.ListenerModule;
 import com.hibiscusmc.hmcclaims.module.ServiceModule;
+import com.hibiscusmc.hmcclaims.selection.DisabledWorlds;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -116,6 +117,7 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(BlockMarker.class).to(BlockMarker.class);
 
         binder.bind(SelectionManager.class).to(SelectionManager.class);
+        binder.bind(DisabledWorlds.class).to(DisabledWorlds.class);
         binder.bind(ClaimManager.class).to(ClaimManager.class);
         binder.bind(UserManager.class).to(UserManager.class);
 

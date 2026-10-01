@@ -1,19 +1,18 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
-import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Config
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
 
@@ -21,19 +20,16 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
 
     private int rows = 6;
 
-    @Setting("screen-type")
     @Comment(GuiScreenType.DESCRIPTION)
     private GuiScreenType screenType = GuiScreenType.FULL;
 
-    @Setting("valid-slots")
     private List<RangeUtil> validSlots = List.of(
             new RangeUtil(19, 25),
             new RangeUtil(28, 34),
             new RangeUtil(37, 43)
     );
 
-    @Setting("role-icon")
-    private DynamicIconWithStack roleIcon = new DynamicIconWithStack(ItemStack.of(Material.BOOK),
+    private DynamicIconWithStack roleIcon = new DynamicIconWithStack(ConfigItem.of(Material.BOOK),
             "<name>", List.of(
             "",
             "<gray>Members: <white><members>",
@@ -43,8 +39,7 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
             "<white>Left-Click <gray>to set this role to <white><player_name>"
     ));
 
-    @Setting("role-icon-selected")
-    private DynamicIconWithStack roleIconSelected = new DynamicIconWithStack(ItemStack.of(Material.BOOK),
+    private DynamicIconWithStack roleIconSelected = new DynamicIconWithStack(ConfigItem.of(Material.BOOK),
             "<name>", List.of(
             "",
             "<gray>Members: <white><members>",
@@ -54,8 +49,7 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
             "<white><player_name> <red>already has this role"
     ));
 
-    @Setting("role-icon-unable")
-    private DynamicIconWithStack roleIconUnable = new DynamicIconWithStack(ItemStack.of(Material.BOOK),
+    private DynamicIconWithStack roleIconUnable = new DynamicIconWithStack(ConfigItem.of(Material.BOOK),
             "<name>", List.of(
             "",
             "<gray>Members: <white><members>",
@@ -65,50 +59,44 @@ public class ClaimMemberRoleConfig extends ClaimMemberManageConfig {
             "<red>You can't set this role to <white><player_name>"
     ));
 
-    @Setting("back-icon")
-    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon backIcon = new SimpleIcon(ConfigItem.of(
             Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
     ), 45);
 
-    @Setting("kick-icon")
-    private SimpleIcon kickIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon kickIcon = new SimpleIcon(ConfigItem.of(
             Material.BARRIER, "Kick Member", List.of("", "<white>Left-Click <gray>to kick this member")
     ), 47);
 
-    @Setting("cant-kick-icon")
-    private ItemStack cantKickIcon = ItemUtil.build(
+    private ConfigItem cantKickIcon = ConfigItem.of(
             Material.BARRIER, "Kick Member", List.of("", "<red>You can't kick this member")
     );
 
-    @Setting("ban-icon")
-    private SimpleIcon banIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon banIcon = new SimpleIcon(ConfigItem.of(
             Material.BARRIER, "Ban Member", List.of("", "<white>Left-Click <gray>to ban this member")
     ), 51);
 
-    @Setting("cant-ban-icon")
-    private ItemStack cantBanIcon = ItemUtil.build(
+    private ConfigItem cantBanIcon = ConfigItem.of(
             Material.BARRIER, "Ban Member", List.of("", "<red>You can't ban this member")
     );
 
-    @Setting("extra-icons")
-    private Map<String, Icon> extraIcons = Map.of(
+    private Map<String, Icon> extraIcons = MapUtil.ordered(
             "example-icon", new Icon(53)
     );
 
-    private Map<String, SimpleMultiIcon> tabs = Map.of(
-            "roles-tab", new SimpleMultiIcon(ItemUtil.build(
+    private Map<String, SimpleMultiIcon> tabs = MapUtil.ordered(
+            "roles-tab", new SimpleMultiIcon(ConfigItem.of(
                     Material.LIME_STAINED_GLASS_PANE, "Roles", List.of("", "<red>You're here!")
             ), List.of(1, 2, 3)),
-            "permissions-tab", new SimpleMultiIcon(ItemUtil.build(
+            "permissions-tab", new SimpleMultiIcon(ConfigItem.of(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Permissions", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), List.of(5, 6, 7))
     );
 
-    private Map<String, SimpleIcon> pages = Map.of(
-            "previous-page", new SimpleIcon(ItemUtil.build(
+    private Map<String, SimpleIcon> pages = MapUtil.ordered(
+            "previous-page", new SimpleIcon(ConfigItem.of(
                     Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
             ), 48),
-            "next-page", new SimpleIcon(ItemUtil.build(
+            "next-page", new SimpleIcon(ConfigItem.of(
                     Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
             ), 50)
     );

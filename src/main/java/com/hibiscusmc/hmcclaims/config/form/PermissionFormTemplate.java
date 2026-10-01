@@ -1,132 +1,97 @@
 package com.hibiscusmc.hmcclaims.config.form;
 
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
-import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
-import com.hibiscusmc.hmcclaims.util.RegistryUtil;
+import com.hibiscusmc.hmcclaims.config.Permissions;
 import lombok.Getter;
+import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.jetbrains.annotations.Nullable;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Section
 @SuppressWarnings({"FieldMayBeFinal"})
 public class PermissionFormTemplate extends FormTemplate {
 
-    private final static int PER_CATEGORY = 7;
+    @Comment("How many permissions each category holds.")
+    private int perCategory = 7;
 
-    @Getter
-    @ConfigSerializable
-    public static class PermissionEntry {
+    @Comment("The category button label.")
+    private String categoryName = "Page <page>";
 
-        @Comment("The permission this row edits. Remove the row to hide the permission.")
-        private Permission key;
+    private Image categoryImage = new Image();
 
-        @Comment("The label shown next to the control")
-        private String label = "";
+    @Comment("Detail text shown at the top of every category form.")
+    private List<String> categoryContent = List.of();
 
-        @Comment("Shown above the control when show-descriptions is enabled")
-        private List<String> description = List.of();
+    @Comment("The label shown next to a permission's control.")
+    private String label = "<white><permission_name>";
 
-        public PermissionEntry() {
-        }
+    @Comment("Whether each permission's description is shown above its control")
+    private boolean showDescriptions = true;
 
-        public PermissionEntry(Permission key, String label, List<String> description) {
-            this.key = key;
-            this.label = label;
-            this.description = description;
-        }
+    /**
+     * A single permission row of a category form.
+     */
+    public record PermissionRow(@NotNull Permission permission, @NotNull String label,
+                                @NotNull List<String> description) {
     }
 
     /**
      * A group of permissions, shown as one button on the category form.
+     *
+     * @param fallback The material used for the image when none is configured.
      */
-    @Getter
-    @ConfigSerializable
-    public static class PermissionCategory {
-
-        @Comment("The category button label")
-        private String name = "Category";
-
-        private Image image = new Image();
-
-        @Comment("Detail text shown at the top of this category's form")
-        private List<String> content = List.of();
-
-        private Map<String, PermissionEntry> permissions = Map.of();
-
-        public PermissionCategory() {
-        }
-
-        public PermissionCategory(String name, Map<String, PermissionEntry> permissions) {
-            this.name = name;
-            this.permissions = permissions;
-        }
+    public record PermissionCategory(
+            @NotNull String name, @NotNull Image image, @Nullable Material fallback,
+            @NotNull List<String> content, @NotNull List<PermissionRow> permissions
+    ) {
     }
 
+    /**
+     * Splits the visible permissions into categories, in registration order.
+     */
     @NotNull
-    protected static Map<Integer, PermissionCategory> buildCategories(@NotNull String namePattern) {
-        Map<Integer, PermissionCategory> categories = new LinkedHashMap<>();
-        Map<String, PermissionEntry> current = new LinkedHashMap<>();
+    public List<PermissionCategory> categories(@NotNull Permissions permissions) {
+        List<PermissionCategory> categories = new ArrayList<>();
+        List<PermissionRow> current = new ArrayList<>();
+        Material fallback = null;
 
-        int page = 1;
-        for (Permission permission : PermissionRegistry.getAllPermissions()) {
-            List<String> description = Arrays.stream(("<gray>" + permission.description()).split("\n"))
-                    .toList();
+        int size = Math.max(1, perCategory);
 
-            current.put(key(permission), new PermissionEntry(
-                    permission, "<white>" + permission.displayName(), description
+        for (Permission permission : permissions.visible()) {
+            Permissions.Entry entry = permissions.entry(permission);
+
+            if (current.isEmpty()) {
+                fallback = entry.icon().vanilla();
+            }
+
+            current.add(new PermissionRow(
+                    permission, label.replace("<permission_name>", entry.name()), entry.description()
             ));
 
-            if (current.size() >= PER_CATEGORY) {
-                categories.put(page, new PermissionCategory(namePattern.replace("<page>", String.valueOf(page)), current));
+            if (current.size() >= size) {
+                categories.add(category(categories.size() + 1, current, fallback));
 
-                current = new LinkedHashMap<>();
-                page++;
+                current = new ArrayList<>();
             }
         }
 
         if (!current.isEmpty()) {
-            categories.put(page, new PermissionCategory(namePattern.replace("<page>", String.valueOf(page)), current));
+            categories.add(category(categories.size() + 1, current, fallback));
         }
 
         return categories;
     }
 
-    @NotNull
-    protected static String key(@NotNull Permission permission) {
-        return RegistryUtil.serialize(permission.key()).replace(":", "-").toLowerCase() + "-permission";
+    private PermissionCategory category(int page, List<PermissionRow> rows, Material fallback) {
+        return new PermissionCategory(
+                categoryName.replace("<page>", String.valueOf(page)),
+                categoryImage, fallback, categoryContent, rows
+        );
     }
-
-    @NotNull
-    public static List<PermissionCategory> usable(@NotNull Map<Integer, PermissionCategory> categories) {
-        List<PermissionCategory> usable = new ArrayList<>();
-
-        categories.entrySet().stream()
-                .filter(entry -> entry.getValue() != null)
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    PermissionCategory category = entry.getValue();
-
-                    boolean hasPermissions = category.permissions().values().stream()
-                            .anyMatch(row -> row != null && row.key() != null);
-
-                    if (hasPermissions) {
-                        usable.add(category);
-                    }
-                });
-
-        return usable;
-    }
-
-    @Setting("show-descriptions")
-    @Comment("Whether each permission's description is shown above its control")
-    private boolean showDescriptions = true;
 }

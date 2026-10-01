@@ -3,9 +3,9 @@ package com.hibiscusmc.hmcclaims.form.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
+import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.form.ClaimRoleManageFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.PermissionFormTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.form.FormService;
@@ -16,9 +16,11 @@ import com.hibiscusmc.hmcclaims.form.spec.FormComponent;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -31,6 +33,9 @@ public class ClaimRoleManageForm implements BaseForm {
 
     @Inject
     private ConfigHolder<ClaimRoleManageFormConfig> configHolder;
+
+    @Inject
+    private ConfigHolder<Permissions> permissionsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -64,7 +69,7 @@ public class ClaimRoleManageForm implements BaseForm {
         ClaimRole role = metadata.role();
 
         List<PermissionFormTemplate.PermissionCategory> categories =
-                PermissionFormTemplate.usable(config.permissionCategories());
+                config.categories(permissionsHolder.get());
 
         SharedContext context = new SharedContext(
                 player, metadata, ClaimRoleManageForm.class, formService, forms, () -> render(player, metadata)
@@ -84,7 +89,7 @@ public class ClaimRoleManageForm implements BaseForm {
             switch (section) {
                 case "categories" -> categories.forEach(category -> builder.button(navigating(
                         FormText.line(category.name(), player, data),
-                        context.image(category.image(), null),
+                        context.image(category.image(), category.fallback()),
                         context,
                         () -> openCategory(player, metadata, category)
                 )));
@@ -139,13 +144,9 @@ public class ClaimRoleManageForm implements BaseForm {
 
         List<Row> rows = new ArrayList<>();
 
-        for (Map.Entry<String, PermissionFormTemplate.PermissionEntry> entry : category.permissions().entrySet()) {
-            PermissionFormTemplate.PermissionEntry row = entry.getValue();
-            if (row == null || row.key() == null) {
-                continue;
-            }
-
-            Permission permission = row.key();
+        for (PermissionFormTemplate.PermissionRow row : category.permissions()) {
+            Permission permission = row.permission();
+            String key = RegistryUtil.serialize(permission.key());
             boolean enabled = role.hasPermission(permission);
             String label = FormText.line(row.label(), player);
 
@@ -154,8 +155,8 @@ public class ClaimRoleManageForm implements BaseForm {
             }
 
             if (editable) {
-                builder.toggle(entry.getKey(), label, enabled);
-                rows.add(new Row(entry.getKey(), permission));
+                builder.toggle(key, label, enabled);
+                rows.add(new Row(key, permission));
             } else {
                 builder.label(FormText.line(config.readOnlyRow(), player, Map.of(
                         "label", row.label(),

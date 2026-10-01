@@ -1,17 +1,17 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.config.gui.SubClaimManageConfig;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
@@ -32,7 +32,7 @@ public class SubClaimManageGui extends ClaimManageGui {
     private StorageHolder storageHolder;
 
     private GuiTemplate.SimpleIcon inheritPermissionsIcon;
-    private ItemStack inheritPermissionsSuccessIcon;
+    private ConfigItem inheritPermissionsSuccessIcon;
 
     @Override
     public void loadConfig() {

@@ -1,14 +1,13 @@
 package com.hibiscusmc.hmcclaims.config.form;
 
 import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
 
 import java.util.List;
 
 @Getter
-@ConfigSerializable
+@Config
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimDeleteFormConfig extends FormTemplate {
 
@@ -25,7 +24,6 @@ public class ClaimDeleteFormConfig extends FormTemplate {
             "<red>This cannot be undone."
     );
 
-    @Setting("sub-claim-content")
     @Comment("Shown for a sub claim")
     private List<String> subClaimContent = List.of(
             "<gray>UID: <white><short_id>",

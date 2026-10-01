@@ -1,16 +1,16 @@
 package com.hibiscusmc.hmcclaims.command;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.config.ConfigRegistry;
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigFactory;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.selection.DisabledWorlds;
 import com.hibiscusmc.hmcclaims.service.Service;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.command.CommandSender;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.commandflow.annotated.CommandClass;
 import team.unnamed.commandflow.annotated.annotation.Command;
 import team.unnamed.inject.Inject;
@@ -25,6 +25,12 @@ public class HMCClaimsCommand implements CommandClass {
 
     @Inject
     private ConfigHolder<Messages> messages;
+
+    @Inject
+    private ConfigRegistry configs;
+
+    @Inject
+    private DisabledWorlds disabledWorlds;
 
     @Inject
     private ClaimManager claimManager;
@@ -45,11 +51,8 @@ public class HMCClaimsCommand implements CommandClass {
         }
 
         try {
-            for (Class<?> clazz : ConfigFactory.all(false)) {
-                ConfigFactory.reload(clazz);
-            }
-
-            Settings.INVALID_WORLDS.clear();
+            configs.reloadAll();
+            disabledWorlds.clear();
 
             guis.reload();
             forms.reload();

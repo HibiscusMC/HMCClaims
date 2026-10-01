@@ -1,25 +1,23 @@
 package com.hibiscusmc.hmcclaims.config.form;
 
-import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
-import com.hibiscusmc.hmcclaims.util.RegistryUtil;
+import com.hibiscusmc.hmcclaims.claim.setting.Setting;
+import com.hibiscusmc.hmcclaims.config.ClaimSettings;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
+import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.jetbrains.annotations.Nullable;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Config
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimSettingsFormConfig extends FormTemplate {
-
-    private final static int PER_CATEGORY = 7;
 
     private Title title = new Title("Settings | <claim_name>", 17);
 
@@ -27,34 +25,37 @@ public class ClaimSettingsFormConfig extends FormTemplate {
             "<gray>Pick a group of settings to edit."
     );
 
-    @Setting("category-title")
     @Comment("Title of the form holding one category's settings")
     private Title categoryTitle = new Title("<category> | <claim_name>", 17);
 
-    @Setting("always-show-categories")
-    @Comment("""
-            Whether the category list is shown even when there is only one category.
-            With this off, a single category opens its settings form directly.""")
+    @Comment("Show the category list even with a single category. Off opens that category directly.")
     private boolean alwaysShowCategories = false;
 
-    @Setting("show-descriptions")
     @Comment("Whether each setting's description is shown above its control")
     private boolean showDescriptions = true;
 
-    @Setting("value-not-set")
     @Comment("Placeholder shown in a text field whose setting has no value yet")
     private String valueNotSet = "Not set";
 
-    @Setting("setting-categories")
-    private Map<Integer, SettingCategory> settingCategories = buildCategories();
+    @Comment("How many settings each category holds.")
+    private int perCategory = 7;
+
+    @Comment("The category button label.")
+    private String categoryName = "Settings <page>";
+
+    private Image categoryImage = new Image();
+
+    @Comment("Detail text shown at the top of every category form.")
+    private List<String> categoryContent = List.of();
+
+    @Comment("The label shown next to a setting's control.")
+    private String label = "<white><setting_name>";
 
     private Navigation nav = new Navigation();
 
-    @Setting("back-button")
     private Button backButton = new Button("Back", Image.path("textures/ui/arrow_left"));
 
-    @Setting("extra-buttons")
-    private Map<String, ActionButton> extraButtons = Map.of(
+    private Map<String, ActionButton> extraButtons = MapUtil.ordered(
             "example-button", new ActionButton("Example Button")
     );
 
@@ -66,98 +67,63 @@ public class ClaimSettingsFormConfig extends FormTemplate {
             "back"
     );
 
-    @Getter
-    @ConfigSerializable
-    public static class SettingEntry {
-
-        @Comment("The setting this row edits. Remove the row to hide the setting.")
-        private com.hibiscusmc.hmcclaims.claim.setting.Setting<?> key;
-
-        @Comment("The label shown next to the control")
-        private String label = "";
-
-        @Comment("Shown above the control when show-descriptions is enabled")
-        private List<String> description = List.of();
-
-        public SettingEntry() {
-        }
-
-        public SettingEntry(com.hibiscusmc.hmcclaims.claim.setting.Setting<?> key, String label, List<String> description) {
-            this.key = key;
-            this.label = label;
-            this.description = description;
-        }
+    /**
+     * A single setting row of a category form.
+     */
+    public record SettingRow(@NotNull Setting<?> setting, @NotNull String label, @NotNull List<String> description) {
     }
 
-    @Getter
-    @ConfigSerializable
-    public static class SettingCategory {
-
-        @Comment("The category button label")
-        private String name = "Category";
-
-        private Image image = new Image();
-
-        @Comment("Detail text shown at the top of this category's form")
-        private List<String> content = List.of();
-
-        private Map<String, SettingEntry> settings = Map.of();
-
-        public SettingCategory() {
-        }
-
-        public SettingCategory(String name, Map<String, SettingEntry> settings) {
-            this.name = name;
-            this.settings = settings;
-        }
+    /**
+     * A group of settings, shown as one button on the category form.
+     *
+     * @param fallback The material used for the image when none is configured.
+     */
+    public record SettingCategory(
+            @NotNull String name, @NotNull Image image, @Nullable Material fallback,
+            @NotNull List<String> content, @NotNull List<SettingRow> settings
+    ) {
     }
 
+    /**
+     * Splits the visible settings into categories, in registration order.
+     */
     @NotNull
-    private static Map<Integer, SettingCategory> buildCategories() {
-        Map<Integer, SettingCategory> categories = new LinkedHashMap<>();
-        Map<String, SettingEntry> current = new LinkedHashMap<>();
+    public List<SettingCategory> categories(@NotNull ClaimSettings claimSettings) {
+        List<SettingCategory> categories = new ArrayList<>();
+        List<SettingRow> current = new ArrayList<>();
+        Material fallback = null;
 
-        int page = 1;
-        for (com.hibiscusmc.hmcclaims.claim.setting.Setting<?> setting : SettingRegistry.getAllSettings()) {
-            List<String> description = Arrays.stream(("<gray>" + setting.description()).split("\n"))
-                    .toList();
+        int size = Math.max(1, perCategory);
 
-            String key = RegistryUtil.serialize(setting.key()).replace(":", "-").toLowerCase() + "-setting";
-            current.put(key, new SettingEntry(setting, "<white>" + setting.displayName(), description));
+        for (Setting<?> setting : claimSettings.visible()) {
+            ClaimSettings.Entry entry = claimSettings.entry(setting);
 
-            if (current.size() >= PER_CATEGORY) {
-                categories.put(page, new SettingCategory("Settings " + page, current));
+            if (current.isEmpty()) {
+                fallback = entry.icon().vanilla();
+            }
 
-                current = new LinkedHashMap<>();
-                page++;
+            current.add(new SettingRow(
+                    setting, label.replace("<setting_name>", entry.name()), entry.description()
+            ));
+
+            if (current.size() >= size) {
+                categories.add(category(categories.size() + 1, current, fallback));
+
+                current = new ArrayList<>();
             }
         }
 
         if (!current.isEmpty()) {
-            categories.put(page, new SettingCategory(page == 1 ? "Claim settings" : "Settings " + page, current));
+            categories.add(category(categories.size() + 1, current, fallback));
         }
 
         return categories;
     }
 
-    @NotNull
-    public static List<SettingCategory> usable(@NotNull Map<Integer, SettingCategory> categories) {
-        List<SettingCategory> usable = new ArrayList<>();
-
-        categories.entrySet().stream()
-                .filter(entry -> entry.getValue() != null)
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    SettingCategory category = entry.getValue();
-
-                    boolean hasSettings = category.settings().values().stream()
-                            .anyMatch(row -> row != null && row.key() != null);
-
-                    if (hasSettings) {
-                        usable.add(category);
-                    }
-                });
-
-        return usable;
+    private SettingCategory category(int page, List<SettingRow> rows, Material fallback) {
+        return new SettingCategory(
+                categoryName.replace("<page>", String.valueOf(page)),
+                categoryImage, fallback, categoryContent, rows
+        );
     }
 }

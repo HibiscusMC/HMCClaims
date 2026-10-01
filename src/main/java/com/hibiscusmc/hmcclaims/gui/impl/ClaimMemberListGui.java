@@ -6,7 +6,6 @@ import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
@@ -30,6 +29,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
@@ -394,7 +394,7 @@ public class ClaimMemberListGui extends ClaimListGui {
 
     @NotNull
     private ItemStack buildSearchIcon(@NotNull AtomicReference<String> searchQuery, Player player) {
-        ItemStack item = searchIcon.item();
+        ItemStack item = searchIcon.item().stack();
         item.editMeta(meta -> {
             meta.itemName(TextUtil.parseItem(searchIcon.name(), player));
 
@@ -413,7 +413,7 @@ public class ClaimMemberListGui extends ClaimListGui {
 
     @NotNull
     private ItemStack buildFilterIcon(@NotNull AtomicReference<String> filterQuery, Player player, @NotNull List<ClaimRole> roles) {
-        ItemStack item = filterIcon.item();
+        ItemStack item = filterIcon.item().stack();
         item.editMeta(meta -> {
             meta.itemName(TextUtil.parseItem(filterIcon.name(), player));
 

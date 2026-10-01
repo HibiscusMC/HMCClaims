@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimManageGui;
 import com.hibiscusmc.hmcclaims.gui.impl.ClaimMemberListGui;
@@ -14,7 +15,6 @@ import it.unimi.dsi.fastutil.chars.CharList;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -199,6 +199,6 @@ public interface BaseGui {
      * @param slot     the inventory slot index for the tab icon
      * @param metadata optional context arguments passed when opening the target GUI
      */
-    record TabIcon(Class<? extends BaseGui> iconTab, ItemStack item, int slot, GuiMetadata metadata) {
+    record TabIcon(Class<? extends BaseGui> iconTab, ConfigItem item, int slot, GuiMetadata metadata) {
     }
 }

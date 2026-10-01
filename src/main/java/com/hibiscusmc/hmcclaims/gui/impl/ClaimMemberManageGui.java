@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
@@ -16,7 +17,6 @@ import it.unimi.dsi.fastutil.chars.CharList;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,10 +35,10 @@ public abstract class ClaimMemberManageGui implements BaseGui {
     private GuiRegistry guis;
 
     private GuiTemplate.SimpleIcon kickIcon;
-    private ItemStack cantKickIcon;
+    private ConfigItem cantKickIcon;
 
     private GuiTemplate.SimpleIcon banIcon;
-    private ItemStack cantBanIcon;
+    private ConfigItem cantBanIcon;
 
     private GuiTemplate.SimpleIcon backIcon;
 
@@ -123,7 +123,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
     @Contract(pure = true)
     protected Item buildKickItem(
             @NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target,
-            @NotNull GuiTemplate.SimpleIcon kickIcon, @NotNull ItemStack cantKickIcon
+            @NotNull GuiTemplate.SimpleIcon kickIcon, @NotNull ConfigItem cantKickIcon
     ) {
         boolean canKick = claim.getMember(player.getUniqueId())
                 .map(member -> member.canManage(target) && member.hasPermission(Permission.MANAGE_MEMBERS))
@@ -152,7 +152,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
     @Contract(pure = true)
     protected Item buildBanItem(
             @NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target,
-            @NotNull GuiTemplate.SimpleIcon banIcon, @NotNull ItemStack cantBanIcon
+            @NotNull GuiTemplate.SimpleIcon banIcon, @NotNull ConfigItem cantBanIcon
     ) {
         boolean canBan = claim.getMember(player.getUniqueId())
                 .map(member -> member.canManage(target) && member.hasPermission(Permission.BAN_MEMBERS))

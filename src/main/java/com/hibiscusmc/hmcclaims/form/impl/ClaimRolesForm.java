@@ -7,7 +7,6 @@ import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.form.ClaimRolesFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.FormTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.form.FormService;
@@ -22,6 +21,7 @@ import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 

@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -19,7 +19,7 @@ public class SettingRegistry {
     /**
      * Internal map storing settings indexed by their unique key string.
      */
-    private final static Map<String, Setting<?>> SETTINGS = new HashMap<>();
+    private final static Map<String, Setting<?>> SETTINGS = new LinkedHashMap<>();
 
     /**
      * Private constructor to prevent instantiation of a utility-based registry.

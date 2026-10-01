@@ -1,67 +1,59 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
-import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Section
 @SuppressWarnings({"FieldMayBeFinal"})
 public class BaseListGuiConfig extends GuiTemplate {
 
-    @Setting("valid-slots")
     private List<RangeUtil> validSlots = List.of(
             new RangeUtil(1, 7),
             new RangeUtil(10, 16)
     );
 
-    @Setting("extra-icons")
-    private Map<String, Icon> extraIcons = Map.of(
+    private Map<String, Icon> extraIcons = MapUtil.ordered(
             "example-icon", new Icon(31)
     );
 
-    @Setting("back-icon")
-    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon backIcon = new SimpleIcon(ConfigItem.of(
             Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
     ), 27);
 
-    @Setting("claims-icon")
     private ClaimsIcon claimsIcon = new ClaimsIcon();
 
-    @Setting("sub-claims-icon")
     private SubClaimsIcon subClaimsIcon = new SubClaimsIcon();
 
-    @Setting("filter-icon")
-    private FilterIcon filterIcon = new FilterIcon(Map.of(
+    private FilterIcon filterIcon = new FilterIcon(MapUtil.ordered(
             "ALL", "All",
             "MAIN", "Main Claims",
             "SUB_CLAIMS", "Sub Claims"
     ), 19);
 
-    @Setting("search-icon")
     private SearchIcon searchIcon = new SearchIcon(25);
 
-    private Map<String, SimpleIcon> pages = Map.of(
-            "previous-page", new SimpleIcon(ItemUtil.build(
+    private Map<String, SimpleIcon> pages = MapUtil.ordered(
+            "previous-page", new SimpleIcon(ConfigItem.of(
                     Material.ARROW, "Previous Page", List.of("", "<white>Left-Click <gray>to go to the previous page")
             ), 21),
-            "next-page", new SimpleIcon(ItemUtil.build(
+            "next-page", new SimpleIcon(ConfigItem.of(
                     Material.ARROW, "Next Page", List.of("", "<white>Left-Click <gray>to go to the next page")
             ), 23)
     );
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class ClaimsIcon {
 
-        private ItemStack item = ItemStack.of(Material.GRASS_BLOCK);
+        private ConfigItem item = ConfigItem.of(Material.GRASS_BLOCK);
 
         private String name = "<gray>Name: <white><name>";
 
@@ -90,7 +82,7 @@ public class BaseListGuiConfig extends GuiTemplate {
         private ClaimsIcon() {
         }
 
-        private ClaimsIcon(ItemStack item, String name, List<String> lore, String owner, String member) {
+        private ClaimsIcon(ConfigItem item, String name, List<String> lore, String owner, String member) {
             this.item = item;
             this.name = name;
             this.lore = lore;
@@ -100,11 +92,11 @@ public class BaseListGuiConfig extends GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class SubClaimsIcon extends ClaimsIcon {
 
         public SubClaimsIcon() {
-            super(ItemStack.of(Material.DIRT),
+            super(ConfigItem.of(Material.DIRT),
                     "<gray>Name: <white><name>",
                     List.of(
                             "<gray>UID: <white><short_id>",

@@ -1,15 +1,16 @@
 package com.hibiscusmc.hmcclaims.config.form;
 
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.List;
 import java.util.Map;
 
+@Config
 @Getter
-@ConfigSerializable
 @SuppressWarnings({"FieldMayBeFinal"})
 public class SubClaimManageFormConfig extends ClaimManageFormConfig {
 
@@ -23,45 +24,34 @@ public class SubClaimManageFormConfig extends ClaimManageFormConfig {
             "<gray>Area: <white><surface_area> <dark_gray>(<total_x>x<total_z>)"
     );
 
-    @Setting("rename-button")
     private Button renameButton = new Button("Rename sub claim", Image.path("textures/items/book_writable"));
 
-    @Setting("lock-button")
     @Comment("Shown while the sub claim is open to everyone")
     private Button lockButton = new Button("Lock sub claim", Image.path("textures/items/door_iron"));
 
-    @Setting("unlock-button")
     @Comment("Shown while the sub claim is locked")
     private Button unlockButton = new Button("Unlock sub claim", Image.path("textures/blocks/door_wood_upper"));
 
-    @Setting("banned-button")
     private Button bannedButton = new Button("Banned players", Image.path("textures/ui/hammer_l"));
 
-    @Setting("inherit-button")
     @Comment("Copies the main claim's members, roles and permissions onto this sub claim")
     private Button inheritButton = new Button("Inherit permissions", Image.path("textures/ui/copy"));
 
-    @Setting("inherit-confirm")
     @Comment("Confirmation shown before the inherited permissions overwrite this sub claim")
     private Confirm inheritConfirm = new Confirm();
 
-    @Setting("inherit-success")
     private String inheritSuccess = "<prefix><green>Permissions inherited from <white><main_claim></white>!";
 
-    @Setting("resize-button")
     @Comment("Closes the form and puts the player into resize mode")
     private Button resizeButton = new Button("Resize sub claim", Image.path("textures/items/gold_shovel"));
 
-    @Setting("delete-button")
     private Button deleteButton = new Button("<red>Delete sub claim", Image.path("textures/ui/redX1"));
 
     private Navigation nav = new Navigation();
 
-    @Setting("back-button")
     private Button backButton = new Button("Back", Image.path("textures/ui/arrow_left"));
 
-    @Setting("extra-buttons")
-    private Map<String, ActionButton> extraButtons = Map.of(
+    private Map<String, ActionButton> extraButtons = MapUtil.ordered(
             "example-button", new ActionButton("Example Button")
     );
 
@@ -79,7 +69,7 @@ public class SubClaimManageFormConfig extends ClaimManageFormConfig {
     );
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Confirm {
 
         private String title = "Inherit permissions?";

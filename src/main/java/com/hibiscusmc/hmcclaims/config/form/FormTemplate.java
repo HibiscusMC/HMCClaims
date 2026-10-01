@@ -1,25 +1,21 @@
 package com.hibiscusmc.hmcclaims.config.form;
 
 import com.hibiscusmc.hmcclaims.gui.Action;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Section
 @SuppressWarnings({"FieldMayBeFinal"})
 public class FormTemplate {
 
-    public final static String ORDER_DESCRIPTION = """
-            The sections of this form, top to bottom.
-            
-            Remove an entry to hide that section; reorder them to move sections around.
-            Unknown entries are ignored. Use "extra:<key>" to place one of the buttons
-            defined under extra-buttons.""";
+    public final static String ORDER_DESCRIPTION
+            = "The sections of this form, top to bottom. Remove one to hide it. extra:<key> places an extra button.";
 
     /**
      * How a button icon is sourced.
@@ -35,7 +31,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Image {
 
         @Comment("NONE, PATH (a texture inside the Bedrock client) or URL")
@@ -57,7 +53,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Button {
 
         @Comment("The button label")
@@ -79,7 +75,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class ActionButton extends Button {
 
         private List<Action> actions = List.of(
@@ -95,7 +91,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Entry {
 
         @Comment("The row label, one entry per rendered line. Placeholders are supported.")
@@ -113,17 +109,13 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Title {
 
         @Comment("The title shown at the top of the form")
         private String text = "";
 
-        @Setting("max-length")
-        @Comment("""
-                This defines the max length of the Claim name, not the title itself!
-                Setting this to -1 will disable the feature.
-                Claim names that exceed the length will be sliced and suffixed with "...\"""")
+        @Comment("Max length of the claim name shown in the title, not of the title itself. -1 disables it.")
         private int maxLength = 28;
 
         public Title() {
@@ -140,7 +132,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class SubForm {
 
         private Title title = new Title("<name>");
@@ -162,7 +154,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Input {
 
         private String label = "Value";
@@ -170,7 +162,6 @@ public class FormTemplate {
         @Comment("The greyed-out hint shown while the field is empty")
         private String placeholder = "";
 
-        @Setting("max-length")
         @Comment("Currently only used to trim overly long submissions. -1 disables it.")
         private int maxLength = 100;
 
@@ -190,7 +181,7 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Dropdown {
 
         private String label = "Option";
@@ -208,24 +199,20 @@ public class FormTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Navigation {
 
         @Comment("Remove an entry to hide that destination")
-        private Map<String, Button> buttons = Map.of(
+        private Map<String, Button> buttons = MapUtil.ordered(
                 "members", new Button("Members", Image.path("textures/ui/FriendsIcon")),
                 "roles", new Button("Roles", Image.path("textures/ui/permissions_op_crown")),
                 "settings", new Button("Settings", Image.path("textures/ui/settings_glyph_color_2x")),
                 "manage", new Button("Manage", Image.path("textures/ui/hammer_l"))
         );
 
-        @Setting("dropdown-label")
-        @Comment("""
-                Label of the navigation dropdown shown on forms that can't hold buttons
-                (the settings and permission editors).""")
+        @Comment("Label of the navigation dropdown on forms that can't hold buttons.")
         private String dropdownLabel = "<gray>Go to";
 
-        @Setting("dropdown-stay")
         @Comment("The dropdown option that keeps the player where they are")
         private String dropdownStay = "Stay here";
     }

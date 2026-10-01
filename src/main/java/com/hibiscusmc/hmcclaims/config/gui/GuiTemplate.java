@@ -1,35 +1,32 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.gui.Action;
-import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Key;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 @Getter
-@ConfigSerializable
+@Section
 @SuppressWarnings({"FieldMayBeFinal"})
 public class GuiTemplate {
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class GuiTitle {
 
         @Comment("The title of the GUI")
         private String text;
 
-        @Setting("max-length")
-        @Comment("""
-                This defines the max length of the Claim name, not the title itself!
-                Setting this to -1 will disable the feature.
-                Claim names that exceed the length will be sliced and suffixed with "...\"""")
+        @Comment("Max length of the claim name shown in the title, not of the title itself. -1 disables it.")
         private int maxLength;
 
         protected GuiTitle(String text) {
@@ -47,7 +44,7 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class DynamicIcon {
 
         private String name;
@@ -64,10 +61,10 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class DynamicIconWithStack {
 
-        private ItemStack item;
+        private ConfigItem item;
 
         private String name;
 
@@ -76,7 +73,7 @@ public class GuiTemplate {
         public DynamicIconWithStack() {
         }
 
-        protected DynamicIconWithStack(ItemStack item, String name, List<String> lore) {
+        protected DynamicIconWithStack(ConfigItem item, String name, List<String> lore) {
             this.item = item;
             this.name = name;
             this.lore = lore;
@@ -84,56 +81,54 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class SimpleIcon {
 
-        private ItemStack item = ItemStack.of(Material.AIR);
+        private ConfigItem item = ConfigItem.of(Material.AIR);
 
         private int slot = -1;
 
         public SimpleIcon() {
         }
 
-        protected SimpleIcon(ItemStack item, int slot) {
+        protected SimpleIcon(ConfigItem item, int slot) {
             this.item = item;
             this.slot = slot;
         }
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class SimpleMultiIcon {
 
-        private ItemStack item = ItemStack.of(Material.AIR);
+        private ConfigItem item = ConfigItem.of(Material.AIR);
 
         private List<Integer> slots = List.of();
 
         public SimpleMultiIcon() {
         }
 
-        protected SimpleMultiIcon(ItemStack item, List<Integer> slots) {
+        protected SimpleMultiIcon(ConfigItem item, List<Integer> slots) {
             this.item = item;
             this.slots = slots;
         }
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class Icon {
 
-        private ItemStack item = ItemUtil.build(Material.OAK_SIGN, "<aqua>Example Icon", List.of(
+        private ConfigItem item = ConfigItem.of(Material.OAK_SIGN, "<aqua>Example Icon", List.of(
                 "",
                 "<gray>This is an example icon!"
         ));
 
         private int slot;
 
-        @Setting("left-click-actions")
         protected List<Action> leftClickActions = List.of(
                 Action.parse("command: say hello!")
         );
 
-        @Setting("right-click-actions")
         protected List<Action> rightClickActions = List.of(
                 Action.parse("console: say %player_name% says hello!"),
                 Action.parse("message: <green>saying hello on your behalf, <white>%player_name%</white>!")
@@ -148,10 +143,10 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class FilterIcon {
 
-        private ItemStack item = ItemStack.of(Material.HOPPER);
+        private ConfigItem item = ConfigItem.of(Material.HOPPER);
 
         private int slot;
 
@@ -165,7 +160,6 @@ public class GuiTemplate {
                 "<white>Right-Click <gray>to select the previous filter"
         );
 
-        @Setting("filter-names")
         private Map<String, String> filterNames;
 
         private String selected = "<white><u><name></u> <green><b>←</b></green>";
@@ -183,10 +177,10 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class SearchIcon {
 
-        private ItemStack item = ItemStack.of(Material.SPYGLASS);
+        private ConfigItem item = ConfigItem.of(Material.SPYGLASS);
 
         private int slot;
 
@@ -199,7 +193,6 @@ public class GuiTemplate {
                 "<white>Left-Click <gray>to search"
         );
 
-        @Setting("no-query")
         private String noQuery = "<i>Nothing...";
 
         protected SearchIcon(int slot) {
@@ -211,64 +204,90 @@ public class GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
-    public static class ToggleIcon<T> {
+    @Section
+    public static class PermissionToggleIcon extends DynamicIconWithStack {
 
-        private int slot;
+        @Key("cant-change-lore")
+        private List<String> cantChangeLore = List.of();
 
-        private T key;
-        private DynamicIconWithStack icon;
-
-        @Setting("has-modify-icon")
-        private boolean hasModifyIcon = true;
-
-        @Setting("modify-icon")
-        private BiStateToggleIcon modifyIcon;
-
-        public ToggleIcon() {
+        public PermissionToggleIcon() {
         }
 
-        protected ToggleIcon(T key, int slot, String name, List<String> lore, BiStateToggleIcon modifyIcon) {
-            this.key = key;
+        protected PermissionToggleIcon(Material material, String name, List<String> lore, List<String> cantChangeLore) {
+            super(ConfigItem.of(material), name, lore);
 
-            this.icon = new DynamicIconWithStack(
-                    ItemStack.of(Material.BOOK), name, lore
+            this.cantChangeLore = cantChangeLore;
+        }
+    }
+
+    /**
+     * The slots a registry-driven list (permissions or settings) is drawn in. Every entry takes one
+     * of the {@code slots} and its toggle goes {@code toggle-offset} slots after it.
+     */
+    @Getter
+    @Section
+    public static class ToggleList {
+
+        @Comment("The slots the entries are placed in. The rest go to the next pages.")
+        private List<RangeUtil> slots = List.of(new RangeUtil(19, 25));
+
+        @Key("toggle-offset")
+        @Comment("The toggle goes in the entry's slot plus this. Set to 0 to hide the toggles.")
+        private int toggleOffset = 9;
+
+        private DynamicIcon icon;
+
+        public ToggleList() {
+        }
+
+        protected ToggleList(String type) {
+            this.icon = new DynamicIcon("<" + type + "_name>", List.of("<" + type + "_description>"));
+        }
+
+        public boolean hasToggle() {
+            return toggleOffset != 0;
+        }
+
+        public int[] allSlots() {
+            return slots.stream()
+                    .flatMapToInt(range -> IntStream.of(range.all()))
+                    .toArray();
+        }
+
+        public <T> List<List<T>> pages(List<T> entries) {
+            int size = Math.max(1, allSlots().length);
+            List<List<T>> pages = new ArrayList<>();
+
+            for (int i = 0; i < entries.size(); i += size) {
+                pages.add(entries.subList(i, Math.min(entries.size(), i + size)));
+            }
+
+            return pages;
+        }
+
+        protected static List<String> lore(String type, String value, String footer) {
+            return List.of(
+                    "<" + type + "_description>",
+                    "",
+                    "<gray>Current Value: <" + value + ">",
+                    "",
+                    footer
             );
-            this.slot = slot;
-
-            this.modifyIcon = modifyIcon;
         }
+    }
 
-        protected static List<String> buildLore(List<String> baseLore, String value) {
-            List<String> cloned = new ArrayList<>(baseLore);
+    /**
+     * A toggle list whose entries can be read-only for the viewer, shown with the no-access icon.
+     */
+    @Getter
+    @Section
+    public static class PermissionToggleList extends ToggleList {
 
-            cloned.addAll(List.of(
-                    "",
-                    "<gray>Current Value: " + value,
-                    "",
-                    " <green><u>Click to change value"
-            ));
+        @Key("no-access-icon")
+        private DynamicIcon noAccessIcon = new DynamicIcon("<permission_name>", List.of("<permission_description>"));
 
-            return cloned;
-        }
-
-        @Getter
-        @ConfigSerializable
-        public static class BiStateToggleIcon {
-
-            private int slot;
-
-            private DynamicIconWithStack enabled;
-            private DynamicIconWithStack disabled;
-
-            public BiStateToggleIcon() {
-            }
-
-            protected BiStateToggleIcon(int slot, DynamicIconWithStack enabled, DynamicIconWithStack disabled) {
-                this.slot = slot;
-                this.enabled = enabled;
-                this.disabled = disabled;
-            }
+        public PermissionToggleList() {
+            super("permission");
         }
     }
 
@@ -279,12 +298,7 @@ public class GuiTemplate {
         /**
          * @noinspection ProtectedMemberInFinalClass
          */
-        protected final static String DESCRIPTION = """
-                ┌─ Options:
-                ├─ FULL
-                ├   Uses both the top and the bottom inventories, using the lower part to
-                │   display what is in the lower-gui config
-                ├─ NORMAL
-                └   Only uses the top part of the inventory""";
+        protected final static String DESCRIPTION
+                = "FULL also uses the player inventory to show the lower-gui, NORMAL only the top one.";
     }
 }

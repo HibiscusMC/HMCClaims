@@ -5,9 +5,9 @@ import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberRoleConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
@@ -68,10 +69,10 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
     private GuiTemplate.DynamicIconWithStack roleIconUnable;
 
     private GuiTemplate.SimpleIcon kickIcon;
-    private ItemStack cantKickIcon;
+    private ConfigItem cantKickIcon;
 
     private GuiTemplate.SimpleIcon banIcon;
-    private ItemStack cantBanIcon;
+    private ConfigItem cantBanIcon;
 
     private GuiTemplate.SimpleMultiIcon rolesTab;
     private GuiTemplate.SimpleMultiIcon permissionsTab;
@@ -286,7 +287,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
             Item item = Item.builder()
                     .setItemProvider(p -> {
                         GuiTemplate.DynamicIconWithStack icon = targetMember.role().equals(role) ? roleIconSelected : canManage && validPosition && validRole ? roleIcon : roleIconUnable;
-                        ItemStack stack = icon.item();
+                        ItemStack stack = icon.item().stack();
 
                         stack.editMeta(meta -> {
                             meta.itemName(TextUtil.parseItem(icon.name(), player, Map.of("name", role.name())));

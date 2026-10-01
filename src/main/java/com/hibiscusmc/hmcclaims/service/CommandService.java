@@ -2,9 +2,9 @@ package com.hibiscusmc.hmcclaims.service;
 
 import com.hibiscusmc.hmcclaims.command.argument.CommandArgumentImpl;
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.command.CommandSender;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.commandflow.CommandManager;
 import team.unnamed.commandflow.annotated.AnnotatedCommandTreeBuilder;
 import team.unnamed.commandflow.annotated.CommandClass;

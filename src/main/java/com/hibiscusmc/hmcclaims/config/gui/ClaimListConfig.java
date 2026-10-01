@@ -1,10 +1,10 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
 import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import team.hypox.config.core.annotation.Config;
 
 @Getter
-@ConfigSerializable
+@Config
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimListConfig extends BaseListGuiConfig {
 

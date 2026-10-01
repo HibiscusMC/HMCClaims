@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.form.input;
 
 import com.hibiscusmc.hmcclaims.config.form.DialogsFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.FormTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
@@ -11,6 +10,7 @@ import com.hibiscusmc.hmcclaims.util.TextUtil;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 

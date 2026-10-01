@@ -4,8 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
-import com.hibiscusmc.hmcclaims.config.DefaultSettings;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.config.ClaimSettings;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -17,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 import java.util.Iterator;
@@ -31,7 +31,7 @@ public class VanillaBlockSettingListener implements Listener {
     private ClaimManager claimManager;
 
     @Inject
-    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
+    private ConfigHolder<ClaimSettings> claimSettingsHolder;
 
     @EventHandler
     public void onMobExplode(EntityExplodeEvent event) {
@@ -86,9 +86,9 @@ public class VanillaBlockSettingListener implements Listener {
             return value;
         }
 
-        String rawValue = defaultSettingsHolder.get().defaultSettings().get(setting);
+        Boolean configured = claimSettingsHolder.get().defaultValue(setting);
 
-        return rawValue != null ? setting.parser().apply(rawValue) : setting.defaultValue();
+        return configured != null ? configured : setting.defaultValue();
     }
 
     private void handleExplosion(List<Block> blockList, Setting<Boolean> setting) {

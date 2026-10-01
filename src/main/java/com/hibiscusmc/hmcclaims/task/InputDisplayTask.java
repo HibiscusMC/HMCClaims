@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.task;
 
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import team.hypox.config.core.ConfigHolder;
 
 @RequiredArgsConstructor
 public class InputDisplayTask extends BukkitRunnable {

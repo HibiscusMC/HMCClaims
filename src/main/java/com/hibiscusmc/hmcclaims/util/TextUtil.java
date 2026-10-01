@@ -1,8 +1,8 @@
 package com.hibiscusmc.hmcclaims.util;
 
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import me.clip.placeholderapi.PAPIComponents;
@@ -21,9 +21,11 @@ import org.bukkit.inventory.ItemStack;
 import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -344,6 +346,44 @@ public class TextUtil {
                 .deserialize(player == null ? string : PlaceholderAPI.setPlaceholders(player, string), resolver)
                 .colorIfAbsent(NamedTextColor.WHITE)
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+    }
+
+    /**
+     * Builds the item and parses PlaceholderAPI placeholders for its name and lore.
+     *
+     * @param item   the configured item
+     * @param player the player to parse placeholders for
+     * @return a new item stack
+     */
+    @NotNull
+    @Contract(value = "_, _ -> new")
+    public static ItemStack parseItemPlaceholders(@NotNull ConfigItem item, Player player) {
+        return parseItemPlaceholders(item.stack(), player);
+    }
+
+    /**
+     * Replaces every line that is exactly the placeholder with the replacement lines.
+     *
+     * @param lines       the lines to expand
+     * @param placeholder the placeholder, including the angle brackets
+     * @param replacement the lines that take its place
+     * @return a new list with the placeholder lines expanded
+     */
+    @NotNull
+    @Contract(value = "_, _, _ -> new", pure = true)
+    public static List<String> expandLines(@NotNull List<String> lines, @NotNull String placeholder, @NotNull List<String> replacement) {
+        List<String> expanded = new ArrayList<>();
+
+        for (String line : lines) {
+            if (line.equals(placeholder)) {
+                expanded.addAll(replacement);
+                continue;
+            }
+
+            expanded.add(line);
+        }
+
+        return expanded;
     }
 
     /**

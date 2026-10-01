@@ -1,26 +1,32 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
+import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
-import com.hibiscusmc.hmcclaims.config.DefaultRoles;
-import com.hibiscusmc.hmcclaims.config.DefaultSettings;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.claim.setting.SettingRegistry;
+import com.hibiscusmc.hmcclaims.config.ClaimSettings;
+import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import lombok.Getter;
+import net.kyori.adventure.key.InvalidKeyException;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -76,10 +82,10 @@ public class ClaimManager {
             = ConcurrentHashMap.newKeySet();
 
     @Inject
-    private ConfigHolder<DefaultRoles> rolesHolder;
+    private ConfigHolder<Permissions> permissionsHolder;
 
     @Inject
-    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
+    private ConfigHolder<ClaimSettings> claimSettingsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -112,6 +118,37 @@ public class ClaimManager {
         pendingClaims.remove(claimId);
     }
 
+    @NotNull
+    private ClaimRole defaultRole(@NotNull Permissions.DefaultRole role) {
+        Set<Permission> permissions = new HashSet<>();
+
+        for (String id : role.permissions()) {
+            if (id.equals("*")) {
+                permissions.addAll(PermissionRegistry.getAllPermissions());
+                continue;
+            }
+
+            Permission permission = findPermission(id);
+            if (permission == null) {
+                Logger.warning("Ignoring unknown permission '{}' in the default role '{}'", id, role.name());
+                continue;
+            }
+
+            permissions.add(permission);
+        }
+
+        return new ClaimRole(null, role.name(), permissions);
+    }
+
+    @Nullable
+    private Permission findPermission(@NotNull String id) {
+        try {
+            return PermissionRegistry.getPermission(id);
+        } catch (InvalidKeyException e) {
+            return null;
+        }
+    }
+
     /**
      * Creates a new claim, registers it in the cache, and updates user claim blocks.
      *
@@ -127,26 +164,27 @@ public class ClaimManager {
                 .filter(claim -> claim.main() == null)
                 .count();
 
+        Permissions.Roles roles = permissionsHolder.get().roles();
+        ClaimSettings claimSettings = claimSettingsHolder.get();
+
         Claim newClaim = new Claim(
                 UUID.randomUUID(),
                 main,
                 new NameAndId(user.uuid(), user.lastKnownName()),
                 region,
                 new ArrayList<>(List.of(
-                        rolesHolder.get().defaultRoles().owner(),
-                        rolesHolder.get().defaultRoles().member(),
-                        rolesHolder.get().defaultRoles().everyone()
+                        defaultRole(roles.owner()),
+                        defaultRole(roles.member()),
+                        defaultRole(roles.everyone())
                 )),
                 (int) totalMainClaims + 1
         );
 
-        for (Map.Entry<Setting<?>, String> entry : defaultSettingsHolder.get().defaultSettings().entrySet()) {
+        for (Setting<?> registered : SettingRegistry.getAllSettings()) {
             //noinspection unchecked
-            Setting<Object> setting = (Setting<Object>) entry.getKey();
-            String value = entry.getValue();
+            Setting<Object> setting = (Setting<Object>) registered;
             SettingHolder<Object> holder = SettingHolder.from(setting);
-            Object parsedValue = setting.parser().apply(value);
-            holder.value(parsedValue == null || parsedValue.equals("null") ? null : parsedValue);
+            holder.value(claimSettings.defaultValue(setting));
 
             newClaim.settings().put(setting, holder);
         }

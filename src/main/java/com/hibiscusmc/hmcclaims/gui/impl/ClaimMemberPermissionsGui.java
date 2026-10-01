@@ -3,9 +3,11 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberPermissionsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
+import com.hibiscusmc.hmcclaims.gui.EntryIcon;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
@@ -17,15 +19,14 @@ import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.Click;
@@ -35,17 +36,18 @@ import xyz.xenondevs.invui.item.ItemBuilder;
 import xyz.xenondevs.invui.item.ItemWrapper;
 import xyz.xenondevs.invui.window.Window;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 @Singleton
 public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
     @Inject
     private ConfigHolder<ClaimMemberPermissionsConfig> configHolder;
+
+    @Inject
+    private ConfigHolder<Permissions> permissionsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -63,13 +65,16 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
     private String unsetState;
     private String disabledState;
 
-    private Int2ObjectMap<Set<ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission>>> permissionPages;
+    private Permissions permissions;
+    private ClaimMemberPermissionsConfig.MemberPermissionList permissionList;
+    private int[] permissionSlots;
+    private List<List<Permission>> permissionPages;
 
     private GuiTemplate.SimpleIcon kickIcon;
-    private ItemStack cantKickIcon;
+    private ConfigItem cantKickIcon;
 
     private GuiTemplate.SimpleIcon banIcon;
-    private ItemStack cantBanIcon;
+    private ConfigItem cantBanIcon;
 
     private GuiTemplate.SimpleMultiIcon rolesTab;
     private GuiTemplate.SimpleMultiIcon permissionsTab;
@@ -97,22 +102,10 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         unsetState = config.states().get("unset");
         disabledState = config.states().get("disabled");
 
-        permissionPages = new Int2ObjectArrayMap<>();
-        for (Map.Entry<Integer, Map<String, ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission>>> page : config.permissionPages().entrySet()) {
-            if (page.getValue() == null) {
-                continue;
-            }
-
-            Set<ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission>> icons = page.getValue().values().stream()
-                    .filter(icon -> icon.key() != null)
-                    .collect(Collectors.toCollection(HashSet::new));
-
-            if (icons.isEmpty()) {
-                continue;
-            }
-
-            permissionPages.put(page.getKey().intValue(), icons);
-        }
+        permissions = permissionsHolder.get();
+        permissionList = config.permissionList();
+        permissionSlots = permissionList.allSlots();
+        permissionPages = permissionList.pages(permissions.visible());
 
         kickIcon = config.kickIcon();
         cantKickIcon = config.cantKickIcon();
@@ -193,19 +186,22 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                 currentPoint++;
             }
 
-            Set<ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission>> currentPermissions =
-                    permissionPages.getOrDefault(currentPage, Set.of());
+            List<Permission> currentPermissions = currentPage >= 1 && currentPage <= permissionPages.size()
+                    ? permissionPages.get(currentPage - 1)
+                    : List.of();
             Char2ObjectArrayMap<Item> permissionItems = new Char2ObjectArrayMap<>();
 
-            for (ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission> toggleIcon : currentPermissions) {
-                PermissionItem item = buildPermissionItem(player, member, toggleIcon, metadata);
+            for (int i = 0; i < currentPermissions.size(); i++) {
+                int slot = permissionSlots[i];
+                PermissionItem item = buildPermissionItem(player, member, currentPermissions.get(i), metadata);
 
                 permissionItems.put((char) currentPoint, item.item());
-                structure.set(toggleIcon.slot(), (char) currentPoint++);
+                structure.set(slot, (char) currentPoint++);
 
-                if (toggleIcon.hasModifyIcon()) {
+                int toggleSlot = slot + permissionList.toggleOffset();
+                if (permissionList.hasToggle() && toggleSlot < structure.size()) {
                     permissionItems.put((char) currentPoint, item.modifyItem());
-                    structure.set(toggleIcon.modifyIcon().slot(), (char) currentPoint++);
+                    structure.set(toggleSlot, (char) currentPoint++);
                 }
             }
 
@@ -227,7 +223,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                     .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(previousPage.item(), player)))
                     .addClickHandler((item, click) -> {
                         int page = currentPage - 1;
-                        if (!permissionPages.containsKey(page)) {
+                        if (page < 1 || page > permissionPages.size()) {
                             return;
                         }
 
@@ -238,7 +234,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                     .setItemProvider(new ItemBuilder(TextUtil.parseItemPlaceholders(nextPage.item(), player)))
                     .addClickHandler((item, click) -> {
                         int page = currentPage + 1;
-                        if (!permissionPages.containsKey(page)) {
+                        if (page < 1 || page > permissionPages.size()) {
                             return;
                         }
 
@@ -287,9 +283,9 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
     @NotNull
     @Contract(pure = true)
-    private PermissionItem buildPermissionItem(@NotNull Player player, @NotNull ClaimMember target, @NotNull ClaimMemberPermissionsConfig.TogglePermissionIcon<Permission> toggleIcon, @NotNull GuiMetadata metadata) {
+    private PermissionItem buildPermissionItem(@NotNull Player player, @NotNull ClaimMember target, @NotNull Permission permission, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
-        Permission permission = toggleIcon.key();
+        Permissions.Entry entry = permissions.entry(permission);
 
         boolean hasPermission = metadata.claim().hasPermission(player.getUniqueId(), Permission.MANAGE_MEMBER_PERMISSIONS) &&
                 claim.getMember(player.getUniqueId())
@@ -305,17 +301,17 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                 return;
             }
 
-            Object2BooleanMap<Permission> permissions = target.permissions();
+            Object2BooleanMap<Permission> overrides = target.permissions();
 
-            if (!permissions.containsKey(permission)) {
-                permissions.put(permission, true);
+            if (!overrides.containsKey(permission)) {
+                overrides.put(permission, true);
             } else {
-                boolean enabled = permissions.getBoolean(permission);
+                boolean enabled = overrides.getBoolean(permission);
 
                 if (enabled) {
-                    permissions.put(permission, false);
+                    overrides.put(permission, false);
                 } else {
-                    permissions.removeBoolean(permission);
+                    overrides.removeBoolean(permission);
                 }
             }
 
@@ -325,43 +321,38 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         return new PermissionItem(
                 Item.builder()
                         .setItemProvider(p -> {
-                            Object2BooleanMap<Permission> permissions = target.permissions();
-                            String state;
+                            GuiTemplate.DynamicIcon icon = hasPermission ? permissionList.icon() : permissionList.noAccessIcon();
 
-                            if (!permissions.containsKey(permission)) {
-                                state = unsetState;
-                            } else {
-                                state = permissions.getBoolean(permission) ? enabledState : disabledState;
-                            }
-
-                            return new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(
-                                    hasPermission ? toggleIcon.icon() : toggleIcon.noPermsIcon(),
-                                    state
+                            return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
+                                    entry.icon(), icon.name(), icon.lore(),
+                                    "permission", entry.name(), entry.description(),
+                                    Map.of("permission_value", stateOf(target, permission))
                             ), player));
                         })
                         .addClickHandler((it, click) -> {
-                            if (!toggleIcon.hasModifyIcon()) {
+                            if (!permissionList.hasToggle()) {
                                 action.accept(it, click);
                             }
                         })
                         .build(),
-                toggleIcon.hasModifyIcon() ?
+                permissionList.hasToggle() ?
                         Item.builder()
                                 .setItemProvider(p -> {
-                                    ClaimMemberPermissionsConfig.TogglePermissionIcon.TriStateToggleIcon modifyIcon = toggleIcon.modifyIcon();
-                                    Object2BooleanMap<Permission> permissions = target.permissions();
-                                    ClaimMemberPermissionsConfig.PermissionIcon icon;
-                                    String state;
+                                    ClaimMemberPermissionsConfig.MemberToggles toggles = permissionList.toggle();
+                                    Object2BooleanMap<Permission> overrides = target.permissions();
+                                    GuiTemplate.PermissionToggleIcon icon;
 
-                                    if (!permissions.containsKey(permission)) {
-                                        icon = modifyIcon.unset();
-                                        state = unsetState;
+                                    if (!overrides.containsKey(permission)) {
+                                        icon = toggles.unset();
                                     } else {
-                                        icon = permissions.getBoolean(permission) ? modifyIcon.enabled() : modifyIcon.disabled();
-                                        state = permissions.getBoolean(permission) ? enabledState : disabledState;
+                                        icon = overrides.getBoolean(permission) ? toggles.enabled() : toggles.disabled();
                                     }
 
-                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(buildPermissionIcon(icon, hasPermission, state), player));
+                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
+                                            icon.item(), icon.name(), hasPermission ? icon.lore() : icon.cantChangeLore(),
+                                            "permission", entry.name(), entry.description(),
+                                            Map.of("permission_value", stateOf(target, permission))
+                                    ), player));
                                 })
                                 .addClickHandler(action)
                                 .build()
@@ -370,31 +361,14 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
     }
 
     @NotNull
-    @Contract(pure = true)
-    private ItemStack buildPermissionIcon(@NotNull GuiTemplate.DynamicIconWithStack icon, @NotNull String state) {
-        ItemStack stack = icon.item();
-        stack.editMeta(meta -> {
-            meta.itemName(TextUtil.parse(icon.name()));
-            meta.lore(TextUtil.parseItemLore(icon.lore(), Map.of("permission_value", state)));
-        });
+    private String stateOf(@NotNull ClaimMember target, @NotNull Permission permission) {
+        Object2BooleanMap<Permission> overrides = target.permissions();
 
-        return stack;
-    }
+        if (!overrides.containsKey(permission)) {
+            return unsetState;
+        }
 
-    @NotNull
-    @Contract(pure = true)
-    private ItemStack buildPermissionIcon(@NotNull ClaimMemberPermissionsConfig.PermissionIcon icon, boolean hasPermission, @NotNull String state) {
-        ItemStack stack = icon.item();
-        stack.editMeta(meta -> {
-            meta.itemName(TextUtil.parse(icon.name()));
-
-            meta.lore(TextUtil.parseItemLore(
-                    hasPermission ? icon.lore() : icon.cantChangeLore(),
-                    Map.of("permission_value", state)
-            ));
-        });
-
-        return stack;
+        return overrides.getBoolean(permission) ? enabledState : disabledState;
     }
 
     record PermissionItem(@NotNull Item item, @Nullable Item modifyItem) {

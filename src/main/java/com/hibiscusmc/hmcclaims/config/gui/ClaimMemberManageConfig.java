@@ -1,53 +1,45 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
-import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Section
 public class ClaimMemberManageConfig extends GuiTemplate {
 
-    @Setting("lower-gui")
     private LowerGui lowerGui = new LowerGui();
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class LowerGui {
 
-        @Setting("extra-icons")
-        private Map<String, Icon> extraIcons = Map.of(
+        private Map<String, Icon> extraIcons = MapUtil.ordered(
                 "example-icon", new Icon(22)
         );
 
-        @Setting("kick-icon")
-        private SimpleIcon kickIcon = new SimpleIcon(ItemUtil.build(
+        private SimpleIcon kickIcon = new SimpleIcon(ConfigItem.of(
                 Material.BARRIER, "Kick Member", List.of("", "<white>Left-Click <gray>to delete role")
         ), 2);
 
-        @Setting("cant-kick-icon")
-        private ItemStack cantKickIcon = ItemUtil.build(
+        private ConfigItem cantKickIcon = ConfigItem.of(
                 Material.BARRIER, "Kick Member", List.of("", "<red>You can't kick this member")
         );
 
-        @Setting("ban-icon")
-        private SimpleIcon banIcon = new SimpleIcon(ItemUtil.build(
+        private SimpleIcon banIcon = new SimpleIcon(ConfigItem.of(
                 Material.BARRIER, "Ban Member", List.of("", "<white>Left-Click <gray>to ban this member")
         ), 6);
 
-        @Setting("cant-ban-icon")
-        private ItemStack cantBanIcon = ItemUtil.build(
+        private ConfigItem cantBanIcon = ConfigItem.of(
                 Material.BARRIER, "Ban Member", List.of("", "<red>You can't ban this member")
         );
 
-        @Setting("back-icon")
-        private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+        private SimpleIcon backIcon = new SimpleIcon(ConfigItem.of(
                 Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
         ), 18);
     }

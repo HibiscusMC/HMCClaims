@@ -5,7 +5,6 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.task.ResizeDisplayTask;
 import com.hibiscusmc.hmcclaims.user.User;
@@ -21,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -396,10 +396,10 @@ public class SelectionManager {
         Settings.Claiming claiming = settingsHolder.get().claiming();
 
         if (claiming.claimToolStrict()) {
-            return tool.isSimilar(claiming.claimTool());
+            return tool.isSimilar(claiming.claimTool().stack());
         }
 
-        return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(claiming.claimTool()));
+        return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(claiming.claimTool().stack()));
     }
 
     /**

@@ -5,9 +5,8 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
-import com.hibiscusmc.hmcclaims.config.DefaultSettings;
+import com.hibiscusmc.hmcclaims.config.ClaimSettings;
 import com.hibiscusmc.hmcclaims.config.Messages;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -18,6 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 /**
@@ -28,7 +28,7 @@ public class CombatPermissionListener implements Listener {
     @Inject
     private ConfigHolder<Messages> messagesHolder;
     @Inject
-    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
+    private ConfigHolder<ClaimSettings> claimSettingsHolder;
 
     @Inject
     private ClaimManager claimManager;
@@ -96,9 +96,9 @@ public class CombatPermissionListener implements Listener {
     }
 
     private boolean defaultPvp() {
-        String rawValue = defaultSettingsHolder.get().defaultSettings().get(Setting.PVP);
+        Boolean value = claimSettingsHolder.get().defaultValue(Setting.PVP);
 
-        return rawValue != null ? Setting.PVP.parser().apply(rawValue) : Setting.PVP.defaultValue();
+        return value != null ? value : Setting.PVP.defaultValue();
     }
 
     private static Player getAttackingPlayer(EntityDamageByEntityEvent event) {

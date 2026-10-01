@@ -8,7 +8,6 @@ import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRolesConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SingleInputDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
@@ -25,6 +24,7 @@ import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
@@ -273,7 +273,7 @@ public class ClaimRolesGui extends ClaimListGui {
 
             Item item = Item.builder()
                     .setItemProvider(p -> {
-                        ItemStack stack = roleIcon.icon();
+                        ItemStack stack = roleIcon.icon().stack();
                         stack.editMeta(meta -> {
                             meta.itemName(TextUtil.parseItem(roleIcon.name(), player, Map.of(
                                     "name", role.name()

@@ -3,14 +3,14 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
-import com.hibiscusmc.hmcclaims.config.DefaultSettings;
+import com.hibiscusmc.hmcclaims.config.ClaimSettings;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimSettingsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SingleInputDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
+import com.hibiscusmc.hmcclaims.gui.EntryIcon;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
@@ -23,9 +23,8 @@ import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.Click;
@@ -48,7 +47,7 @@ public class ClaimSettingsGui extends ClaimListGui {
     @Inject
     private ConfigHolder<Messages> messagesHolder;
     @Inject
-    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
+    private ConfigHolder<ClaimSettings> claimSettingsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -76,7 +75,10 @@ public class ClaimSettingsGui extends ClaimListGui {
     private String enabledState;
     private String disabledState;
 
-    private Map<Integer, List<ClaimSettingsConfig.ToggleSettingIcon<Setting<?>>>> settingPages;
+    private ClaimSettings claimSettings;
+    private ClaimSettingsConfig.SettingList settingList;
+    private int[] settingSlots;
+    private List<List<Setting<?>>> settingPages;
 
     @Override
     public void loadConfig() {
@@ -100,7 +102,10 @@ public class ClaimSettingsGui extends ClaimListGui {
         enabledState = config.states().get(true);
         disabledState = config.states().get(false);
 
-        settingPages = config.settingPages();
+        claimSettings = claimSettingsHolder.get();
+        settingList = config.settingList();
+        settingSlots = settingList.allSlots();
+        settingPages = settingList.pages(claimSettings.visible());
 
         screenType = config.screenType();
         if (screenType == GuiTemplate.GuiScreenType.FULL) {
@@ -143,15 +148,21 @@ public class ClaimSettingsGui extends ClaimListGui {
 
             Char2ObjectArrayMap<Item> settingItems = new Char2ObjectArrayMap<>();
             int currentSafeCode = FIRST_SAFE_CHAR + icons.size() + 1;
-            for (ClaimSettingsConfig.ToggleSettingIcon<Setting<?>> toggleIcon : settingPages.getOrDefault(currentPage, List.of())) {
-                SettingItem item = buildSetting(player, claim, toggleIcon);
+            List<Setting<?>> currentSettings = currentPage >= 1 && currentPage <= settingPages.size()
+                    ? settingPages.get(currentPage - 1)
+                    : List.of();
+
+            for (int i = 0; i < currentSettings.size(); i++) {
+                int slot = settingSlots[i];
+                SettingItem item = buildSetting(player, claim, currentSettings.get(i));
 
                 settingItems.put((char) currentSafeCode, item.item());
-                structure.set(toggleIcon.slot(), (char) currentSafeCode++);
+                structure.set(slot, (char) currentSafeCode++);
 
-                if (toggleIcon.hasModifyIcon()) {
+                int toggleSlot = slot + settingList.toggleOffset();
+                if (settingList.hasToggle() && toggleSlot < structure.size()) {
                     settingItems.put((char) currentSafeCode, item.modifyItem());
-                    structure.set(toggleIcon.modifyIcon().slot(), (char) currentSafeCode++);
+                    structure.set(toggleSlot, (char) currentSafeCode++);
                 }
             }
 
@@ -192,7 +203,7 @@ public class ClaimSettingsGui extends ClaimListGui {
                     .setItemProvider(TextUtil.parseItemPlaceholders(previousPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage - 1;
-                        if (!settingPages.containsKey(page)) {
+                        if (page < 1 || page > settingPages.size()) {
                             return;
                         }
 
@@ -204,7 +215,7 @@ public class ClaimSettingsGui extends ClaimListGui {
                     .setItemProvider(TextUtil.parseItemPlaceholders(nextPage.item(), player))
                     .addClickHandler(click -> {
                         int page = currentPage + 1;
-                        if (!settingPages.containsKey(page)) {
+                        if (page < 1 || page > settingPages.size()) {
                             return;
                         }
 
@@ -243,17 +254,15 @@ public class ClaimSettingsGui extends ClaimListGui {
         });
     }
 
-    private SettingItem buildSetting(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimSettingsConfig.ToggleSettingIcon<Setting<?>> toggleIcon) {
-        Setting<?> setting = toggleIcon.key();
+    private SettingItem buildSetting(@NotNull Player player, @NotNull Claim claim, @NotNull Setting<?> setting) {
+        ClaimSettings.Entry entry = claimSettings.entry(setting);
+
         //noinspection unchecked
         SettingHolder<Object> holder = (SettingHolder<Object>) claim.settings()
                 .computeIfAbsent(setting, (k) -> {
                     //noinspection unchecked
                     SettingHolder<Object> h = (SettingHolder<Object>) SettingHolder.from(setting);
-
-                    String rawValue = defaultSettingsHolder.get().defaultSettings().getOrDefault(setting, null);
-                    Object value = rawValue != null ? setting.parser().apply(rawValue) : null;
-                    h.value(value == null || value.equals("null") ? null : value);
+                    h.value(claimSettings.defaultValue(setting));
 
                     return h;
                 });
@@ -279,19 +288,10 @@ public class ClaimSettingsGui extends ClaimListGui {
                 return;
             }
 
-            String settingName = setting.displayName();
-            ItemStack settingItem = toggleIcon.icon().item();
-            if (settingItem.hasItemMeta()) {
-                ItemMeta meta = settingItem.getItemMeta();
-                if (meta.hasItemName()) {
-                    settingName = TextUtil.unparse(meta.itemName());
-                }
-            }
-
             new SingleInputDialog()
                     .create(
                             messagesHolder.get().dialogs().setting(),
-                            Map.of("claim_name", claim.name()), Map.of("setting_name", settingName),
+                            Map.of("claim_name", claim.name()), Map.of("setting_name", entry.name()),
                             holder.value() != null ? holder.value().toString() : holder.setting().defaultValue().toString()
                     )
                     .onSubmit(view -> {
@@ -309,30 +309,36 @@ public class ClaimSettingsGui extends ClaimListGui {
 
         return new SettingItem(
                 Item.builder()
-                        .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(buildSettingIcon(holder, toggleIcon.icon(), toggleIcon.notSet()), player)))
+                        .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
+                                entry.icon(), settingList.icon().name(), settingList.icon().lore(),
+                                "setting", entry.name(), entry.description(),
+                                Map.of("setting_value", valueOf(holder))
+                        ), player)))
                         .addClickHandler((it, click) -> {
-                            if (toggleIcon.hasModifyIcon()) {
+                            if (settingList.hasToggle()) {
                                 return;
                             }
 
                             action.accept(it, click);
                         })
                         .build(),
-                toggleIcon.hasModifyIcon() ?
+                settingList.hasToggle() ?
                         Item.builder()
                                 .setItemProvider(p -> {
                                     Object value = holder.value();
 
-                                    GuiTemplate.ToggleIcon.BiStateToggleIcon modifyIcon = toggleIcon.modifyIcon();
-
                                     GuiTemplate.DynamicIconWithStack icon;
                                     if (value instanceof Boolean ? (Boolean) value : value != null) {
-                                        icon = modifyIcon.enabled();
+                                        icon = settingList.toggle().enabled();
                                     } else {
-                                        icon = modifyIcon.disabled();
+                                        icon = settingList.toggle().disabled();
                                     }
 
-                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(buildSettingIcon(holder, icon, toggleIcon.notSet()), player));
+                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
+                                            icon.item(), icon.name(), icon.lore(),
+                                            "setting", entry.name(), entry.description(),
+                                            Map.of("setting_value", valueOf(holder))
+                                    ), player));
                                 })
                                 .addClickHandler(action)
                                 .build()
@@ -340,19 +346,19 @@ public class ClaimSettingsGui extends ClaimListGui {
         );
     }
 
-    private ItemStack buildSettingIcon(@NotNull SettingHolder<?> holder, @NotNull GuiTemplate.DynamicIconWithStack icon, String notSetArg) {
-        ItemStack stack = icon.item();
-        stack.editMeta(meta -> {
-            meta.itemName(TextUtil.parse(icon.name()));
+    @NotNull
+    private String valueOf(@NotNull SettingHolder<?> holder) {
+        Object value = holder.value();
 
-            meta.lore(TextUtil.parseItemLore(icon.lore(), Map.of(
-                    "setting_value", holder.value() != null ? holder.value() instanceof Boolean ?
-                            ((Boolean) holder.value() ? enabledState : disabledState)
-                            : holder.value().toString() : notSetArg
-            )));
-        });
+        if (value == null) {
+            return settingList.notSet();
+        }
 
-        return stack;
+        if (value instanceof Boolean enabled) {
+            return enabled ? enabledState : disabledState;
+        }
+
+        return value.toString();
     }
 
     record SettingItem(Item item, Item modifyItem) {

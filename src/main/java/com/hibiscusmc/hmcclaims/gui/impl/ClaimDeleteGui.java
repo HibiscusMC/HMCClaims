@@ -6,7 +6,6 @@ import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimDeleteConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
@@ -25,6 +24,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
@@ -214,7 +214,7 @@ public class ClaimDeleteGui extends ClaimListGui {
         Map<String, String> claimPlaceholders = placeholders.claimInfo(claim);
 
         ClaimDeleteConfig.ClaimIcon icon = claim.main() == null ? claimIcon : subClaimIcon;
-        ItemStack stack = icon.item();
+        ItemStack stack = icon.item().stack();
         ItemMeta meta = stack.getItemMeta();
 
         List<Component> lore = new ArrayList<>();

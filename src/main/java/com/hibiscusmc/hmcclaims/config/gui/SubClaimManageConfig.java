@@ -1,17 +1,18 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
-import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
+import team.hypox.config.core.annotation.Key;
+import team.hypox.config.core.annotation.Optional;
 
 import java.util.List;
 import java.util.Map;
 
-@ConfigSerializable
+@Config
 @Getter(onMethod_ = {@Override})
 @SuppressWarnings({"FieldMayBeFinal"})
 public class SubClaimManageConfig extends ClaimManageConfig {
@@ -20,77 +21,68 @@ public class SubClaimManageConfig extends ClaimManageConfig {
 
     private int rows = 6;
 
-    @Setting("screen-type")
     @Comment(GuiScreenType.DESCRIPTION)
     private GuiScreenType screenType = GuiScreenType.FULL;
 
-    @Setting("extra-icons")
-    private Map<String, Icon> extraIcons = Map.of(
+    private Map<String, Icon> extraIcons = MapUtil.ordered(
             "example-icon", new Icon(40)
     );
 
-    @Setting("delete-icon")
-    private SimpleIcon deleteIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon deleteIcon = new SimpleIcon(ConfigItem.of(
             Material.BARRIER, "Delete claim", List.of("", "<white>Left-Click <gray>to delete claim")
     ), 8);
 
-    @Setting("rename-icon")
-    private SimpleIcon renameIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon renameIcon = new SimpleIcon(ConfigItem.of(
             Material.FEATHER, "Rename claim", List.of("", "<white>Left-Click <gray>to rename claim")
     ), 18);
 
-    @Setting("lock-icon")
-    private SimpleIcon lockIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon lockIcon = new SimpleIcon(ConfigItem.of(
             Material.CHEST, "Lock claim", List.of("", "<white>Left-Click <gray>to make your claim private")
     ), 20);
 
-    @Setting("unlock-icon")
-    private ItemStack unlockIcon = ItemUtil.build(
+    private ConfigItem unlockIcon = ConfigItem.of(
             Material.ENDER_CHEST, "Unlock claim", List.of("", "<white>Left-Click <gray>to make your claim public")
     );
 
-    @Setting("banned-icon")
-    private SimpleIcon bannedIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon bannedIcon = new SimpleIcon(ConfigItem.of(
             Material.BARRIER, "Banned members", List.of("", "<white>Left-Click <gray>to show the list of banned members")
     ), 22);
 
     @Getter
-    @Setting("inherit-icon")
-    private SimpleIcon inheritPermissionsIcon = new SimpleIcon(ItemUtil.build(
+    @Key("inherit-icon")
+    private SimpleIcon inheritPermissionsIcon = new SimpleIcon(ConfigItem.of(
             Material.REDSTONE, "Inherit Permissions", List.of("", "<white>Left-Click <gray>to inherit the permissions of the", "<gray>main claim. This will add every member, role and permission", "<gray>from the main claim to this claim.")
     ), 24);
 
     @Getter
-    @Setting("inherit-success-icon")
-    private ItemStack inheritPermissionsSucesssIcon = ItemUtil.build(
+    @Key("inherit-success-icon")
+    private ConfigItem inheritPermissionsSucesssIcon = ConfigItem.of(
             Material.REDSTONE_BLOCK, "Inherit Permissions", List.of("", "<green>Permissions inherited successfully!")
     );
 
-    @Setting("resize-icon")
-    private SimpleIcon resizeIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon resizeIcon = new SimpleIcon(ConfigItem.of(
             Material.GOLDEN_HOE, "Resize claim", List.of("", "<white>Left-Click <gray>to resize claim borders")
     ), 26);
 
-    @Setting("back-icon")
-    private SimpleIcon backIcon = new SimpleIcon(ItemUtil.build(
+    private SimpleIcon backIcon = new SimpleIcon(ConfigItem.of(
             Material.ARROW, "Back", List.of("", "<white>Left-Click <gray>to go back")
     ), 45);
 
-    private Map<String, SimpleIcon> tabs = Map.of(
-            "members-tab", new SimpleIcon(ItemUtil.build(
+    private Map<String, SimpleIcon> tabs = MapUtil.ordered(
+            "members-tab", new SimpleIcon(ConfigItem.of(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Members", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 1),
-            "roles-tab", new SimpleIcon(ItemUtil.build(
+            "roles-tab", new SimpleIcon(ConfigItem.of(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Roles", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 3),
-            "settings-tab", new SimpleIcon(ItemUtil.build(
+            "settings-tab", new SimpleIcon(ConfigItem.of(
                     Material.GRAY_STAINED_GLASS_PANE, "<gray>Settings", List.of("", "<white>Left-Click <gray>to go to this tab")
             ), 5),
-            "manage-tab", new SimpleIcon(ItemUtil.build(
+            "manage-tab", new SimpleIcon(ConfigItem.of(
                     Material.LIME_STAINED_GLASS_PANE, "Manage", List.of("", "<red>You're here!")
             ), 7)
     );
 
-    @Setting("lower-gui")
+    @Optional
     private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
 }

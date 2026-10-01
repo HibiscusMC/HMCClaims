@@ -1,18 +1,20 @@
 package com.hibiscusmc.hmcclaims.config.gui;
 
-import com.hibiscusmc.hmcclaims.util.ItemUtil;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
+import team.hypox.config.core.annotation.Key;
+import team.hypox.config.core.annotation.Optional;
+import team.hypox.config.core.annotation.Section;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Config
 @SuppressWarnings({"FieldMayBeFinal"})
 public class ClaimDeleteConfig extends GuiTemplate {
 
@@ -20,37 +22,34 @@ public class ClaimDeleteConfig extends GuiTemplate {
 
     private int rows = 1;
 
-    @Setting("claim-icon")
     private ClaimIcon claimIcon = new ClaimIcon();
 
-    @Setting("subclaim-icon")
+    @Key("subclaim-icon")
     private SubClaimIcon subClaimIcon = new SubClaimIcon();
 
     private SimpleMultiIcon confirm = new SimpleMultiIcon(
-            ItemUtil.build(Material.LIME_STAINED_GLASS_PANE, "<green>Confirm"), List.of(2)
+            ConfigItem.of(Material.LIME_STAINED_GLASS_PANE, "<green>Confirm"), List.of(2)
     );
 
     private SimpleMultiIcon cancel = new SimpleMultiIcon(
-            ItemUtil.build(Material.RED_STAINED_GLASS_PANE, "<red>Cancel"), List.of(6)
+            ConfigItem.of(Material.RED_STAINED_GLASS_PANE, "<red>Cancel"), List.of(6)
     );
 
-    @Setting("extra-icons")
-    private Map<String, Icon> extraIcons = Map.of(
+    private Map<String, Icon> extraIcons = MapUtil.ordered(
             "example-icon", new Icon(8)
     );
 
-    @Setting("screen-type")
     @Comment(GuiScreenType.DESCRIPTION)
     private GuiScreenType screenType = GuiScreenType.FULL;
 
-    @Setting("lower-gui")
+    @Optional
     private BaseListGuiConfig lowerGui = new BaseListGuiConfig();
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class ClaimIcon {
 
-        private ItemStack item = ItemStack.of(Material.GRASS_BLOCK);
+        private ConfigItem item = ConfigItem.of(Material.GRASS_BLOCK);
 
         private int slot = 4;
 
@@ -78,7 +77,7 @@ public class ClaimDeleteConfig extends GuiTemplate {
         public ClaimIcon() {
         }
 
-        private ClaimIcon(ItemStack item, String name, List<String> lore, String owner, String member) {
+        private ClaimIcon(ConfigItem item, String name, List<String> lore, String owner, String member) {
             this.item = item;
             this.name = name;
             this.lore = lore;
@@ -88,11 +87,11 @@ public class ClaimDeleteConfig extends GuiTemplate {
     }
 
     @Getter
-    @ConfigSerializable
+    @Section
     public static class SubClaimIcon extends ClaimIcon {
 
         public SubClaimIcon() {
-            super(ItemStack.of(Material.DIRT),
+            super(ConfigItem.of(Material.DIRT),
                     "<gray>Name: <white><name>",
                     List.of(
                             "<gray>UID: <white><short_id>",

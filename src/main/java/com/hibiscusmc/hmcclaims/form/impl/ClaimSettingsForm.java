@@ -3,9 +3,8 @@ package com.hibiscusmc.hmcclaims.form.impl;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
-import com.hibiscusmc.hmcclaims.config.DefaultSettings;
+import com.hibiscusmc.hmcclaims.config.ClaimSettings;
 import com.hibiscusmc.hmcclaims.config.form.ClaimSettingsFormConfig;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.form.FormService;
@@ -17,8 +16,10 @@ import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
+import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
@@ -32,7 +33,7 @@ public class ClaimSettingsForm implements BaseForm {
     @Inject
     private ConfigHolder<ClaimSettingsFormConfig> configHolder;
     @Inject
-    private ConfigHolder<DefaultSettings> defaultSettingsHolder;
+    private ConfigHolder<ClaimSettings> claimSettingsHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -60,7 +61,7 @@ public class ClaimSettingsForm implements BaseForm {
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
         List<ClaimSettingsFormConfig.SettingCategory> categories =
-                ClaimSettingsFormConfig.usable(config.settingCategories());
+                config.categories(claimSettingsHolder.get());
 
         if (categories.size() == 1 && !config.alwaysShowCategories()) {
             openCategory(player, metadata, categories.getFirst(), true);
@@ -93,7 +94,7 @@ public class ClaimSettingsForm implements BaseForm {
             if (section.equals("categories")) {
                 categories.forEach(category -> builder.button(navigating(
                         FormText.line(category.name(), player),
-                        context.image(category.image(), null),
+                        context.image(category.image(), category.fallback()),
                         context,
                         () -> openCategory(player, metadata, category, false)
                 )));
@@ -131,15 +132,10 @@ public class ClaimSettingsForm implements BaseForm {
 
         List<Row> rows = new ArrayList<>();
 
-        for (Map.Entry<String, ClaimSettingsFormConfig.SettingEntry> entry : category.settings().entrySet()) {
-            ClaimSettingsFormConfig.SettingEntry row = entry.getValue();
-            if (row == null || row.key() == null) {
-                continue;
-            }
-
-            Setting<?> setting = row.key();
+        for (ClaimSettingsFormConfig.SettingRow row : category.settings()) {
+            Setting<?> setting = row.setting();
             SettingHolder<Object> holder = holder(claim, setting);
-            String key = entry.getKey();
+            String key = RegistryUtil.serialize(setting.key());
 
             if (config.showDescriptions() && !row.description().isEmpty()) {
                 builder.label(FormText.block(row.description(), player, Map.of()));
@@ -217,9 +213,7 @@ public class ClaimSettingsForm implements BaseForm {
         return (SettingHolder<Object>) claim.settings().computeIfAbsent(setting, key -> {
             SettingHolder<Object> created = (SettingHolder<Object>) SettingHolder.from(setting);
 
-            String raw = defaultSettingsHolder.get().defaultSettings().getOrDefault(setting, null);
-            Object value = raw != null ? setting.parser().apply(raw) : null;
-            created.value(value == null || value.equals("null") ? null : value);
+            created.value(claimSettingsHolder.get().defaultValue((Setting<Object>) setting));
 
             return created;
         });

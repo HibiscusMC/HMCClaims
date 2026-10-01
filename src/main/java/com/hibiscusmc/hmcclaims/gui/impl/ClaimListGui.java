@@ -8,7 +8,6 @@ import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.config.gui.BaseListGuiConfig;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
-import com.hibiscusmc.hmcclaims.config.internal.ConfigHolder;
 import com.hibiscusmc.hmcclaims.dialog.type.SearchDialog;
 import com.hibiscusmc.hmcclaims.dialog.type.SingleInputDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
@@ -31,6 +30,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 import xyz.xenondevs.invui.gui.Gui;
@@ -254,7 +254,7 @@ public class ClaimListGui implements BaseGui {
     private Item buildSearch(@NotNull Metadata metadata, Runnable update) {
         return Item.builder()
                 .setItemProvider(player -> {
-                    ItemStack item = searchIcon.item();
+                    ItemStack item = searchIcon.item().stack();
                     item.editMeta(meta -> {
                         meta.itemName(TextUtil.parseItem(searchIcon.name(), player));
                         Query searchQuery = metadata.searchQuery().get();
@@ -300,7 +300,7 @@ public class ClaimListGui implements BaseGui {
     private Item buildFilter(@NotNull Metadata metadata, Runnable update) {
         return Item.builder()
                 .setItemProvider(player -> {
-                    ItemStack stack = filterIcon.item();
+                    ItemStack stack = filterIcon.item().stack();
                     ItemMeta meta = stack.getItemMeta();
 
                     List<Component> lore = new ArrayList<>();
@@ -457,7 +457,7 @@ public class ClaimListGui implements BaseGui {
         Map<String, String> claimPlaceholders = placeholders.claimInfo(claim);
 
         ClaimListConfig.ClaimsIcon icon = claim.main() == null ? claimsIcon : subClaimsIcon;
-        ItemStack stack = icon.item();
+        ItemStack stack = icon.item().stack();
         ItemMeta meta = stack.getItemMeta();
 
         List<Component> lore = new ArrayList<>();

@@ -1,15 +1,15 @@
 package com.hibiscusmc.hmcclaims.config.form;
 
+import com.hibiscusmc.hmcclaims.util.MapUtil;
 import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Comment;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import team.hypox.config.core.annotation.Comment;
+import team.hypox.config.core.annotation.Config;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@ConfigSerializable
+@Config
 @SuppressWarnings({"FieldMayBeFinal"})
 public class MainClaimManageFormConfig extends ClaimManageFormConfig {
 
@@ -23,37 +23,28 @@ public class MainClaimManageFormConfig extends ClaimManageFormConfig {
             "<gray>Sub Claims: <white><total_sub_claims>"
     );
 
-    @Setting("rename-button")
     private Button renameButton = new Button("Rename claim", Image.path("textures/items/book_writable"));
 
-    @Setting("lock-button")
     @Comment("Shown while the claim is open to everyone")
     private Button lockButton = new Button("Lock claim", Image.path("textures/items/door_iron"));
 
-    @Setting("unlock-button")
     @Comment("Shown while the claim is locked")
     private Button unlockButton = new Button("Unlock claim", Image.path("textures/blocks/door_wood_upper"));
 
-    @Setting("banned-button")
     private Button bannedButton = new Button("Banned players", Image.path("textures/ui/hammer_l"));
 
-    @Setting("transfer-button")
     private Button transferButton = new Button("Transfer ownership", Image.path("textures/items/nether_star"));
 
-    @Setting("resize-button")
     @Comment("Closes the form and puts the player into resize mode")
     private Button resizeButton = new Button("Resize claim", Image.path("textures/items/gold_shovel"));
 
-    @Setting("delete-button")
     private Button deleteButton = new Button("<red>Delete claim", Image.path("textures/ui/redX1"));
 
     private Navigation nav = new Navigation();
 
-    @Setting("back-button")
     private Button backButton = new Button("Back", Image.path("textures/ui/arrow_left"));
 
-    @Setting("extra-buttons")
-    private Map<String, ActionButton> extraButtons = Map.of(
+    private Map<String, ActionButton> extraButtons = MapUtil.ordered(
             "example-button", new ActionButton("Example Button")
     );
 
