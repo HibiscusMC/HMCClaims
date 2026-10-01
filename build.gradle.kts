@@ -1,21 +1,22 @@
 plugins {
     id("java")
     id("maven-publish")
-    id("io.freefair.lombok") version "9.2.0"
-    id("com.gradleup.shadow") version "9.1.0"
-    id("com.google.protobuf") version "0.10.0"
-    id("xyz.jpenilla.run-paper") version "3.0.2"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
+    alias(libs.plugins.lombok)
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.protobuf)
+    alias(libs.plugins.run.paper)
+    alias(libs.plugins.paperweight)
 }
 
 group = "com.hibiscusmc.hmcclaims"
-version = "0.5.0"
+version = "0.6.0"
 
-val serverVersion = "26.2"
+val serverVersion = libs.versions.minecraft.get()
 val serverSnapshot = "build.+"
 
 repositories {
     maven("https://repo.hibiscusmc.com/releases/")
+    maven("https://repo.krzu.me/releases/")
 
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/releases/")
@@ -31,39 +32,38 @@ dependencies {
     paperweight.paperDevBundle("$serverVersion.$serverSnapshot")
 
     // Protobuf
-    implementation("com.google.protobuf:protobuf-java:4.35.1")
+    implementation(libs.protobuf.java)
 
     // Inject
-    implementation("team.unnamed:inject:2.0.1")
+    implementation(libs.inject)
     // Command-Flow
-    implementation("team.unnamed:commandflow-bukkit-commandmap:0.8.0") {
+    implementation(libs.commandflow.bukkit.commandmap) {
         exclude("net.kyori")
     }
 
     // InvUI
-    implementation("xyz.xenondevs.invui:invui:2.3.0")
+    implementation(libs.invui)
 
     // HibiscusCommons
-    compileOnly("me.lojosho:HibiscusCommons:0.9.3")
+    compileOnly(libs.hibiscus.commons)
     // PlaceholderAPI
-    compileOnly("me.clip:placeholderapi:2.12.3")
+    compileOnly(libs.placeholderapi)
     // Floodgate (Bedrock forms via Geyser)
-    compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
+    compileOnly(libs.floodgate.api)
     // Vault (claim block purchases)
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1") {
+    compileOnly(libs.vault.api) {
         exclude("org.bukkit")
     }
 
-    // Configurate
-    implementation("org.spongepowered:configurate-core:4.4.5-HMC")
-    implementation("org.spongepowered:configurate-yaml:4.4.5-HMC")
+    // hx-config
+    implementation(libs.hxconfig)
 
     // HikariCP
-    compileOnly("com.zaxxer:HikariCP:7.0.2")
+    compileOnly(libs.hikaricp)
 }
 
 lombok {
-    version = "1.18.42"
+    version = libs.versions.lombok.asProvider()
 }
 
 java {
@@ -80,7 +80,7 @@ java {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:4.35.1"
+        artifact = "com.google.protobuf:protoc:${libs.versions.protoc.get()}"
     }
 
     generateProtoTasks {
@@ -119,7 +119,9 @@ tasks {
         relocate("team.unnamed.inject", "$main.inject")
         relocate("com.google.protobuf", "$main.protobuf")
         relocate("team.unnamed.commandflow", "$main.commandflow")
-        relocate("org.spongepowered.configurate", "$main.configurate")
+        relocate("team.hypox.config", "$main.config")
+
+        exclude("colors.bin")
     }
 
     build {
@@ -128,12 +130,12 @@ tasks {
 
     runServer {
         downloadPlugins {
-            modrinth("placeholderapi", "pIvQcXW8")
-            modrinth("luckperms", "v5.5.17-bukkit")
+            modrinth("placeholderapi", libs.versions.papi.modrinth.get())
+            modrinth("luckperms", libs.versions.luckperms.download.get())
             url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
             url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
-            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/0.9.3/HibiscusCommons-0.9.3.jar")
-            url("https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar")
+            url("https://repo.hibiscusmc.com/releases/me/lojosho/HibiscusCommons/${libs.versions.hibiscus.commons.get()}/HibiscusCommons-${libs.versions.hibiscus.commons.get()}.jar")
+            url("https://github.com/MilkBowl/Vault/releases/download/${libs.versions.vault.download.get()}/Vault.jar")
         }
 
         minecraftVersion(serverVersion)

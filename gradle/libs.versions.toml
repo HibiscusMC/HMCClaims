@@ -1,0 +1,64 @@
+[versions]
+minecraft = "26.2"
+
+lombok = "1.18.42"
+lombok-plugin = "9.2.0"
+shadow = "9.1.0"
+protobuf-plugin = "0.10.0"
+run-paper = "3.0.2"
+paperweight = "2.0.0-beta.21"
+
+protobuf = "4.35.1"
+protoc = "4.35.1"
+inject = "2.0.1"
+commandflow = "0.8.0"
+invui = "2.3.0"
+hibiscus-commons = "0.9.3"
+placeholderapi = "2.12.3"
+floodgate = "2.2.5-SNAPSHOT"
+vault = "1.7.1"
+hikaricp = "7.0.2"
+hxconfig = "2.0.0"
+
+# Downloaded into the run-paper test server
+luckperms-download = "v5.5.17-bukkit"
+vault-download = "1.7.3"
+papi-modrinth = "pIvQcXW8"
+
+[plugins]
+lombok = { id = "io.freefair.lombok", version.ref = "lombok-plugin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobuf-plugin" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-paper" }
+paperweight = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight" }
+
+[libraries]
+# Protobuf
+protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+
+# Inject
+inject = { module = "team.unnamed:inject", version.ref = "inject" }
+
+# Command-Flow
+commandflow-bukkit-commandmap = { module = "team.unnamed:commandflow-bukkit-commandmap", version.ref = "commandflow" }
+
+# InvUI
+invui = { module = "xyz.xenondevs.invui:invui", version.ref = "invui" }
+
+# hx-config
+hxconfig = { module = "team.hypox.hx-config:yaml", version.ref = "hxconfig" }
+
+# HibiscusCommons
+hibiscus-commons = { module = "me.lojosho:HibiscusCommons", version.ref = "hibiscus-commons" }
+
+# PlaceholderAPI
+placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
+
+# Floodgate
+floodgate-api = { module = "org.geysermc.floodgate:api", version.ref = "floodgate" }
+
+# Vault
+vault-api = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault" }
+
+# HikariCP
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
