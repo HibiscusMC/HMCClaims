@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.claim;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimDeleteEvent;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -13,6 +14,7 @@ import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
@@ -383,6 +385,8 @@ public class ClaimManager {
      * @param claim the claim to delete
      */
     public void deleteClaim(@NotNull Claim claim) {
+        EventUtil.call(new ClaimDeleteEvent(claim));
+
         removeClaimFromCache(claim);
 
         Storage storage = storageHolder.get();

@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
@@ -18,6 +19,7 @@ import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
@@ -255,6 +257,8 @@ public class ClaimMemberListForm implements BaseForm {
         claim.removeMember(member.uuid());
         storageHolder.get().claims().saveMembers(claim);
 
+        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_REMOVED, member.uuid()));
+
         text.send(player, messagesHolder.get().claims().memberRemoved(), Map.of(
                 "name", member.lastKnownName(),
                 "player_head", "",
@@ -273,6 +277,8 @@ public class ClaimMemberListForm implements BaseForm {
         member.banned(true);
 
         storageHolder.get().claims().saveMembers(claim);
+
+        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_BANNED, member.uuid()));
 
         text.send(player, messagesHolder.get().claims().memberBanned(), Map.of(
                 "name", member.lastKnownName(),
@@ -299,6 +305,8 @@ public class ClaimMemberListForm implements BaseForm {
                     }
 
                     storageHolder.get().claims().saveMembers(claim);
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_ADDED, added.uuid()));
 
                     text.send(player, messagesHolder.get().claims().memberAdded(), Map.of(
                             "name", target.name(),

@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
@@ -15,6 +16,7 @@ import com.hibiscusmc.hmcclaims.form.SharedContext;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
@@ -171,6 +173,8 @@ public class ClaimMemberRoleForm implements BaseForm {
 
                     member.role(role);
                     storageHolder.get().claims().saveMembers(claim);
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_ROLE_CHANGED, member.uuid()));
 
                     context.refresh();
                 }

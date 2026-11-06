@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.config.form.ClaimManageFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.SubClaimManageFormConfig;
@@ -8,6 +9,7 @@ import com.hibiscusmc.hmcclaims.form.SharedContext;
 import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import team.hypox.config.core.ConfigHolder;
@@ -70,6 +72,8 @@ public class SubClaimManageForm extends ClaimManageForm {
                 () -> {
                     claim.inheritPermissions();
                     storageHolder.get().claims().saveClaim(claim);
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.PERMISSIONS_INHERITED, null));
 
                     text.send(player, config.inheritSuccess(), data);
 

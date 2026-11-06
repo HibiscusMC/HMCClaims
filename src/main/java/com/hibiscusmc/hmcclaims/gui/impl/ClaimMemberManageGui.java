@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
@@ -9,6 +10,7 @@ import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.Char2ObjectMap;
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
@@ -141,6 +143,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
                     }
 
                     claim.removeMember(target.uuid());
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_REMOVED, target.uuid()));
 
                     guis.get(ClaimMemberListGui.class)
                             .open(player, new GuiMetadata(claim));
@@ -173,6 +176,8 @@ public abstract class ClaimMemberManageGui implements BaseGui {
                     target.permissions(new Object2BooleanArrayMap<>());
                     target.joinedTimestamp(Instant.now());
                     target.banned(true);
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_BANNED, target.uuid()));
 
                     guis.get(ClaimMemberListGui.class)
                             .open(player, new GuiMetadata(claim));

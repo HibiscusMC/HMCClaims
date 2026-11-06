@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -16,6 +17,7 @@ import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -207,6 +209,8 @@ public class ClaimManageForm implements BaseForm {
                     ));
 
                     claimManager.transferClaim(claim, oldOwner, target.id());
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.OWNER_TRANSFERRED, target.id()));
 
                     formService.root(player, () -> forms.get(ClaimListForm.class).send(player));
                 },

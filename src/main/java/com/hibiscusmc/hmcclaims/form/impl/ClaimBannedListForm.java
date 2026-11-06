@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -15,6 +16,7 @@ import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.MapUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -174,6 +176,8 @@ public class ClaimBannedListForm implements BaseForm {
                     claim.removeMember(member.uuid());
                     storageHolder.get().claims().saveMembers(claim);
 
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_REMOVED, member.uuid()));
+
                     formService.back(player);
                 });
 
@@ -219,6 +223,8 @@ public class ClaimBannedListForm implements BaseForm {
                     member.banned(true);
 
                     storageHolder.get().claims().saveMembers(claim);
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_BANNED, member.uuid()));
 
                     text.send(player, messages.claims().memberBanned(), Map.of(
                             "name", target.name(),

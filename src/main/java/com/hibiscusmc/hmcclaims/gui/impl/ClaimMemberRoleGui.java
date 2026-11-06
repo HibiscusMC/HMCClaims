@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
@@ -12,6 +13,7 @@ import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
@@ -311,6 +313,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                         }
 
                         targetMember.role(role);
+                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_ROLE_CHANGED, targetMember.uuid()));
                         guiReference.get()
                                 .setContent(buildRoleItems(player, claim, targetMember, metadata, guiReference));
                     })

@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.command;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
@@ -14,6 +15,7 @@ import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.PlayerResolver;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
 import team.hypox.config.core.ConfigHolder;
@@ -123,6 +125,8 @@ public class ClaimCommand implements CommandClass {
             storage.claims()
                     .saveMembers(claim);
 
+            EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_ADDED, added.uuid()));
+
             text.send(sender, messages.claims().memberAdded(), Map.of(
                     "player_head", "<head:" + player.name() + ">",
                     "name", player.name(),
@@ -169,6 +173,8 @@ public class ClaimCommand implements CommandClass {
         Storage storage = storageHolder.get();
         storage.claims()
                 .saveMembers(claim);
+
+        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_REMOVED, member.uuid()));
 
         text.send(sender, messages.claims().memberRemoved(), Map.of(
                 "player_head", "<head:" + playerName + ">",

@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -19,6 +20,7 @@ import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.UserManager;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
@@ -295,6 +297,8 @@ public class ClaimManageGui extends ClaimListGui {
                                         ));
 
                                         claimManager.transferClaim(claim, oldOwnerId, member.id());
+
+                                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.OWNER_TRANSFERRED, member.id()));
                                     } else {
                                         text.send(player, member.id().equals(player.getUniqueId()) ?
                                                 messages.claims().selfAlreadyOwner() :

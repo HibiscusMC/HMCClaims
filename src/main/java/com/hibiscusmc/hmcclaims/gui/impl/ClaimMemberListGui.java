@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -15,6 +16,7 @@ import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
@@ -485,6 +487,8 @@ public class ClaimMemberListGui extends ClaimListGui {
                                         Storage storage = storageHolder.get();
                                         storage.claims()
                                                 .saveMembers(claim);
+
+                                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_ADDED, added.uuid()));
 
                                         text.send(player, messagesHolder.get().claims().memberAdded(), Map.of(
                                                 "name", member.name(),

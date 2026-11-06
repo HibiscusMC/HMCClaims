@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -13,6 +14,7 @@ import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.ItemUtil;
 import com.hibiscusmc.hmcclaims.util.MapUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
@@ -278,6 +280,7 @@ public class ClaimBannedListGui extends ClaimListGui {
                     .setItemProvider(player -> new ItemWrapper(TextUtil.parseItemPlaceholders(head, player)))
                     .addClickHandler(click -> {
                         claim.removeMember(member.uuid());
+                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_REMOVED, member.uuid()));
                         open(click.player(), metadata);
                     })
                     .build());
@@ -334,6 +337,8 @@ public class ClaimBannedListGui extends ClaimListGui {
                                         Storage storage = storageHolder.get();
                                         storage.claims()
                                                 .saveMembers(claim);
+
+                                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_BANNED, claimMember.uuid()));
 
                                         text.send(player, messagesHolder.get().claims().memberBanned(), Map.of(
                                                 "name", member.name(),

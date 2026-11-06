@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
@@ -7,6 +8,7 @@ import com.hibiscusmc.hmcclaims.config.gui.SubClaimManageConfig;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.CharList;
 import org.bukkit.entity.Player;
@@ -111,6 +113,8 @@ public class SubClaimManageGui extends ClaimManageGui {
 
                     Storage storage = storageHolder.get();
                     storage.claims().saveClaim(claim);
+
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.PERMISSIONS_INHERITED, null));
 
                     it.notifyWindows();
                 })
