@@ -16,7 +16,7 @@ val serverSnapshot = "build.+"
 
 repositories {
     maven("https://repo.hibiscusmc.com/releases/")
-    maven("https://repo.krzu.me/releases/")
+    maven("https://repo.hypox.studio/releases/")
 
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/releases/")
