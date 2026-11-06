@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.hibiscusmc.hmcclaims"
-version = "0.6.0"
+version = "0.7.0"
 
 val serverVersion = libs.versions.minecraft.get()
 val serverSnapshot = "build.+"
