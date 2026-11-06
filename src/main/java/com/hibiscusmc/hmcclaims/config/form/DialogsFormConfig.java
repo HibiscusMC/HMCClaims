@@ -65,6 +65,23 @@ public class DialogsFormConfig extends FormTemplate {
     @Comment("Sent when the typed name doesn't match a player who has joined before")
     private String playerNotFound = "<prefix><red>Player not found.";
 
+    @Comment("Shown before saving permission changes that have a configured warning")
+    private Confirm confirm = new Confirm();
+
+    @Getter
+    @Section
+    public static class Confirm {
+
+        private String title = "Confirm changes";
+
+        private String confirm = "Confirm";
+
+        private String cancel = "Cancel";
+
+        @Comment("Placed between the warnings of each changed permission")
+        private String separator = "\n\n";
+    }
+
     @Getter
     @Section
     public static class SingleInput {

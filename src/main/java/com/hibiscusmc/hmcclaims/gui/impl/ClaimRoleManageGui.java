@@ -1,13 +1,16 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimRoleManageConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
+import com.hibiscusmc.hmcclaims.dialog.type.ConfirmationDialog;
 import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.EntryIcon;
@@ -15,6 +18,7 @@ import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
@@ -46,6 +50,9 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
+
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -211,6 +218,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
                         }
 
                         registry.remove(role);
+                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_DELETED, null));
                         guis.get(ClaimRolesGui.class)
                                 .open(player, metadata);
                     })
@@ -288,13 +296,27 @@ public class ClaimRoleManageGui extends ClaimListGui {
                 return;
             }
 
-            if (role.hasPermission(permission)) {
-                role.removePermission(permission);
-            } else {
-                role.addPermission(permission);
+            Claim claim = metadata.claim();
+            Player player = click.player();
+            boolean granting = !role.hasPermission(permission);
+            List<String> warning = entry.warning(granting);
+
+            if (warning.isEmpty()) {
+                togglePermission(claim, role, permission, granting);
+
+                it.notifyWindows();
+                return;
             }
 
-            it.notifyWindows();
+            new ConfirmationDialog()
+                    .create(messagesHolder.get().dialogs().confirm(), Map.of("permission", entry.name()), warning)
+                    .onSubmit(() -> {
+                        togglePermission(claim, role, permission, granting);
+
+                        open(player, metadata);
+                    })
+                    .onCancel(() -> open(player, metadata))
+                    .show(player);
         };
 
         return new PermissionItem(
@@ -333,6 +355,16 @@ public class ClaimRoleManageGui extends ClaimListGui {
                                 .build()
                         : null
         );
+    }
+
+    private void togglePermission(@NotNull Claim claim, @NotNull ClaimRole role, @NotNull Permission permission, boolean granting) {
+        if (granting) {
+            role.addPermission(permission);
+        } else {
+            role.removePermission(permission);
+        }
+
+        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_PERMISSIONS_CHANGED, null));
     }
 
     @NotNull

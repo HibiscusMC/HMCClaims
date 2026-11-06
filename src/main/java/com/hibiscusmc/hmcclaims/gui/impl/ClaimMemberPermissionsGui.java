@@ -1,17 +1,21 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberPermissionsConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
+import com.hibiscusmc.hmcclaims.dialog.type.ConfirmationDialog;
 import com.hibiscusmc.hmcclaims.gui.EntryIcon;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
@@ -48,6 +52,9 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
+
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
 
     @Inject
     private StorageHolder storageHolder;
@@ -302,20 +309,31 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
             }
 
             Object2BooleanMap<Permission> overrides = target.permissions();
+            Player clicker = click.player();
 
-            if (!overrides.containsKey(permission)) {
-                overrides.put(permission, true);
-            } else {
-                boolean enabled = overrides.getBoolean(permission);
+            boolean before = target.hasPermission(permission);
+            Boolean next = !overrides.containsKey(permission) ? Boolean.TRUE
+                    : overrides.getBoolean(permission) ? Boolean.FALSE : null;
+            boolean after = next != null ? next : target.role().hasPermission(permission);
 
-                if (enabled) {
-                    overrides.put(permission, false);
-                } else {
-                    overrides.removeBoolean(permission);
-                }
+            List<String> warning = before != after ? entry.warning(after) : List.of();
+
+            if (warning.isEmpty()) {
+                applyOverride(claim, target, permission, next);
+
+                it.notifyWindows();
+                return;
             }
 
-            it.notifyWindows();
+            new ConfirmationDialog()
+                    .create(messagesHolder.get().dialogs().confirm(), Map.of("permission", entry.name()), warning)
+                    .onSubmit(() -> {
+                        applyOverride(claim, target, permission, next);
+
+                        open(clicker, metadata);
+                    })
+                    .onCancel(() -> open(clicker, metadata))
+                    .show(clicker);
         };
 
         return new PermissionItem(
@@ -358,6 +376,16 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                                 .build()
                         : null
         );
+    }
+
+    private void applyOverride(@NotNull Claim claim, @NotNull ClaimMember target, @NotNull Permission permission, @Nullable Boolean value) {
+        if (value == null) {
+            target.permissions().removeBoolean(permission);
+        } else {
+            target.permissions().put(permission, value.booleanValue());
+        }
+
+        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_PERMISSIONS_CHANGED, target.uuid()));
     }
 
     @NotNull

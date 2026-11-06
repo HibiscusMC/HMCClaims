@@ -1,21 +1,26 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.form.ClaimRoleManageFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.DialogsFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.PermissionFormTemplate;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.SharedContext;
+import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.FormComponent;
+import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
@@ -39,6 +44,9 @@ public class ClaimRoleManageForm implements BaseForm {
 
     @Inject
     private StorageHolder storageHolder;
+
+    @Inject
+    private FormInputs inputs;
 
     @Inject
     private FormRegistry forms;
@@ -169,28 +177,69 @@ public class ClaimRoleManageForm implements BaseForm {
         builder.component(navigation);
 
         builder.onSubmit(values -> {
-            if (editable) {
-                for (Row row : rows) {
-                    if (values.toggle(row.key(), role.hasPermission(row.permission()))) {
-                        role.addPermission(row.permission());
-                    } else {
-                        role.removePermission(row.permission());
+            Runnable submit = () -> {
+                if (editable) {
+                    for (Row row : rows) {
+                        if (values.toggle(row.key(), role.hasPermission(row.permission()))) {
+                            role.addPermission(row.permission());
+                        } else {
+                            role.removePermission(row.permission());
+                        }
+                    }
+
+                    storageHolder.get().claims().saveRoles(metadata.claim());
+
+                    EventUtil.call(new ClaimAccessChangeEvent(metadata.claim(), ClaimAccessChangeEvent.Cause.ROLE_PERMISSIONS_CHANGED, null));
+                }
+
+                if (navigation != null) {
+                    Class<? extends BaseForm> target = navigationTarget(values.index(NAVIGATION_KEY, 0), context);
+
+                    if (target != null) {
+                        context.navigateTo(target);
+                        return;
                     }
                 }
 
-                storageHolder.get().claims().saveRoles(metadata.claim());
-            }
+                formService.back(player);
+            };
 
-            if (navigation != null) {
-                Class<? extends BaseForm> target = navigationTarget(values.index(NAVIGATION_KEY, 0), context);
+            List<String> warnings = new ArrayList<>();
 
-                if (target != null) {
-                    context.navigateTo(target);
-                    return;
+            if (editable) {
+                for (Row row : rows) {
+                    boolean before = role.hasPermission(row.permission());
+                    boolean after = values.toggle(row.key(), before);
+
+                    if (before == after) {
+                        continue;
+                    }
+
+                    Permissions.Entry entry = permissionsHolder.get().entry(row.permission());
+                    List<String> warning = entry.warning(after);
+
+                    if (!warning.isEmpty()) {
+                        warnings.add(FormText.block(warning, player, Map.of("permission", entry.name())));
+                    }
                 }
             }
 
-            formService.back(player);
+            if (warnings.isEmpty()) {
+                submit.run();
+                return;
+            }
+
+            DialogsFormConfig.Confirm confirm = inputs.config().confirm();
+
+            formService.send(player, new ModalFormSpec(
+                    FormText.line(confirm.title(), player),
+                    String.join(confirm.separator(), warnings),
+                    FormText.line(confirm.confirm(), player),
+                    FormText.line(confirm.cancel(), player),
+                    submit,
+                    () -> openCategory(player, metadata, category),
+                    () -> openCategory(player, metadata, category)
+            ));
         });
 
         builder.onClose(() -> formService.back(player));
@@ -208,6 +257,8 @@ public class ClaimRoleManageForm implements BaseForm {
 
         claim.roleRegistry().remove(metadata.role());
         storageHolder.get().claims().saveRoles(claim);
+
+        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_DELETED, null));
 
         formService.back(player);
     }

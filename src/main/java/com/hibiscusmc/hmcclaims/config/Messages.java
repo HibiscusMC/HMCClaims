@@ -346,6 +346,24 @@ public class Messages {
                 )
         );
 
+        private Confirm confirm = new Confirm();
+
+        @Getter
+        @Section
+        public static class Confirm {
+
+            private String title = "Change <permission>";
+
+            private Map<String, Button> buttons = MapUtil.ordered(
+                    "confirm", new Button(
+                            "Confirm", "Click to apply the change"
+                    ),
+                    "cancel", new Button(
+                            "Cancel", "Click to keep things as they are"
+                    )
+            );
+        }
+
         @Getter
         @Section
         public static class Search {

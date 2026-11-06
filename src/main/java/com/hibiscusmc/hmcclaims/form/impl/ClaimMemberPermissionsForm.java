@@ -1,20 +1,25 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
+import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.form.ClaimMemberPermissionsFormConfig;
+import com.hibiscusmc.hmcclaims.config.form.DialogsFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.PermissionFormTemplate;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
 import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.SharedContext;
+import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
+import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import org.bukkit.entity.Player;
@@ -40,6 +45,9 @@ public class ClaimMemberPermissionsForm implements BaseForm {
 
     @Inject
     private StorageHolder storageHolder;
+
+    @Inject
+    private FormInputs inputs;
 
     @Inject
     private FormRegistry forms;
@@ -173,15 +181,64 @@ public class ClaimMemberPermissionsForm implements BaseForm {
         }
 
         builder.onSubmit(values -> {
-            if (editable) {
+            if (!editable) {
+                formService.back(player);
+                return;
+            }
+
+            Runnable submit = () -> {
                 for (Row row : rows) {
                     apply(overrides, row.permission(), values.index(row.key(), stateIndex(overrides, row.permission())));
                 }
 
                 storageHolder.get().claims().saveMembers(claim);
+
+                EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_PERMISSIONS_CHANGED, member.uuid()));
+
+                formService.back(player);
+            };
+
+            List<String> warnings = new ArrayList<>();
+
+            for (Row row : rows) {
+                Permission permission = row.permission();
+                int selected = values.index(row.key(), stateIndex(overrides, permission));
+
+                boolean before = member.hasPermission(permission);
+                boolean after = switch (selected < 0 || selected >= STATES.size() ? "unset" : STATES.get(selected)) {
+                    case "enabled" -> true;
+                    case "disabled" -> false;
+                    default -> member.role().hasPermission(permission);
+                };
+
+                if (before == after) {
+                    continue;
+                }
+
+                Permissions.Entry entry = permissionsHolder.get().entry(permission);
+                List<String> warning = entry.warning(after);
+
+                if (!warning.isEmpty()) {
+                    warnings.add(FormText.block(warning, player, Map.of("permission", entry.name())));
+                }
             }
 
-            formService.back(player);
+            if (warnings.isEmpty()) {
+                submit.run();
+                return;
+            }
+
+            DialogsFormConfig.Confirm confirm = inputs.config().confirm();
+
+            formService.send(player, new ModalFormSpec(
+                    FormText.line(confirm.title(), player),
+                    String.join(confirm.separator(), warnings),
+                    FormText.line(confirm.confirm(), player),
+                    FormText.line(confirm.cancel(), player),
+                    submit,
+                    () -> openCategory(player, metadata, category),
+                    () -> openCategory(player, metadata, category)
+            ));
         });
 
         builder.onClose(() -> formService.back(player));

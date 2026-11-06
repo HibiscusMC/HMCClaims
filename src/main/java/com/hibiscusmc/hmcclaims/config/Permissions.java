@@ -134,7 +134,23 @@ public class Permissions {
 
         private ConfigItem icon = ConfigItem.of(Material.BOOK);
 
+        @Comment("Shown for confirmation before this permission is granted. Leave empty for no confirmation.")
+        private List<String> grantWarning = new ArrayList<>();
+
+        @Comment("Shown for confirmation before this permission is revoked. Leave empty for no confirmation.")
+        private List<String> revokeWarning = new ArrayList<>();
+
         public Entry() {
+        }
+
+        /**
+         * Returns the confirmation lines for a change, empty when it needs no confirmation.
+         *
+         * @param granting true when the permission is being granted, false when revoked
+         */
+        @NotNull
+        public List<String> warning(boolean granting) {
+            return granting ? grantWarning : revokeWarning;
         }
 
         @NotNull
