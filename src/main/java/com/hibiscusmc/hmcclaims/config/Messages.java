@@ -69,6 +69,10 @@ public class Messages {
 
         private String claimTransferred = "<prefix><green>Claim <white><claim></white> transferred to <white><player_head> <name></white>!";
 
+        private String transferTargetOffline = "<prefix><red>Player <white><name></white> must be online to receive a claim!";
+
+        private String transferNotEnoughBlocks = "<prefix><red>Player <white><name></white> doesn't have enough claim blocks for this claim! <gray>Required: <white><required_blocks></white>, <gray>Available: <white><current_blocks>";
+
         private String memberBanned = "<prefix><green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
 
         private Permissions permissions = new Permissions();

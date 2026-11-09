@@ -17,10 +17,13 @@ import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.user.User;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import team.hypox.config.core.ConfigHolder;
@@ -50,6 +53,10 @@ public class ClaimManageForm implements BaseForm {
 
     @Inject
     protected ClaimManager claimManager;
+
+    @Inject
+    protected UserManager userManager;
+
     @Inject
     protected SelectionManager selectionManager;
 
@@ -193,7 +200,7 @@ public class ClaimManageForm implements BaseForm {
                 target -> {
                     Messages messages = messagesHolder.get();
 
-                    if (!claim.transfer(target)) {
+                    if (target.id().equals(claim.owner())) {
                         text.send(player, target.id().equals(player.getUniqueId())
                                 ? messages.claims().selfAlreadyOwner()
                                 : messages.claims().memberAlreadyOwner());
@@ -202,6 +209,34 @@ public class ClaimManageForm implements BaseForm {
                         return;
                     }
 
+                    Player targetPlayer = Bukkit.getPlayer(target.id());
+                    User recipient = targetPlayer == null ? null : userManager.getUser(target.id()).orElse(null);
+
+                    if (recipient == null) {
+                        text.send(player, messages.claims().transferTargetOffline(), Map.of("name", target.name()));
+
+                        context.refresh();
+                        return;
+                    }
+
+                    userManager.calculateUsedBlocks(recipient);
+
+                    long required = claim.main() == null ? claim.region().getSurfaceArea() : 0;
+                    long available = userManager.getRemainingBlocks(recipient);
+
+                    if (available < required) {
+                        text.send(player, messages.claims().transferNotEnoughBlocks(), Map.of(
+                                "name", target.name(),
+                                "required_blocks", required + "",
+                                "current_blocks", available + ""
+                        ));
+
+                        context.refresh();
+                        return;
+                    }
+
+                    claim.transfer(target);
+
                     text.send(player, messages.claims().claimTransferred(), Map.of(
                             "name", target.name(),
                             "player_head", "",
@@ -209,6 +244,9 @@ public class ClaimManageForm implements BaseForm {
                     ));
 
                     claimManager.transferClaim(claim, oldOwner, target.id());
+
+                    userManager.getUser(oldOwner).ifPresent(user -> userManager.calculateUsedBlocks(user));
+                    userManager.calculateUsedBlocks(recipient);
 
                     EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.OWNER_TRANSFERRED, target.id()));
 

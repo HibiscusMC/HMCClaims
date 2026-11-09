@@ -19,6 +19,7 @@ import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -26,6 +27,7 @@ import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.chars.CharArrayList;
 import it.unimi.dsi.fastutil.chars.CharList;
 import net.minecraft.server.players.NameAndId;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import team.hypox.config.core.ConfigHolder;
@@ -287,26 +289,57 @@ public class ClaimManageGui extends ClaimListGui {
                                 })
                                 .onSubmit((member) -> {
                                     Messages messages = messagesHolder.get();
-                                    boolean transferred = claim.transfer(member);
 
-                                    if (transferred) {
-                                        text.send(player, messages.claims().claimTransferred(), Map.of(
-                                                "name", member.name(),
-                                                "player_head", "<head:" + member.name() + ">",
-                                                "claim", claim.name()
-                                        ));
-
-                                        claimManager.transferClaim(claim, oldOwnerId, member.id());
-
-                                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.OWNER_TRANSFERRED, member.id()));
-                                    } else {
+                                    if (member.id().equals(claim.owner())) {
                                         text.send(player, member.id().equals(player.getUniqueId()) ?
                                                 messages.claims().selfAlreadyOwner() :
                                                 messages.claims().memberAlreadyOwner()
                                         );
 
                                         scheduler.schedule(() -> inputRunnable.get().run());
+                                        return;
                                     }
+
+                                    Player target = Bukkit.getPlayer(member.id());
+                                    User recipient = target == null ? null : userManager.getUser(member.id()).orElse(null);
+
+                                    if (recipient == null) {
+                                        text.send(player, messages.claims().transferTargetOffline(), Map.of("name", member.name()));
+
+                                        scheduler.schedule(() -> inputRunnable.get().run());
+                                        return;
+                                    }
+
+                                    userManager.calculateUsedBlocks(recipient);
+
+                                    long required = claim.main() == null ? claim.region().getSurfaceArea() : 0;
+                                    long available = userManager.getRemainingBlocks(recipient);
+
+                                    if (available < required) {
+                                        text.send(player, messages.claims().transferNotEnoughBlocks(), Map.of(
+                                                "name", member.name(),
+                                                "required_blocks", required + "",
+                                                "current_blocks", available + ""
+                                        ));
+
+                                        scheduler.schedule(() -> inputRunnable.get().run());
+                                        return;
+                                    }
+
+                                    claim.transfer(member);
+
+                                    text.send(player, messages.claims().claimTransferred(), Map.of(
+                                            "name", member.name(),
+                                            "player_head", "<head:" + member.name() + ">",
+                                            "claim", claim.name()
+                                    ));
+
+                                    claimManager.transferClaim(claim, oldOwnerId, member.id());
+
+                                    userManager.getUser(oldOwnerId).ifPresent(user -> userManager.calculateUsedBlocks(user));
+                                    userManager.calculateUsedBlocks(recipient);
+
+                                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.OWNER_TRANSFERRED, member.id()));
                                 });
                     });
 

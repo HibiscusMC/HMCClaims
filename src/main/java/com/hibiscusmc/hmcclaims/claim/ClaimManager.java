@@ -438,26 +438,32 @@ public class ClaimManager {
     }
 
     /**
-     * Transfers a player claim and all of its sub claims to a new player
+     * Transfers a player claim and all of its sub claims to a new player, then persists them
      */
     public void transferClaim(@NotNull Claim claimToTransfer, @NotNull UUID oldId, @NotNull UUID newId) {
         Set<Claim> claims = playerClaims.get(oldId);
-        if (claims == null || claims.isEmpty()) {
-            return;
+
+        if (claims != null && !claims.isEmpty()) {
+            Set<Claim> newClaims = playerClaims.computeIfAbsent(newId, k -> ConcurrentHashMap.newKeySet());
+
+            claims.removeIf(claim -> {
+                if (claim.claimId().equals(claimToTransfer.claimId()) ||
+                        (claim.main() != null && claim.main().claimId().equals(claimToTransfer.claimId()))
+                ) {
+                    newClaims.add(claim);
+                    return true;
+                }
+
+                return false;
+            });
         }
 
-        Set<Claim> newClaims = playerClaims.computeIfAbsent(newId, k -> ConcurrentHashMap.newKeySet());
+        ClaimRepository repository = storageHolder.get().claims();
+        repository.saveClaim(claimToTransfer);
 
-        claims.removeIf(claim -> {
-            if (claim.claimId().equals(claimToTransfer.claimId()) ||
-                    (claim.main() != null && claim.main().claimId().equals(claimToTransfer.claimId()))
-            ) {
-                newClaims.add(claim);
-                return true;
-            }
-
-            return false;
-        });
+        for (Claim subClaim : claimToTransfer.subClaims()) {
+            repository.saveClaim(subClaim);
+        }
     }
 
     /**
