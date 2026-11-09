@@ -18,6 +18,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -75,7 +76,9 @@ public class VanillaBlockSettingListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onEntityExplosionDamage(EntityDamageByEntityEvent event) {
-        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_EXPLOSION) {
+        // Paper reports primed TNT as BLOCK_EXPLOSION even though the damager is the TNT entity.
+        if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_EXPLOSION
+                && event.getCause() != EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
             return;
         }
 
@@ -87,6 +90,31 @@ public class VanillaBlockSettingListener implements Listener {
         Location target = event.getEntity().getLocation();
 
         if (!allowsExplosion(explosionSource(damager, target), target, settingFor(damager))) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onBlockExplosionDamage(EntityDamageByBlockEvent event) {
+        if (event.getCause() != EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
+            return;
+        }
+
+        if (event.getEntity() instanceof Player) {
+            return;
+        }
+
+        Location source;
+
+        if (event.getDamager() != null) {
+            source = event.getDamager().getLocation();
+        } else if (event.getDamagerBlockState() != null) {
+            source = event.getDamagerBlockState().getLocation();
+        } else {
+            return;
+        }
+
+        if (!allowsExplosion(source, event.getEntity().getLocation(), Setting.BLOCK_EXPLOSIONS)) {
             event.setCancelled(true);
         }
     }
@@ -132,13 +160,17 @@ public class VanillaBlockSettingListener implements Listener {
     }
 
     private static Location explosionSource(@Nullable Entity entity, @NotNull Location fallback) {
-        if (entity == null || entity instanceof LivingEntity) {
+        if (entity == null) {
             return fallback;
+        }
+
+        if (entity instanceof LivingEntity) {
+            return entity.getLocation();
         }
 
         Location origin = entity.getOrigin();
 
-        return origin != null ? origin : fallback;
+        return origin != null ? origin : entity.getLocation();
     }
 
     private boolean allowsExplosion(@NotNull Location source, @NotNull Location target, @NotNull Setting<Boolean> setting) {
