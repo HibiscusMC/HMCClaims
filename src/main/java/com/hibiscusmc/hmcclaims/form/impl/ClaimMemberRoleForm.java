@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -34,6 +35,9 @@ public class ClaimMemberRoleForm implements BaseForm {
 
     @Inject
     private ConfigHolder<ClaimMemberRoleFormConfig> configHolder;
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private StorageHolder storageHolder;
@@ -70,7 +74,7 @@ public class ClaimMemberRoleForm implements BaseForm {
         ClaimRoleRegistry registry = claim.roleRegistry();
         List<ClaimRole> allRoles = registry.allRoles();
 
-        Optional<ClaimMember> self = claim.getMember(player.getUniqueId());
+        Optional<ClaimMember> self = access.actor(player, claim);
         boolean canManage = self
                 .map(executor -> executor.hasPermission(Permission.MANAGE_MEMBER_ROLES) && executor.canManage(member))
                 .orElse(false);

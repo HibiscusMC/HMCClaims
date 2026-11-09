@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener.permission;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -44,6 +45,9 @@ import java.util.List;
 public class VanillaBlockListener implements Listener {
 
     @Inject
+    private ClaimAccess access;
+
+    @Inject
     private ConfigHolder<Messages> messagesHolder;
 
     @Inject
@@ -76,7 +80,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_CONTAINER)) {
+        if (access.hasPermission(player, claim, Permission.USE_CONTAINER)) {
             return;
         }
 
@@ -103,7 +107,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_DOOR)) {
+        if (access.hasPermission(player, claim, Permission.USE_DOOR)) {
             return;
         }
 
@@ -130,7 +134,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_TRAPDOOR)) {
+        if (access.hasPermission(player, claim, Permission.USE_TRAPDOOR)) {
             return;
         }
 
@@ -160,7 +164,7 @@ public class VanillaBlockListener implements Listener {
         ItemStack item = event.getItem();
 
         if (item != null && Tag.ITEMS_LECTERN_BOOKS.isTagged(item.getType()) && isEmptyLectern(block)) {
-            if (claim.hasPermission(player.getUniqueId(), Permission.USE_CONTAINER)) {
+            if (access.hasPermission(player, claim, Permission.USE_CONTAINER)) {
                 return;
             }
 
@@ -169,7 +173,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_LECTERN)) {
+        if (access.hasPermission(player, claim, Permission.USE_LECTERN)) {
             return;
         }
 
@@ -192,7 +196,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_CONTAINER)) {
+        if (access.hasPermission(player, claim, Permission.USE_CONTAINER)) {
             return;
         }
 
@@ -216,7 +220,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_REDSTONE)) {
+        if (access.hasPermission(player, claim, Permission.USE_REDSTONE)) {
             return;
         }
 
@@ -252,7 +256,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.PLAYER_INTERACT)) {
+        if (access.hasPermission(player, claim, Permission.PLAYER_INTERACT)) {
             return;
         }
 
@@ -295,7 +299,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.IGNITE_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.IGNITE_BLOCK)) {
             return;
         }
 
@@ -320,7 +324,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.IGNITE_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.IGNITE_BLOCK)) {
             return;
         }
 
@@ -342,7 +346,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.IGNITE_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.IGNITE_BLOCK)) {
             return;
         }
 
@@ -368,7 +372,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.BREAK_BLOCK)) {
             return;
         }
 
@@ -394,7 +398,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_REDSTONE)) {
+        if (access.hasPermission(player, claim, Permission.USE_REDSTONE)) {
             return;
         }
 
@@ -415,8 +419,8 @@ public class VanillaBlockListener implements Listener {
         }
 
         if (PlantUtil.isPlantableBlock(block.getType())) {
-            if (claim.hasPermission(player.getUniqueId(), Permission.PLANT_CROPS)
-                    || claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK)) {
+            if (access.hasPermission(player, claim, Permission.PLANT_CROPS)
+                    || access.hasPermission(player, claim, Permission.PLACE_BLOCK)) {
                 return;
             }
 
@@ -425,7 +429,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.PLACE_BLOCK)) {
             return;
         }
 
@@ -447,7 +451,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.PLACE_BLOCK)) {
             return;
         }
 
@@ -468,8 +472,8 @@ public class VanillaBlockListener implements Listener {
         }
 
         if (PlantUtil.isHarvestable(block)) {
-            if (claim.hasPermission(player.getUniqueId(), Permission.HARVEST_CROPS)
-                    || claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
+            if (access.hasPermission(player, claim, Permission.HARVEST_CROPS)
+                    || access.hasPermission(player, claim, Permission.BREAK_BLOCK)) {
                 return;
             }
 
@@ -478,7 +482,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.BREAK_BLOCK)) {
             return;
         }
 
@@ -505,7 +509,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.TRAMPLE_SOIL)) {
+        if (access.hasPermission(player, claim, Permission.TRAMPLE_SOIL)) {
             return;
         }
 
@@ -530,7 +534,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.TRAMPLE_SOIL)) {
+        if (access.hasPermission(player, claim, Permission.TRAMPLE_SOIL)) {
             return;
         }
 
@@ -556,7 +560,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.TRAMPLE_SOIL)) {
+        if (access.hasPermission(player, claim, Permission.TRAMPLE_SOIL)) {
             return;
         }
 
@@ -564,14 +568,14 @@ public class VanillaBlockListener implements Listener {
         event.setCancelled(true);
     }
 
-    private static boolean isAllowedPlacement(Claim claim, Player player, Material type) {
+    private boolean isAllowedPlacement(Claim claim, Player player, Material type) {
         if (PlantUtil.isPlantableItem(type)) {
-            return claim.hasPermission(player.getUniqueId(), Permission.PLANT_CROPS)
-                    || claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK);
+            return access.hasPermission(player, claim, Permission.PLANT_CROPS)
+                    || access.hasPermission(player, claim, Permission.PLACE_BLOCK);
         }
 
         return type.asBlockType() != null
-                && claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK);
+                && access.hasPermission(player, claim, Permission.PLACE_BLOCK);
     }
 
     private static boolean isEmptyLectern(Block block) {

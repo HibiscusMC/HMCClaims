@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.command;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.command.argument.Member;
@@ -29,6 +30,9 @@ import java.util.Map;
 
 @Command(names = {"claim"}, permission = "hmcclaims.commands.claim")
 public class ClaimCommand implements CommandClass {
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private ClaimManager claimManager;
@@ -63,7 +67,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner())) {
+        if (!access.isOwner(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -83,7 +87,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner())) {
+        if (!access.isOwner(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -104,7 +108,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner())) {
+        if (!access.isOwner(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -148,7 +152,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!sender.getUniqueId().equals(claim.owner())) {
+        if (!access.isOwner(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }

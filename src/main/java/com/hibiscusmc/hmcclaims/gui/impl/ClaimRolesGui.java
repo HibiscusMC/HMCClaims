@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -50,6 +51,8 @@ public class ClaimRolesGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<ClaimRolesConfig> configHolder;
+    @Inject
+    private ClaimAccess access;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -243,7 +246,7 @@ public class ClaimRolesGui extends ClaimListGui {
         List<ClaimRole> allRoles = registry.allRoles();
         int allRolesQty = allRoles.size();
 
-        ClaimMember playerMember = claim.getMember(player.getUniqueId())
+        ClaimMember playerMember = access.actor(player, claim)
                 .orElse(null);
         ClaimRole playerRole = playerMember != null ?
                 playerMember.role() :

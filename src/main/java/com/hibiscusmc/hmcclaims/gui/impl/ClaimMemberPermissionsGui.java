@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -49,6 +50,9 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
 
     @Inject
     private ConfigHolder<ClaimMemberPermissionsConfig> configHolder;
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
@@ -294,10 +298,9 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         Claim claim = metadata.claim();
         Permissions.Entry entry = permissions.entry(permission);
 
-        boolean hasPermission = metadata.claim().hasPermission(player.getUniqueId(), Permission.MANAGE_MEMBER_PERMISSIONS) &&
-                claim.getMember(player.getUniqueId())
-                        .map(member -> member.canManage(target))
-                        .orElse(false);
+        boolean hasPermission = access.actor(player, claim)
+                .map(member -> member.hasPermission(Permission.MANAGE_MEMBER_PERMISSIONS) && member.canManage(target))
+                .orElse(false);
 
         BiConsumer<Item, Click> action = (it, click) -> {
             if (!hasPermission) {

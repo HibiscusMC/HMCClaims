@@ -18,6 +18,10 @@ public class Messages {
     @Key("reload")
     private String pluginReload = "<prefix><gray>Plugin reloaded!";
 
+    private String bypassEnabled = "<prefix><gray>Claim bypass <green>enabled</green>. You can build in and manage any claim.";
+
+    private String bypassDisabled = "<prefix><gray>Claim bypass <red>disabled</red>.";
+
     private Claims claims = new Claims();
 
     private Commands commands = new Commands();

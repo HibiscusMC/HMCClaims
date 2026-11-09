@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -52,6 +53,9 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
 
     @Inject
     private ConfigHolder<ClaimMemberRoleConfig> configHolder;
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private StorageHolder storageHolder;
@@ -269,7 +273,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
         List<ClaimRole> allRoles = registry.allRoles();
         List<Item> roleItems = new ArrayList<>();
 
-        Optional<ClaimMember> executor = claim.getMember(player.getUniqueId());
+        Optional<ClaimMember> executor = access.actor(player, claim);
         boolean canManage = executor.map(m ->
                         m.hasPermission(Permission.MANAGE_MEMBER_ROLES) &&
                                 m.canManage(targetMember)

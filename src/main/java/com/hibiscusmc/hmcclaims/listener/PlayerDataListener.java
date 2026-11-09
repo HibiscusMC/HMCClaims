@@ -103,20 +103,22 @@ public class PlayerDataListener implements Listener {
 
         Storage storage = holder.get();
 
-        manager.getUser(uuid).ifPresent(user ->
-                storage.users().saveUser(user).whenComplete((value, ex) -> {
-                    if (ex != null) {
-                        Logger.error("Couldn't save player data.", ex);
+        manager.getUser(uuid).ifPresent(user -> {
+            user.bypassMode(false);
 
-                        return;
-                    }
+            storage.users().saveUser(user).whenComplete((value, ex) -> {
+                if (ex != null) {
+                    Logger.error("Couldn't save player data.", ex);
 
-                    if (Bukkit.getPlayer(uuid) != null) {
-                        return;
-                    }
+                    return;
+                }
 
-                    manager.invalidateUser(uuid);
-                })
-        );
+                if (Bukkit.getPlayer(uuid) != null) {
+                    return;
+                }
+
+                manager.invalidateUser(uuid);
+            });
+        });
     }
 }

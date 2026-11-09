@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener.permission;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
@@ -23,6 +24,9 @@ import team.unnamed.inject.Inject;
  * Fly, Elytra, Locked Claim Entry
  */
 public class MovementPermissionListener implements Listener {
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
@@ -54,6 +58,10 @@ public class MovementPermissionListener implements Listener {
         }
 
         Player player = event.getPlayer();
+
+        if (access.isBypassing(player)) {
+            return;
+        }
 
         ClaimMember member = claim.getMember(player.getUniqueId())
                 .orElse(null);
@@ -88,6 +96,11 @@ public class MovementPermissionListener implements Listener {
         }
 
         Player player = event.getPlayer();
+
+        if (access.isBypassing(player)) {
+            return;
+        }
+
         ClaimMember member = claim.getMember(player.getUniqueId())
                 .orElse(null);
         boolean banned = member != null && member.banned();
@@ -124,7 +137,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.ALLOW_FLIGHT)) {
+        if (access.hasPermission(player, claim, Permission.ALLOW_FLIGHT)) {
             return;
         }
 
@@ -153,7 +166,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.ALLOW_FLIGHT)) {
+        if (access.hasPermission(player, claim, Permission.ALLOW_FLIGHT)) {
             return;
         }
 
@@ -176,7 +189,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        if (toClaim.hasPermission(player.getUniqueId(), Permission.USE_ELYTRA)) {
+        if (access.hasPermission(player, toClaim, Permission.USE_ELYTRA)) {
             return;
         }
 
@@ -202,7 +215,7 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_ELYTRA)) {
+        if (access.hasPermission(player, claim, Permission.USE_ELYTRA)) {
             return;
         }
 

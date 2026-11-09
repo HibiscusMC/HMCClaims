@@ -20,6 +20,7 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Singleton
 public class ClaimDeleteForm implements BaseForm {
@@ -78,8 +79,10 @@ public class ClaimDeleteForm implements BaseForm {
                 FormText.line(config.confirm(), player, data),
                 FormText.line(config.cancel(), player, data),
                 () -> {
+                    UUID owner = claim.owner();
+
                     claimManager.deleteClaim(claim);
-                    userManager.calculateUsedBlocks(player.getUniqueId());
+                    userManager.getUser(owner).ifPresent(userManager::calculateUsedBlocks);
 
                     text.send(player, messagesHolder.get().claims().deleted(), Map.of(
                             "claim_name", claim.name()

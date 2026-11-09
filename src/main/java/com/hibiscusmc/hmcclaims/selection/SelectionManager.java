@@ -225,6 +225,11 @@ public class SelectionManager {
      * @param claim  The claim being resized.
      */
     public void beginResize(@NotNull Player player, @NotNull Claim claim) {
+        if (!claim.owner().equals(player.getUniqueId())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         User user = userManager.getUser(player.getUniqueId())
                 .orElseThrow(() -> new IllegalStateException("User not loaded!"));
 

@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -36,6 +37,9 @@ public class ClaimRolesForm implements BaseForm {
 
     @Inject
     private ConfigHolder<ClaimRolesFormConfig> configHolder;
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private StorageHolder storageHolder;
@@ -122,7 +126,7 @@ public class ClaimRolesForm implements BaseForm {
         int rolePosition = allRoles.indexOf(role);
         int total = allRoles.size();
 
-        ClaimMember self = claim.getMember(player.getUniqueId()).orElse(null);
+        ClaimMember self = access.actor(player, claim).orElse(null);
         ClaimRole selfRole = self != null ? self.role() : registry.everyoneRole();
         int selfPosition = allRoles.indexOf(selfRole);
 
@@ -237,7 +241,7 @@ public class ClaimRolesForm implements BaseForm {
         Claim claim = metadata.claim();
         Runnable reopen = () -> render(player, metadata);
 
-        ClaimMember self = claim.getMember(player.getUniqueId()).orElse(null);
+        ClaimMember self = access.actor(player, claim).orElse(null);
         if (self == null || !self.hasPermission(Permission.MANAGE_ROLES)) {
             text.send(player, config.cantCreate());
             reopen.run();

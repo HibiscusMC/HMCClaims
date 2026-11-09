@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -57,6 +58,8 @@ public class ClaimMemberListGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<ClaimMemberListConfig> configHolder;
+    @Inject
+    private ClaimAccess access;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -299,7 +302,7 @@ public class ClaimMemberListGui extends ClaimListGui {
         Map<ClaimMember, Item> parsedMembers = new HashMap<>();
 
         Set<ClaimMember> members = claim.members();
-        ClaimMember selfMember = claim.getMember(player.getUniqueId())
+        ClaimMember selfMember = access.actor(player, claim)
                 .orElse(null);
 
         for (ClaimMember member : members) {

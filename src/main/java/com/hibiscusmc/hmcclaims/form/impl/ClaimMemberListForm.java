@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -46,6 +47,8 @@ public class ClaimMemberListForm implements BaseForm {
     @Inject
     private ConfigHolder<ClaimMemberListFormConfig> configHolder;
     @Inject
+    private ClaimAccess access;
+    @Inject
     private ConfigHolder<Messages> messagesHolder;
 
     @Inject
@@ -88,7 +91,7 @@ public class ClaimMemberListForm implements BaseForm {
         scheduler.scheduleAsync(() -> {
             State state = formService.state(player, STATE_KEY, State::new);
 
-            ClaimMember self = claim.getMember(player.getUniqueId()).orElse(null);
+            ClaimMember self = access.actor(player, claim).orElse(null);
 
             List<ClaimMember> all = claim.members().stream()
                     .sorted(ClaimMember.DISPLAY_ORDER)
@@ -184,7 +187,7 @@ public class ClaimMemberListForm implements BaseForm {
         Claim claim = metadata.claim();
         FormTemplate.SubForm actions = config.memberActions();
 
-        ClaimMember self = claim.getMember(player.getUniqueId()).orElse(null);
+        ClaimMember self = access.actor(player, claim).orElse(null);
         boolean canManage = self != null && self.canManage(member);
 
         boolean canKick = canManage && self.hasPermission(Permission.MANAGE_MEMBERS);

@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener.permission;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
@@ -26,6 +27,9 @@ import team.unnamed.inject.Inject;
  * Damage Players and Entities, Break Hanging Entities, Damage Vehicles
  */
 public class CombatPermissionListener implements Listener {
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
@@ -57,7 +61,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(attacker.getUniqueId(), Permission.DAMAGE_ENTITY)) {
+        if (access.hasPermission(attacker, claim, Permission.DAMAGE_ENTITY)) {
             return;
         }
 
@@ -98,7 +102,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
+        if (access.hasPermission(player, claim, Permission.BREAK_BLOCK)) {
             return;
         }
 
@@ -120,7 +124,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.DAMAGE_ENTITY)) {
+        if (access.hasPermission(player, claim, Permission.DAMAGE_ENTITY)) {
             return;
         }
 
@@ -142,7 +146,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.DAMAGE_ENTITY)) {
+        if (access.hasPermission(player, claim, Permission.DAMAGE_ENTITY)) {
             return;
         }
 

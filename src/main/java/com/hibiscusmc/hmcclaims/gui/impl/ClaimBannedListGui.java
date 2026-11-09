@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimBannedListConfig;
@@ -56,6 +57,8 @@ public class ClaimBannedListGui extends ClaimListGui {
 
     @Inject
     private ConfigHolder<ClaimBannedListConfig> configHolder;
+    @Inject
+    private ClaimAccess access;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -317,11 +320,11 @@ public class ClaimBannedListGui extends ClaimListGui {
                                     ClaimMember claimMember = claim.getMember(member.id())
                                             .orElse(claim.addMember(member));
 
-                                    ClaimMember selfMember = claim.getMember(player.getUniqueId())
+                                    ClaimMember selfMember = access.actor(player, claim)
                                             .orElse(null);
 
                                     if (claimMember.uuid().equals(player.getUniqueId()) ||
-                                            (selfMember != null && !selfMember.canManage(claimMember))) {
+                                            (selfMember == null || !selfMember.canManage(claimMember))) {
                                         text.send(player, messagesHolder.get().claims().cantBanMember());
 
                                         scheduler.schedule(() -> inputRunnable.get().run());

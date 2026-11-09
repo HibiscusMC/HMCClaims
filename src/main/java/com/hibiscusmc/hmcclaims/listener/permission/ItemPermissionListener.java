@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.listener.permission;
 
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -44,6 +45,9 @@ import team.unnamed.inject.Inject;
 public class ItemPermissionListener implements Listener {
 
     @Inject
+    private ClaimAccess access;
+
+    @Inject
     private ConfigHolder<Messages> messagesHolder;
 
     @Inject
@@ -62,7 +66,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.INTERACT_ENTITY)) {
+        if (access.hasPermission(player, claim, Permission.INTERACT_ENTITY)) {
             return;
         }
 
@@ -102,7 +106,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), permission)) {
+        if (access.hasPermission(player, claim, permission)) {
             return;
         }
 
@@ -134,13 +138,13 @@ public class ItemPermissionListener implements Listener {
         }
 
         Player player = event.getPlayer();
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_ITEM)) {
+        if (access.hasPermission(player, claim, Permission.USE_ITEM)) {
             return;
         }
 
         if (PlantUtil.isPlantableItem(item.getType())
-                && (claim.hasPermission(player.getUniqueId(), Permission.PLANT_CROPS)
-                || claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK))) {
+                && (access.hasPermission(player, claim, Permission.PLANT_CROPS)
+                || access.hasPermission(player, claim, Permission.PLACE_BLOCK))) {
             return;
         }
 
@@ -163,7 +167,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.PICKUP_ITEM)) {
+        if (access.hasPermission(player, claim, Permission.PICKUP_ITEM)) {
             return;
         }
 
@@ -181,7 +185,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.DROP_ITEM)) {
+        if (access.hasPermission(player, claim, Permission.DROP_ITEM)) {
             return;
         }
 
@@ -203,7 +207,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_WIND_CHARGE)) {
+        if (access.hasPermission(player, claim, Permission.USE_WIND_CHARGE)) {
             return;
         }
 
@@ -239,7 +243,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_WIND_CHARGE)) {
+        if (access.hasPermission(player, claim, Permission.USE_WIND_CHARGE)) {
             return;
         }
 
@@ -263,7 +267,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_VEHICLE)) {
+        if (access.hasPermission(player, claim, Permission.USE_VEHICLE)) {
             return;
         }
 
@@ -290,7 +294,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_VEHICLE)) {
+        if (access.hasPermission(player, claim, Permission.USE_VEHICLE)) {
             return;
         }
 
@@ -319,7 +323,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_ITEM)) {
+        if (access.hasPermission(player, claim, Permission.USE_ITEM)) {
             return;
         }
 
@@ -337,7 +341,7 @@ public class ItemPermissionListener implements Listener {
             return;
         }
 
-        if (claim.hasPermission(player.getUniqueId(), Permission.USE_ITEM)) {
+        if (access.hasPermission(player, claim, Permission.USE_ITEM)) {
             return;
         }
 
@@ -354,7 +358,7 @@ public class ItemPermissionListener implements Listener {
         }
 
         return player != null
-                && claim.hasPermission(player.getUniqueId(), Permission.USE_WIND_CHARGE);
+                && access.hasPermission(player, claim, Permission.USE_WIND_CHARGE);
     }
 
     private static boolean isHandledBySpecificPermission(Material type) {

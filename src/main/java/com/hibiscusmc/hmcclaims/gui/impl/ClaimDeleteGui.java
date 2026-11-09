@@ -34,6 +34,7 @@ import xyz.xenondevs.invui.window.Window;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Singleton
 public class ClaimDeleteGui extends ClaimListGui {
@@ -146,8 +147,10 @@ public class ClaimDeleteGui extends ClaimListGui {
             gui.addIngredient('(', Item.builder()
                     .setItemProvider(TextUtil.parseItemPlaceholders(confirm.item(), player))
                     .addClickHandler(click -> {
+                        UUID owner = claim.owner();
+
                         claimManager.deleteClaim(claim);
-                        userManager.calculateUsedBlocks(player.getUniqueId());
+                        userManager.getUser(owner).ifPresent(userManager::calculateUsedBlocks);
 
                         text.send(player, messagesHolder.get().claims().deleted(), Map.of(
                                 "claim_name", claim.name()

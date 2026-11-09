@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimBannedListFormConfig;
@@ -42,6 +43,8 @@ public class ClaimBannedListForm implements BaseForm {
 
     @Inject
     private ConfigHolder<ClaimBannedListFormConfig> configHolder;
+    @Inject
+    private ClaimAccess access;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -203,9 +206,9 @@ public class ClaimBannedListForm implements BaseForm {
                     ClaimMember member = claim.getMember(target.id())
                             .orElseGet(() -> claim.addMember(target));
 
-                    ClaimMember self = claim.getMember(player.getUniqueId()).orElse(null);
+                    ClaimMember self = access.actor(player, claim).orElse(null);
 
-                    if (member.uuid().equals(player.getUniqueId()) || (self != null && !self.canManage(member))) {
+                    if (member.uuid().equals(player.getUniqueId()) || (self == null || !self.canManage(member))) {
                         text.send(player, messages.claims().cantBanMember());
                         reopen.run();
                         return;

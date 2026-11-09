@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Permissions;
@@ -39,6 +40,9 @@ public class ClaimMemberPermissionsForm implements BaseForm {
 
     @Inject
     private ConfigHolder<ClaimMemberPermissionsFormConfig> configHolder;
+
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
@@ -129,9 +133,8 @@ public class ClaimMemberPermissionsForm implements BaseForm {
         Claim claim = metadata.claim();
         ClaimMember member = metadata.member();
 
-        boolean editable = claim.hasPermission(player.getUniqueId(), Permission.MANAGE_MEMBER_PERMISSIONS)
-                && claim.getMember(player.getUniqueId())
-                .map(self -> self.canManage(member))
+        boolean editable = access.actor(player, claim)
+                .map(self -> self.hasPermission(Permission.MANAGE_MEMBER_PERMISSIONS) && self.canManage(member))
                 .orElse(false);
 
         Map<String, String> data = Map.of(
