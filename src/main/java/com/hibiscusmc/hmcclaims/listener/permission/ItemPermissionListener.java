@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.Event;
@@ -22,16 +23,18 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 /**
- * Entity Interaction, Item Use, Item Pickup and Drop, Wind Burst, Vehicle Use
+ * Entity Interaction, Container Vehicles, Item Use, Item Pickup and Drop, Wind Burst, Vehicle Use
  */
 public class ItemPermissionListener implements Listener {
 
@@ -60,6 +63,46 @@ public class ItemPermissionListener implements Listener {
 
         if (event.getHand() == EquipmentSlot.HAND) {
             text.sendNotification(player, messagesHolder.get().claims().permissions().interactEntity());
+        }
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInteractEntityClick(PlayerInteractEntityEvent event) {
+        Entity entity = event.getRightClicked();
+        if (entity instanceof Player) {
+            return;
+        }
+
+        Permission permission;
+        String message;
+
+        if (entity instanceof Vehicle && !(entity instanceof LivingEntity)) {
+            if (!(entity instanceof InventoryHolder)) {
+                return;
+            }
+
+            permission = Permission.USE_CONTAINER;
+            message = messagesHolder.get().claims().permissions().interactBlock();
+        } else {
+            permission = Permission.INTERACT_ENTITY;
+            message = messagesHolder.get().claims().permissions().interactEntity();
+        }
+
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(entity.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), permission)) {
+            return;
+        }
+
+        if (event.getHand() == EquipmentSlot.HAND) {
+            text.sendNotification(player, message);
         }
         event.setCancelled(true);
     }

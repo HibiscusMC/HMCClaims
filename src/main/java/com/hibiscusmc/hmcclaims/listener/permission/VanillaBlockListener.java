@@ -24,6 +24,7 @@ import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.inventory.ItemStack;
@@ -340,6 +341,28 @@ public class VanillaBlockListener implements Listener {
 
             text.sendNotification(player, messagesHolder.get().claims().permissions().plantCrops());
             event.setCancelled(true);
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.PLACE_BLOCK)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().placeBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onHangingPlace(HangingPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getEntity().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
             return;
         }
 

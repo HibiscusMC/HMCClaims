@@ -9,24 +9,30 @@ import com.hibiscusmc.hmcclaims.config.ClaimSettings;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 /**
- * Damage Players and Entities
+ * Damage Players and Entities, Break Hanging Entities, Damage Vehicles
  */
 public class CombatPermissionListener implements Listener {
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
+
     @Inject
     private ConfigHolder<ClaimSettings> claimSettingsHolder;
 
@@ -42,7 +48,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        Player attacker = getAttackingPlayer(event);
+        Player attacker = attackingPlayer(event.getDamager());
         if (attacker == null) {
             return;
         }
@@ -68,7 +74,7 @@ public class CombatPermissionListener implements Listener {
             return;
         }
 
-        Player attacker = getAttackingPlayer(event);
+        Player attacker = attackingPlayer(event.getDamager());
         if (attacker == null) {
             return;
         }
@@ -78,6 +84,72 @@ public class CombatPermissionListener implements Listener {
         }
 
         text.sendNotification(attacker, messagesHolder.get().claims().settings().pvpDisabled());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onHangingBreak(HangingBreakByEntityEvent event) {
+        Player player = attackingPlayer(event.getRemover());
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getEntity().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().breakBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        Player player = attackingPlayer(event.getAttacker());
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getVehicle().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.DAMAGE_ENTITY)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().damageEntity());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onVehicleDestroy(VehicleDestroyEvent event) {
+        Player player = attackingPlayer(event.getAttacker());
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getVehicle().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.DAMAGE_ENTITY)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().damageEntity());
         event.setCancelled(true);
     }
 
@@ -101,12 +173,12 @@ public class CombatPermissionListener implements Listener {
         return value != null ? value : Setting.PVP.defaultValue();
     }
 
-    private static Player getAttackingPlayer(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player player) {
+    private static @Nullable Player attackingPlayer(@Nullable Entity damager) {
+        if (damager instanceof Player player) {
             return player;
         }
 
-        if (event.getDamager() instanceof Projectile projectile) {
+        if (damager instanceof Projectile projectile) {
             ProjectileSource source = projectile.getShooter();
             if (source instanceof Player player) {
                 return player;
