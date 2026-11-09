@@ -341,6 +341,46 @@ public class ClaimManager {
     }
 
     /**
+     * Claims, including sub-claims, whose area overlaps the square of the given radius around the location.
+     */
+    @NotNull
+    @Contract(pure = true)
+    public Set<Claim> getClaimsNear(@NotNull Location center, double radius) {
+        Map<Long, Set<Claim>> chunkMap = worldChunkMaps.get(center.getWorld().getName());
+        if (chunkMap == null) {
+            return Set.of();
+        }
+
+        int minX = (int) Math.floor(center.getX() - radius);
+        int maxX = (int) Math.floor(center.getX() + radius);
+        int minZ = (int) Math.floor(center.getZ() - radius);
+        int maxZ = (int) Math.floor(center.getZ() + radius);
+
+        Set<Claim> found = new LinkedHashSet<>();
+
+        for (int chunkX = minX >> 4; chunkX <= maxX >> 4; chunkX++) {
+            for (int chunkZ = minZ >> 4; chunkZ <= maxZ >> 4; chunkZ++) {
+                Set<Claim> claimsInChunk = chunkMap.get(ChunkUtil.getChunkKey(chunkX, chunkZ));
+
+                if (claimsInChunk == null) {
+                    continue;
+                }
+
+                for (Claim claim : claimsInChunk) {
+                    ClaimRegion region = claim.region();
+
+                    if (region.minX() <= maxX && region.maxX() >= minX
+                            && region.minZ() <= maxZ && region.maxZ() >= minZ) {
+                        found.add(claim);
+                    }
+                }
+            }
+        }
+
+        return found;
+    }
+
+    /**
      * Gets the "most specific" claim at a location.
      * If multiple claims exist (e.g., a sub-claim inside a main claim),
      * the one with the highest depth is returned.

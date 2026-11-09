@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.listener.protection;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.util.EntityUtil;
 import org.bukkit.Location;
@@ -7,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
+import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
@@ -177,6 +179,18 @@ public class BorderProtectionListener implements Listener {
 
         if (source == null) {
             return;
+        }
+
+        if (projectile instanceof AbstractWindCharge windCharge) {
+            Claim sourceClaim = claimManager.getClaimAt(source).orElse(null);
+
+            for (Claim claim : claimManager.getClaimsNear(windCharge.getLocation(), EntityUtil.explosionReach(windCharge))) {
+                if (sourceClaim == null || !sourceClaim.owner().equals(claim.owner())) {
+                    event.setCancelled(true);
+                    projectile.remove();
+                    return;
+                }
+            }
         }
 
         Location target = event.getHitEntity() != null ? event.getHitEntity().getLocation()

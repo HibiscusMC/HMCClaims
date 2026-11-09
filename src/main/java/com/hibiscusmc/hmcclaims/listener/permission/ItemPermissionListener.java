@@ -25,6 +25,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityPlaceEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -213,6 +214,29 @@ public class ItemPermissionListener implements Listener {
 
         text.sendNotification(player, messagesHolder.get().claims().permissions().useWindCharge());
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onWindChargeHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof AbstractWindCharge windCharge)) {
+            return;
+        }
+
+        Player player = EntityUtil.responsiblePlayer(windCharge);
+        if (player == null) {
+            return;
+        }
+
+        for (Claim claim : claimManager.getClaimsNear(windCharge.getLocation(), EntityUtil.explosionReach(windCharge))) {
+            if (access.hasPermission(player, claim, Permission.USE_WIND_CHARGE)) {
+                continue;
+            }
+
+            text.sendNotification(player, messagesHolder.get().claims().permissions().useWindCharge());
+            event.setCancelled(true);
+            windCharge.remove();
+            return;
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
