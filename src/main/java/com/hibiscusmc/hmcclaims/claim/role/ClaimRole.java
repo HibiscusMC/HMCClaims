@@ -60,23 +60,21 @@ public class ClaimRole {
      * @param newName the new name of the role
      */
     public void rename(@NotNull String newName) {
-        if (newName.isEmpty()) {
+        String name = TextUtil.strip(newName);
+
+        if (name.isEmpty()) {
             throw new IllegalArgumentException("role name cannot be empty");
         }
 
-        if (newName.length() < 2) {
+        if (name.length() < 2) {
             throw new IllegalArgumentException("role name cannot be less than 2 characters");
         }
 
-        if (newName.length() > 40) {
+        if (name.length() > 40) {
             throw new IllegalArgumentException("role name cannot be longer than 40 characters");
         }
 
-        if (newName.equals(this.name)) {
-            return;
-        }
-
-        this.name = TextUtil.strip(newName);
+        this.name = name;
     }
 
     /**

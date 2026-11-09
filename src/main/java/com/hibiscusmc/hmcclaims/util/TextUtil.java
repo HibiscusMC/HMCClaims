@@ -450,7 +450,7 @@ public class TextUtil {
     }
 
     /**
-     * Removes all tags from the text.
+     * Removes all tags from the text, repeating until none are left so nested input like {@code <<b>click:...>} can't rebuild a tag.
      *
      * @param unsafeText the input message, with potential tags
      * @return the output, without tags
@@ -459,7 +459,15 @@ public class TextUtil {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static String strip(String unsafeText) {
-        return MINI_MESSAGE.stripTags(unsafeText);
+        String stripped = unsafeText;
+        String previous;
+
+        do {
+            previous = stripped;
+            stripped = MINI_MESSAGE.stripTags(previous);
+        } while (!stripped.equals(previous));
+
+        return stripped;
     }
 
     /**
