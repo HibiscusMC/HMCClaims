@@ -214,8 +214,11 @@ public class ClaimBannedListForm implements BaseForm {
                 target -> {
                     Messages messages = messagesHolder.get();
 
-                    ClaimMember member = claim.getMember(target.id())
-                            .orElseGet(() -> claim.addMember(target));
+                    ClaimMember existing = claim.getMember(target.id()).orElse(null);
+                    ClaimMember member = existing != null ? existing : new ClaimMember(
+                            target.id(), claim, target.name(),
+                            claim.roleRegistry().defaultRole(), new Object2BooleanArrayMap<>()
+                    );
 
                     ClaimMember self = access.actor(player, claim).orElse(null);
 
@@ -229,6 +232,10 @@ public class ClaimBannedListForm implements BaseForm {
                         text.send(player, messages.claims().memberAlreadyBanned());
                         reopen.run();
                         return;
+                    }
+
+                    if (existing == null) {
+                        claim.addMember(member);
                     }
 
                     member.role(claim.roleRegistry().defaultRole());

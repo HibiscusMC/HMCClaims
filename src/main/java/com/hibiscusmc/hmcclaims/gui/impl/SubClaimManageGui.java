@@ -88,12 +88,7 @@ public class SubClaimManageGui extends ClaimManageGui {
                         .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
-                        .setUpperGui(upperGui)
-                        .addCloseHandler(reason -> {
-                            Storage storage = storageHolder.get();
-
-                            storage.claims().saveClaimMeta(claim);
-                        });
+                        .setUpperGui(upperGui);
 
                 if (lowerGui != null) {
                     window.setLowerGui(lowerGui);

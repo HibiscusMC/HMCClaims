@@ -18,7 +18,6 @@ import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
-import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
@@ -177,12 +176,7 @@ public class ClaimManageGui extends ClaimListGui {
                         .setTitle(TextUtil.parse(title.text(), player, Map.of(
                                 "claim_name", parseName(claim.name(), title.maxLength())
                         )))
-                        .setUpperGui(upperGui)
-                        .addCloseHandler(reason -> {
-                            Storage storage = storageHolder.get();
-
-                            storage.claims().saveClaimMeta(claim);
-                        });
+                        .setUpperGui(upperGui);
 
                 if (lowerGui != null) {
                     windowBuilder.setLowerGui(lowerGui);
@@ -388,6 +382,7 @@ public class ClaimManageGui extends ClaimListGui {
                                 }
 
                                 claim.rename(newName);
+                                storageHolder.get().claims().saveClaimName(claim);
 
                                 open(player, metadata);
                             })
@@ -406,6 +401,8 @@ public class ClaimManageGui extends ClaimListGui {
                     }
 
                     claim.locked(!claim.locked());
+                    storageHolder.get().claims().saveClaimMeta(claim);
+
                     it.notifyWindows();
                 })
                 .build();

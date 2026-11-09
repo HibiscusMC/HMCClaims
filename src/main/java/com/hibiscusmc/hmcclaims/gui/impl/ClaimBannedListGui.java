@@ -294,6 +294,8 @@ public class ClaimBannedListGui extends ClaimListGui {
                     .setItemProvider(player -> new ItemWrapper(TextUtil.parseItemPlaceholders(head, player)))
                     .addClickHandler(click -> {
                         claim.removeMember(member.uuid());
+                        storageHolder.get().claims().saveMembers(claim);
+
                         EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.MEMBER_REMOVED, member.uuid()));
                         open(click.player(), metadata);
                     })
@@ -328,8 +330,11 @@ public class ClaimBannedListGui extends ClaimListGui {
                                     open(player, metadata);
                                 })
                                 .onSubmit((member) -> {
-                                    ClaimMember claimMember = claim.getMember(member.id())
-                                            .orElse(claim.addMember(member));
+                                    ClaimMember existing = claim.getMember(member.id()).orElse(null);
+                                    ClaimMember claimMember = existing != null ? existing : new ClaimMember(
+                                            member.id(), claim, member.name(),
+                                            claim.roleRegistry().defaultRole(), new Object2BooleanArrayMap<>()
+                                    );
 
                                     ClaimMember selfMember = access.actor(player, claim)
                                             .orElse(null);
@@ -343,6 +348,10 @@ public class ClaimBannedListGui extends ClaimListGui {
                                     }
 
                                     if (!claimMember.banned()) {
+                                        if (existing == null) {
+                                            claim.addMember(claimMember);
+                                        }
+
                                         claimMember.role(claim.roleRegistry().defaultRole());
                                         claimMember.permissions(new Object2BooleanArrayMap<>());
                                         claimMember.joinedTimestamp(Instant.now());
