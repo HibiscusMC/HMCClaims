@@ -357,6 +357,25 @@ public class ClaimManager {
     }
 
     /**
+     * Whether a change starting at {@code source} may affect {@code target}: allowed when the
+     * target isn't claimed, or the source is in a claim with the same owner.
+     *
+     * @param source The location the change starts from.
+     * @param target The location being changed.
+     * @return true if the change is allowed.
+     */
+    public boolean canAffect(@NotNull Location source, @NotNull Location target) {
+        Claim targetClaim = getClaimAt(target).orElse(null);
+        if (targetClaim == null) {
+            return true;
+        }
+
+        Claim sourceClaim = getClaimAt(source).orElse(null);
+
+        return sourceClaim != null && sourceClaim.owner().equals(targetClaim.owner());
+    }
+
+    /**
      * Gets a claim by its UUID.
      *
      * @param uuid The claim UUID.

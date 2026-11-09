@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener.protection;
 
-import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.util.EntityUtil;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -27,13 +27,13 @@ import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.world.StructureGrowEvent;
-import org.jetbrains.annotations.NotNull;
 import team.unnamed.inject.Inject;
 
 /**
- * Pistons, Liquid Flow, Fire Spread, Dispensers, Structure Growth, Mob Griefing and
+ * Pistons, Liquid Flow, Fire Spread, Dispensers, TNT Priming, Structure Growth, Mob Griefing and
  * Falling Blocks crossing into claims
  */
 public class BorderProtectionListener implements Listener {
@@ -46,14 +46,14 @@ public class BorderProtectionListener implements Listener {
         Location source = event.getBlock().getLocation();
         BlockFace direction = event.getDirection();
 
-        if (!canAffect(source, event.getBlock().getRelative(direction).getLocation())) {
+        if (!claimManager.canAffect(source, event.getBlock().getRelative(direction).getLocation())) {
             event.setCancelled(true);
             return;
         }
 
         for (Block block : event.getBlocks()) {
-            if (!canAffect(source, block.getLocation())
-                    || !canAffect(source, block.getRelative(direction).getLocation())) {
+            if (!claimManager.canAffect(source, block.getLocation())
+                    || !claimManager.canAffect(source, block.getRelative(direction).getLocation())) {
                 event.setCancelled(true);
                 return;
             }
@@ -66,9 +66,9 @@ public class BorderProtectionListener implements Listener {
         BlockFace direction = event.getDirection();
 
         for (Block block : event.getBlocks()) {
-            if (!canAffect(source, block.getLocation())
-                    || !canAffect(source, block.getRelative(direction).getLocation())
-                    || !canAffect(source, block.getRelative(direction.getOppositeFace()).getLocation())) {
+            if (!claimManager.canAffect(source, block.getLocation())
+                    || !claimManager.canAffect(source, block.getRelative(direction).getLocation())
+                    || !claimManager.canAffect(source, block.getRelative(direction.getOppositeFace()).getLocation())) {
                 event.setCancelled(true);
                 return;
             }
@@ -76,8 +76,34 @@ public class BorderProtectionListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onTntPrime(TNTPrimeEvent event) {
+        Entity entity = event.getPrimingEntity();
+        if (EntityUtil.responsiblePlayer(entity) != null) {
+            return;
+        }
+
+        Location source;
+
+        if (event.getPrimingBlock() != null) {
+            source = event.getPrimingBlock().getLocation();
+        } else if (entity != null) {
+            source = entity.getOrigin();
+        } else {
+            return;
+        }
+
+        if (source == null) {
+            return;
+        }
+
+        if (!claimManager.canAffect(source, event.getBlock().getLocation())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onBlockFromTo(BlockFromToEvent event) {
-        if (!canAffect(event.getBlock().getLocation(), event.getToBlock().getLocation())) {
+        if (!claimManager.canAffect(event.getBlock().getLocation(), event.getToBlock().getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -89,7 +115,7 @@ public class BorderProtectionListener implements Listener {
             return;
         }
 
-        if (!canAffect(event.getSource().getLocation(), event.getBlock().getLocation())) {
+        if (!claimManager.canAffect(event.getSource().getLocation(), event.getBlock().getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -101,7 +127,7 @@ public class BorderProtectionListener implements Listener {
             return;
         }
 
-        if (!canAffect(igniting.getLocation(), event.getBlock().getLocation())) {
+        if (!claimManager.canAffect(igniting.getLocation(), event.getBlock().getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -118,7 +144,7 @@ public class BorderProtectionListener implements Listener {
             return;
         }
 
-        if (!canAffect(igniting.getLocation(), event.getBlock().getLocation())) {
+        if (!claimManager.canAffect(igniting.getLocation(), event.getBlock().getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -131,7 +157,7 @@ public class BorderProtectionListener implements Listener {
 
         Block target = event.getBlock().getRelative(directional.getFacing());
 
-        if (!canAffect(event.getBlock().getLocation(), target.getLocation())) {
+        if (!claimManager.canAffect(event.getBlock().getLocation(), target.getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -140,14 +166,14 @@ public class BorderProtectionListener implements Listener {
     public void onStructureGrow(StructureGrowEvent event) {
         Location source = event.getLocation();
 
-        event.getBlocks().removeIf(state -> !canAffect(source, state.getLocation()));
+        event.getBlocks().removeIf(state -> !claimManager.canAffect(source, state.getLocation()));
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onFertilize(BlockFertilizeEvent event) {
         Location source = event.getBlock().getLocation();
 
-        event.getBlocks().removeIf(state -> !canAffect(source, state.getLocation()));
+        event.getBlocks().removeIf(state -> !claimManager.canAffect(source, state.getLocation()));
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -160,7 +186,7 @@ public class BorderProtectionListener implements Listener {
                 return;
             }
 
-            if (!canAffect(origin, event.getBlock().getLocation())) {
+            if (!claimManager.canAffect(origin, event.getBlock().getLocation())) {
                 event.setCancelled(true);
             }
 
@@ -174,17 +200,6 @@ public class BorderProtectionListener implements Listener {
         if (claimManager.getClaimAt(event.getBlock().getLocation()).isPresent()) {
             event.setCancelled(true);
         }
-    }
-
-    private boolean canAffect(@NotNull Location source, @NotNull Location target) {
-        Claim targetClaim = claimManager.getClaimAt(target).orElse(null);
-        if (targetClaim == null) {
-            return true;
-        }
-
-        Claim sourceClaim = claimManager.getClaimAt(source).orElse(null);
-
-        return sourceClaim != null && sourceClaim.owner().equals(targetClaim.owner());
     }
 
     private static boolean isGriefer(Entity entity) {
