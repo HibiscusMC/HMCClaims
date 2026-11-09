@@ -49,6 +49,10 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
+        if (claim.equals(claimManager.getClaimAt(from).orElse(null))) {
+            return;
+        }
+
         Player player = event.getPlayer();
 
         ClaimMember member = claim.getMember(player.getUniqueId())

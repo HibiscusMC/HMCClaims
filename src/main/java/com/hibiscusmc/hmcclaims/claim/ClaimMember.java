@@ -126,6 +126,10 @@ public class ClaimMember {
             return true;
         }
 
+        if (banned) {
+            return false;
+        }
+
         if (!permissions.containsKey(permission)) {
             return role.hasPermission(permission);
         }
