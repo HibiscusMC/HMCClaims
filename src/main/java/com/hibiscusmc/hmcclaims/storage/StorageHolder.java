@@ -58,8 +58,7 @@ public class StorageHolder {
         try {
             implementation.initialize(config);
         } catch (Exception ex) {
-            Logger.error("Couldn't initialize " + implementation.name() + " storage. Shutting down...");
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Couldn't initialize " + implementation.name() + " storage", ex);
         }
     }
 

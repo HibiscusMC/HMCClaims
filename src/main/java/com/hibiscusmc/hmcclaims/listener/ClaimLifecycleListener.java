@@ -6,6 +6,7 @@ import com.hibiscusmc.hmcclaims.claim.RawClaim;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
+import com.hibiscusmc.hmcclaims.util.ExceptionUtil;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -22,15 +23,20 @@ import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,6 +44,9 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ClaimLifecycleListener implements Listener {
+
+    private static final int STARTUP_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_SECONDS = 3;
 
     private final Map<String, Long2ObjectMap<Set<RawClaim>>> tempChunksHolder
             = new ConcurrentHashMap<>();
@@ -128,25 +137,65 @@ public class ClaimLifecycleListener implements Listener {
             return;
         }
 
+        Storage storage = storageHolder.get();
+        List<String> failedWorlds = new ArrayList<>();
+
         for (World world : Bukkit.getWorlds()) {
             String worldName = world.getName();
 
-            Storage storage = storageHolder.get();
-
             long start = System.currentTimeMillis();
-            storage.claims().getAllClaims(worldName).thenAccept(holder -> {
-                        tempChunksHolder.put(worldName, holder.chunks());
+            RawClaim.CacheHolder holder = loadWorldClaims(storage, worldName);
 
-                        for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
-                            tempPlayersHolder.computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
-                                    .addAll(playerEntry.getValue());
-                        }
-                    }
-            ).join();
+            if (holder == null) {
+                failedWorlds.add(worldName);
+                continue;
+            }
+
+            tempChunksHolder.put(worldName, holder.chunks());
+
+            for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
+                tempPlayersHolder.computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
+                        .addAll(playerEntry.getValue());
+            }
+
             long end = System.currentTimeMillis() - start;
 
-            Logger.log("Loaded " + tempChunksHolder.get(worldName).size() + " chunks for world '" + worldName + "' in " + end + "ms");
+            Logger.log("Loaded " + holder.chunks().size() + " chunks for world '" + worldName + "' in " + end + "ms");
         }
+
+        if (!failedWorlds.isEmpty()) {
+            Logger.error("Couldn't load the claims of world(s) {}. Shutting down the server so they aren't left unprotected.", String.join(", ", failedWorlds));
+            Bukkit.shutdown();
+        }
+    }
+
+    @Nullable
+    private RawClaim.CacheHolder loadWorldClaims(@NotNull Storage storage, @NotNull String worldName) {
+        for (int attempt = 1; attempt <= STARTUP_ATTEMPTS; attempt++) {
+            try {
+                return storage.claims().getAllClaims(worldName).join();
+            } catch (CompletionException | CancellationException ex) {
+                if (attempt == STARTUP_ATTEMPTS) {
+                    Logger.error("Couldn't load the claims of world '" + worldName + "'", ex);
+
+                    return null;
+                }
+
+                Logger.warning("Couldn't load the claims of world '{}' (attempt {}/{}): {}. Retrying in {}s...",
+                        worldName, attempt, STARTUP_ATTEMPTS, ExceptionUtil.rootMessage(ex), RETRY_DELAY_SECONDS);
+
+                try {
+                    TimeUnit.SECONDS.sleep(RETRY_DELAY_SECONDS);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    Logger.error("Couldn't load the claims of world '" + worldName + "'", ex);
+
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 
     @EventHandler
