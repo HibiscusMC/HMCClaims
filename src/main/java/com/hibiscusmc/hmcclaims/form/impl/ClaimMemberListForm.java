@@ -82,6 +82,11 @@ public class ClaimMemberListForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.canOpen(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         render(player, metadata);
     }
 
@@ -294,6 +299,12 @@ public class ClaimMemberListForm implements BaseForm {
 
     private void addMember(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
+
+        if (!access.actor(player, claim).map(member -> member.hasPermission(Permission.MANAGE_MEMBERS)).orElse(false)) {
+            text.send(player, messagesHolder.get().commands().noPermission());
+            return;
+        }
+
         Runnable reopen = () -> render(player, metadata);
 
         inputs.promptPlayer(

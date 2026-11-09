@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -454,6 +455,22 @@ public class ClaimManager {
     @Contract(pure = true)
     public Set<Claim> getPlayerClaims(@NotNull UUID uuid) {
         return playerClaims.getOrDefault(uuid, Collections.emptySet());
+    }
+
+    /**
+     * The claims the player owns, followed by the ones they co-own.
+     */
+    @NotNull
+    public Set<Claim> getManagedClaims(@NotNull UUID uuid) {
+        Set<Claim> managed = new LinkedHashSet<>(getPlayerClaims(uuid));
+
+        for (Claim claim : claims.values()) {
+            if (claim.getMember(uuid).map(ClaimMember::isCoOwner).orElse(false)) {
+                managed.add(claim);
+            }
+        }
+
+        return managed;
     }
 
     /**

@@ -7,6 +7,7 @@ import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimRolesFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.FormTemplate;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
@@ -55,6 +56,8 @@ public class ClaimRolesForm implements BaseForm {
     private SchedulerUtil scheduler;
     @Inject
     private TextUtil text;
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
 
     private ClaimRolesFormConfig config;
 
@@ -70,6 +73,11 @@ public class ClaimRolesForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.canOpen(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         render(player, metadata);
     }
 

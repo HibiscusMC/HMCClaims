@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.command.argument.Member;
 import com.hibiscusmc.hmcclaims.command.argument.PlayerName;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -67,7 +68,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!access.isOwner(sender, claim)) {
+        if (!access.canOpen(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -108,8 +109,13 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!access.isOwner(sender, claim)) {
+        if (!access.canOpen(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
+            return;
+        }
+
+        if (!access.actor(sender, claim).map(member -> member.hasPermission(Permission.MANAGE_MEMBERS)).orElse(false)) {
+            text.send(sender, messages.commands().noPermission());
             return;
         }
 
@@ -152,7 +158,7 @@ public class ClaimCommand implements CommandClass {
             return;
         }
 
-        if (!access.isOwner(sender, claim)) {
+        if (!access.canOpen(sender, claim)) {
             text.send(sender, messages.commands().notYourClaim());
             return;
         }
@@ -164,6 +170,11 @@ public class ClaimCommand implements CommandClass {
 
         if (member.isOwner()) {
             text.send(sender, messages.claims().cantRemoveOwner());
+            return;
+        }
+
+        if (!access.actor(sender, claim).map(actor -> actor.hasPermission(Permission.MANAGE_MEMBERS) && actor.canManage(member)).orElse(false)) {
+            text.send(sender, messages.commands().noPermission());
             return;
         }
 

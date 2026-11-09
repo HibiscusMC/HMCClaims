@@ -1,9 +1,11 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.config.ClaimSettings;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimSettingsFormConfig;
 import com.hibiscusmc.hmcclaims.form.BaseForm;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
@@ -17,6 +19,7 @@ import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import team.hypox.config.core.ConfigHolder;
@@ -46,6 +49,15 @@ public class ClaimSettingsForm implements BaseForm {
     @Inject
     private PlaceholderUtil placeholders;
 
+    @Inject
+    private ClaimAccess access;
+
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private TextUtil text;
+
     private ClaimSettingsFormConfig config;
 
     @Override
@@ -60,6 +72,11 @@ public class ClaimSettingsForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.isOwner(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         List<ClaimSettingsFormConfig.SettingCategory> categories =
                 config.categories(claimSettingsHolder.get());
 

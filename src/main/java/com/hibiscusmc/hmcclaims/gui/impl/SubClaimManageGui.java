@@ -53,6 +53,11 @@ public class SubClaimManageGui extends ClaimManageGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
             InventoryStructure invStructure = build(player, claim, metadata);
@@ -105,6 +110,13 @@ public class SubClaimManageGui extends ClaimManageGui {
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(processed.get() ? inheritPermissionsSuccessIcon : inheritPermissionsIcon.item(), p)))
                 .addClickHandler((it, click) -> {
+                    Player player = click.player();
+
+                    if (!access.isOwner(player, claim)) {
+                        text.send(player, messagesHolder.get().commands().notYourClaim());
+                        return;
+                    }
+
                     if (processed.getAndSet(true)) {
                         return;
                     }

@@ -65,6 +65,9 @@ public class ClaimRolesGui extends ClaimListGui {
     @Inject
     private SchedulerUtil scheduler;
 
+    @Inject
+    private TextUtil text;
+
     private final List<Integer> slots = new ArrayList<>();
     private GuiTemplate.GuiTitle title;
     private int rows = 1;
@@ -124,6 +127,11 @@ public class ClaimRolesGui extends ClaimListGui {
     @Override
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();

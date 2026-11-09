@@ -8,6 +8,7 @@ import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberRoleConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
@@ -65,6 +66,12 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
 
     @Inject
     private SchedulerUtil scheduler;
+
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
+
+    @Inject
+    private TextUtil text;
 
     private final IntSet slots = new IntArraySet();
     private GuiTemplate.GuiTitle title;
@@ -139,6 +146,11 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
         ClaimMember member = metadata.member();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             PagedGui.Builder<Item> builder = PagedGui.itemsBuilder();

@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -61,6 +62,12 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
     @Inject
     private SchedulerUtil scheduler;
+
+    @Inject
+    private ClaimAccess access;
+
+    @Inject
+    private TextUtil text;
 
     private GuiTemplate.GuiTitle title;
     private int rows = 1;
@@ -128,6 +135,11 @@ public class ClaimRoleManageGui extends ClaimListGui {
         Claim claim = metadata.claim();
         ClaimRole role = metadata.role();
         int currentPage = metadata.currentPage();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();

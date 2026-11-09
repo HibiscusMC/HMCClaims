@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimManageFormConfig;
@@ -66,6 +67,8 @@ public class ClaimManageForm implements BaseForm {
     protected SchedulerUtil scheduler;
     @Inject
     protected TextUtil text;
+    @Inject
+    protected ClaimAccess access;
 
     private MainClaimManageFormConfig config;
 
@@ -81,6 +84,11 @@ public class ClaimManageForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.canOpen(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         render(player, metadata, config, ClaimManageForm.class);
     }
 
@@ -123,30 +131,30 @@ public class ClaimManageForm implements BaseForm {
 
         switch (section) {
             case "rename" -> button(builder, context, config.renameButton(), player, data,
-                    () -> rename(player, metadata, context));
+                    ownerOnly(player, claim, () -> rename(player, metadata, context)));
 
             case "lock" -> {
                 FormTemplate.Button button = claim.locked() ? config.unlockButton() : config.lockButton();
 
-                button(builder, context, button, player, data, () -> {
+                button(builder, context, button, player, data, ownerOnly(player, claim, () -> {
                     claim.locked(!claim.locked());
                     storageHolder.get().claims().saveClaimMeta(claim);
 
                     context.refresh();
-                });
+                }));
             }
 
             case "banned" -> button(builder, context, config.bannedButton(), player, data,
                     () -> context.navigateTo(ClaimBannedListForm.class));
 
-            case "resize" -> button(builder, context, config.resizeButton(), player, data, () -> {
+            case "resize" -> button(builder, context, config.resizeButton(), player, data, ownerOnly(player, claim, () -> {
                 formService.clear(player);
 
                 selectionManager.beginResize(player, claim);
-            });
+            }));
 
             case "delete" -> button(builder, context, config.deleteButton(), player, data,
-                    () -> context.navigateTo(ClaimDeleteForm.class));
+                    ownerOnly(player, claim, () -> context.navigateTo(ClaimDeleteForm.class)));
 
             case "transfer" -> {
                 if (!(config instanceof MainClaimManageFormConfig main)) {
@@ -154,7 +162,7 @@ public class ClaimManageForm implements BaseForm {
                 }
 
                 button(builder, context, main.transferButton(), player, data,
-                        () -> transfer(player, metadata, context));
+                        ownerOnly(player, claim, () -> transfer(player, metadata, context)));
             }
 
             default -> {
@@ -174,6 +182,17 @@ public class ClaimManageForm implements BaseForm {
                 context.image(button.image(), null),
                 action
         );
+    }
+
+    protected Runnable ownerOnly(@NotNull Player player, @NotNull Claim claim, @NotNull Runnable action) {
+        return () -> {
+            if (!access.isOwner(player, claim)) {
+                text.send(player, messagesHolder.get().commands().notYourClaim());
+                return;
+            }
+
+            action.run();
+        };
     }
 
     protected void rename(@NotNull Player player, @NotNull GuiMetadata metadata, @NotNull SharedContext context) {

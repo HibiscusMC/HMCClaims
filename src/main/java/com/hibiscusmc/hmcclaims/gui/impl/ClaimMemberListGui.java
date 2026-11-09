@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimMemberListConfig;
@@ -144,6 +145,11 @@ public class ClaimMemberListGui extends ClaimListGui {
     @Override
     public void open(@NotNull Player player, @NotNull GuiMetadata guiMetadata) {
         Claim claim = guiMetadata.claim();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();
@@ -463,6 +469,11 @@ public class ClaimMemberListGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(addMemberIcon.item(), player))
                 .addClickHandler(click -> {
+                    if (!access.actor(player, claim).map(member -> member.hasPermission(Permission.MANAGE_MEMBERS)).orElse(false)) {
+                        text.send(player, messagesHolder.get().commands().noPermission());
+                        return;
+                    }
+
                     Input<?> currentInput = inputManager.fetch(player);
 
                     if (currentInput != null) {

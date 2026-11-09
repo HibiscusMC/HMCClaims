@@ -34,6 +34,15 @@ public class ClaimMember {
             .comparing(ClaimMember::isOwner, Comparator.reverseOrder())
             .thenComparing(member -> member.joinedTimestamp());
 
+    private final static List<Permission> MANAGEMENT_PERMISSIONS = List.of(
+            Permission.MANAGE_MEMBERS,
+            Permission.BAN_MEMBERS,
+            Permission.MANAGE_MEMBER_ROLES,
+            Permission.MANAGE_MEMBER_PERMISSIONS,
+            Permission.MANAGE_ROLES,
+            Permission.MANAGE_ROLE_PERMISSIONS
+    );
+
     private final UUID uuid;
     private final Claim claim;
 
@@ -85,6 +94,17 @@ public class ClaimMember {
      */
     public boolean isOwner() {
         return claim.owner().equals(uuid);
+    }
+
+    /**
+     * Whether this member isn't the owner but can help run the claim through a management permission.
+     */
+    public boolean isCoOwner() {
+        if (isOwner() || banned) {
+            return false;
+        }
+
+        return MANAGEMENT_PERMISSIONS.stream().anyMatch(this::hasPermission);
     }
 
     /**

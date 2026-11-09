@@ -2,6 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -77,6 +78,8 @@ public class ClaimManageGui extends ClaimListGui {
     protected SchedulerUtil scheduler;
     @Inject
     protected TextUtil text;
+    @Inject
+    protected ClaimAccess access;
 
     protected GuiTemplate.GuiTitle title;
     protected int rows = 1;
@@ -138,6 +141,11 @@ public class ClaimManageGui extends ClaimListGui {
     @Override
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();
@@ -246,10 +254,15 @@ public class ClaimManageGui extends ClaimListGui {
             gui.addIngredient('&', buildResizeIcon(player, claim));
             gui.addIngredient('*', Item.builder()
                     .setItemProvider(TextUtil.parseItemPlaceholders(deleteIcon.item(), player))
-                    .addClickHandler(click ->
-                            guis.get(ClaimDeleteGui.class)
-                                    .open(player, metadata)
-                    )
+                    .addClickHandler(click -> {
+                        if (!access.isOwner(player, claim)) {
+                            text.send(player, messagesHolder.get().commands().notYourClaim());
+                            return;
+                        }
+
+                        guis.get(ClaimDeleteGui.class)
+                                .open(player, metadata);
+                    })
                     .build());
 
             if (isValidIcon(backIcon)) {
@@ -266,6 +279,11 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(transferIcon.item(), player))
                 .addClickHandler(click -> {
+                    if (!access.isOwner(player, claim)) {
+                        text.send(player, messagesHolder.get().commands().notYourClaim());
+                        return;
+                    }
+
                     Input<?> currentInput = inputManager.fetch(player);
 
                     if (currentInput != null) {
@@ -351,23 +369,30 @@ public class ClaimManageGui extends ClaimListGui {
     private Item buildRenameIcon(@NotNull Player player, @NotNull Claim claim, @NotNull GuiMetadata metadata) {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(renameIcon.item(), player))
-                .addClickHandler(click -> new SingleInputDialog()
-                        .create(
-                                messagesHolder.get().dialogs().renameClaim(),
-                                Map.of("claim_name", claim.name()), Map.of(),
-                                claim.name(), 40
-                        )
-                        .onSubmit(view -> {
-                            String newName = view.getText("input");
-                            if (newName == null) {
-                                return;
-                            }
+                .addClickHandler(click -> {
+                    if (!access.isOwner(player, claim)) {
+                        text.send(player, messagesHolder.get().commands().notYourClaim());
+                        return;
+                    }
 
-                            claim.rename(newName);
+                    new SingleInputDialog()
+                            .create(
+                                    messagesHolder.get().dialogs().renameClaim(),
+                                    Map.of("claim_name", claim.name()), Map.of(),
+                                    claim.name(), 40
+                            )
+                            .onSubmit(view -> {
+                                String newName = view.getText("input");
+                                if (newName == null) {
+                                    return;
+                                }
 
-                            open(player, metadata);
-                        })
-                        .show(player))
+                                claim.rename(newName);
+
+                                open(player, metadata);
+                            })
+                            .show(player);
+                })
                 .build();
     }
 
@@ -375,6 +400,11 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(claim.locked() ? unlockIcon : lockIcon.item(), player)))
                 .addClickHandler((it, click) -> {
+                    if (!access.isOwner(player, claim)) {
+                        text.send(player, messagesHolder.get().commands().notYourClaim());
+                        return;
+                    }
+
                     claim.locked(!claim.locked());
                     it.notifyWindows();
                 })
@@ -385,6 +415,11 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(resizeIcon.item(), player))
                 .addClickHandler(click -> {
+                    if (!access.isOwner(player, claim)) {
+                        text.send(player, messagesHolder.get().commands().notYourClaim());
+                        return;
+                    }
+
                     player.closeInventory();
 
                     selectionManager.beginResize(player, claim);

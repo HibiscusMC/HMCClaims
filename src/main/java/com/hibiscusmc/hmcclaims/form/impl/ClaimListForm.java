@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -60,6 +61,8 @@ public class ClaimListForm implements BaseForm {
 
     @Inject
     private ClaimManager claimManager;
+    @Inject
+    private ClaimAccess access;
 
     @Inject
     private PlaceholderUtil placeholders;
@@ -83,7 +86,7 @@ public class ClaimListForm implements BaseForm {
     @Override
     public void send(@NotNull Player player) {
         if (settingsHolder.get().guis().claimsGui() == Settings.Guis.ClaimsGui.FIRST_CLAIM) {
-            Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
+            Set<Claim> claims = claimManager.getManagedClaims(player.getUniqueId());
 
             if (claims.isEmpty()) {
                 text.send(player, messagesHolder.get().claims().dontHaveAny());
@@ -102,7 +105,7 @@ public class ClaimListForm implements BaseForm {
         scheduler.scheduleAsync(() -> {
             State state = formService.state(player, STATE_KEY, State::new);
 
-            List<Claim> all = claimManager.getPlayerClaims(player.getUniqueId()).stream()
+            List<Claim> all = claimManager.getManagedClaims(player.getUniqueId()).stream()
                     .sorted(Comparator.comparing((Claim claim) -> claim.main() != null)
                             .thenComparing(Claim::name, String.CASE_INSENSITIVE_ORDER))
                     .toList();
@@ -215,6 +218,11 @@ public class ClaimListForm implements BaseForm {
     }
 
     private void rename(@NotNull Player player, @NotNull Claim claim) {
+        if (!access.isOwner(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         inputs.prompt(
                 player, inputs.config().renameClaim(), Map.of("claim_name", claim.name()), claim.name(),
                 newName -> {

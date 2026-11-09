@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.gui.ClaimBannedListConfig;
 import com.hibiscusmc.hmcclaims.config.gui.GuiTemplate;
@@ -137,6 +138,16 @@ public class ClaimBannedListGui extends ClaimListGui {
     @Override
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
+        if (!access.actor(player, claim).map(member -> member.hasPermission(Permission.BAN_MEMBERS)).orElse(false)) {
+            text.send(player, messagesHolder.get().commands().noPermission());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             PagedGui.Builder<Item> pagedGui = PagedGui.itemsBuilder();

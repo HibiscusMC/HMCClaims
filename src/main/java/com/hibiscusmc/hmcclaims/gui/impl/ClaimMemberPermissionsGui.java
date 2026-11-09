@@ -69,6 +69,9 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
     @Inject
     private SchedulerUtil scheduler;
 
+    @Inject
+    private TextUtil text;
+
     private GuiTemplate.GuiTitle title;
     private int rows = 1;
 
@@ -145,6 +148,11 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         Claim claim = metadata.claim();
         ClaimMember member = metadata.member();
         int currentPage = metadata.currentPage();
+
+        if (!access.canOpen(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> builder = Gui.builder();

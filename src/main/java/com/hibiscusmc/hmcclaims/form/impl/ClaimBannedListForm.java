@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimBannedListFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.FormTemplate;
@@ -79,6 +80,16 @@ public class ClaimBannedListForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.canOpen(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
+        if (!access.actor(player, metadata.claim()).map(member -> member.hasPermission(Permission.BAN_MEMBERS)).orElse(false)) {
+            text.send(player, messagesHolder.get().commands().noPermission());
+            return;
+        }
+
         render(player, metadata);
     }
 

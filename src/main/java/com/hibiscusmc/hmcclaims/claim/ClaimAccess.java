@@ -54,4 +54,12 @@ public class ClaimAccess {
     public boolean isOwner(@NotNull Player player, @NotNull Claim claim) {
         return claim.owner().equals(player.getUniqueId()) || isBypassing(player);
     }
+
+    /**
+     * Whether the player may open the claim's menus: owner, co-owner or bypassing.
+     */
+    public boolean canOpen(@NotNull Player player, @NotNull Claim claim) {
+        return isOwner(player, claim)
+                || claim.getMember(player.getUniqueId()).map(ClaimMember::isCoOwner).orElse(false);
+    }
 }

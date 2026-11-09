@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
+import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Permissions;
 import com.hibiscusmc.hmcclaims.config.form.ClaimMemberPermissionsFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.DialogsFormConfig;
@@ -22,6 +23,7 @@ import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
+import com.hibiscusmc.hmcclaims.util.TextUtil;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -57,6 +59,10 @@ public class ClaimMemberPermissionsForm implements BaseForm {
     private FormRegistry forms;
     @Inject
     private FormService formService;
+    @Inject
+    private ConfigHolder<Messages> messagesHolder;
+    @Inject
+    private TextUtil text;
 
     private ClaimMemberPermissionsFormConfig config;
 
@@ -72,6 +78,11 @@ public class ClaimMemberPermissionsForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.canOpen(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         render(player, metadata);
     }
 

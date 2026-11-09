@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimDeleteFormConfig;
@@ -44,6 +45,8 @@ public class ClaimDeleteForm implements BaseForm {
     private PlaceholderUtil placeholders;
     @Inject
     private TextUtil text;
+    @Inject
+    private ClaimAccess access;
 
     private ClaimDeleteFormConfig config;
 
@@ -60,6 +63,12 @@ public class ClaimDeleteForm implements BaseForm {
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
+
+        if (!access.isOwner(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         Map<String, String> data = placeholders.claimInfo(claim);
 
         Runnable cancel = () -> {

@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -80,6 +81,9 @@ public class ClaimListGui implements BaseGui {
     private ClaimManager claimManager;
 
     @Inject
+    private ClaimAccess access;
+
+    @Inject
     private TextUtil text;
 
     private final IntList slots = new IntArrayList();
@@ -138,7 +142,7 @@ public class ClaimListGui implements BaseGui {
     @Override
     public void open(@NotNull Player player) {
         if (settingsHolder.get().guis().claimsGui() == Settings.Guis.ClaimsGui.FIRST_CLAIM) {
-            Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
+            Set<Claim> claims = claimManager.getManagedClaims(player.getUniqueId());
             if (claims.isEmpty()) {
                 player.closeInventory();
                 text.send(player, messagesHolder.get().claims().dontHaveAny());
@@ -234,7 +238,7 @@ public class ClaimListGui implements BaseGui {
 
         AtomicReference<PagedGui<Item>> guiReference = new AtomicReference<>(null);
 
-        Set<Claim> claims = claimManager.getPlayerClaims(player.getUniqueId());
+        Set<Claim> claims = claimManager.getManagedClaims(player.getUniqueId());
         Map<Claim, Item> parsedClaims = buildClaims(guiReference, claims, metadata, guiMetadata);
 
         Runnable updateClaims = () -> updateClaims(guiReference.get(), parsedClaims, metadata);
@@ -411,6 +415,11 @@ public class ClaimListGui implements BaseGui {
                         Player player = click.player();
 
                         if (click.clickType() == ClickType.RIGHT) {
+                            if (!access.isOwner(player, claim)) {
+                                text.send(player, messagesHolder.get().commands().notYourClaim());
+                                return;
+                            }
+
                             new SingleInputDialog()
                                     .create(
                                             messagesHolder.get().dialogs().renameClaim(),

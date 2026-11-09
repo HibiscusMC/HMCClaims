@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.config.ClaimSettings;
@@ -57,6 +58,12 @@ public class ClaimSettingsGui extends ClaimListGui {
 
     @Inject
     private SchedulerUtil scheduler;
+
+    @Inject
+    private ClaimAccess access;
+
+    @Inject
+    private TextUtil text;
 
     private GuiTemplate.GuiTitle title;
     private int rows = 1;
@@ -117,6 +124,11 @@ public class ClaimSettingsGui extends ClaimListGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
         int currentPage = metadata.currentPage();
+
+        if (!access.isOwner(player, claim)) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
 
         scheduler.scheduleAsync(() -> {
             Gui.Builder<?, ?> gui = Gui.builder();

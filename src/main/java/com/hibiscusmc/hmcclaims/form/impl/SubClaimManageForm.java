@@ -38,6 +38,11 @@ public class SubClaimManageForm extends ClaimManageForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
+        if (!access.canOpen(player, metadata.claim())) {
+            text.send(player, messagesHolder.get().commands().notYourClaim());
+            return;
+        }
+
         render(player, metadata, config, SubClaimManageForm.class);
     }
 
@@ -52,7 +57,7 @@ public class SubClaimManageForm extends ClaimManageForm {
         }
 
         button(builder, context, sub.inheritButton(), player, data,
-                () -> confirmInherit(player, metadata, sub, context, data));
+                ownerOnly(player, metadata.claim(), () -> confirmInherit(player, metadata, sub, context, data)));
 
         return true;
     }
