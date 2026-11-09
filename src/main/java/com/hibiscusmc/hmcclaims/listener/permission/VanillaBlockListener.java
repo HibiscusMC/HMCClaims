@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.util.EntityUtil;
 import com.hibiscusmc.hmcclaims.util.PlantUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Material;
@@ -14,6 +15,7 @@ import org.bukkit.block.Container;
 import org.bukkit.block.data.type.Lectern;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,6 +24,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -35,7 +38,8 @@ import java.util.List;
 
 /**
  * Place Blocks, Break Blocks, Use Containers, Doors, Trapdoors, Lecterns,
- * Redstone, Player Interact, Ignite, Harvest, Plant, Trample Soil
+ * Redstone, Player Interact, Ignite, TNT Priming, Projectile Block Interaction, Harvest, Plant,
+ * Trample Soil
  */
 public class VanillaBlockListener implements Listener {
 
@@ -301,7 +305,10 @@ public class VanillaBlockListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onIgniteBlock(BlockIgniteEvent event) {
-        Player player = event.getPlayer();
+        Player player = event.getPlayer() != null
+                ? event.getPlayer()
+                : EntityUtil.responsiblePlayer(event.getIgnitingEntity());
+
         if (player == null) {
             return;
         }
@@ -318,6 +325,80 @@ public class VanillaBlockListener implements Listener {
         }
 
         text.sendNotification(player, messagesHolder.get().claims().permissions().igniteBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onTntPrime(TNTPrimeEvent event) {
+        Player player = EntityUtil.responsiblePlayer(event.getPrimingEntity());
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getBlock().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.IGNITE_BLOCK)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().igniteBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onProjectileChangeBlock(EntityChangeBlockEvent event) {
+        if (!(event.getEntity() instanceof Projectile)) {
+            return;
+        }
+
+        Player player = EntityUtil.responsiblePlayer(event.getEntity());
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getBlock().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.BREAK_BLOCK)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().breakBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onProjectileInteract(EntityInteractEvent event) {
+        if (!(event.getEntity() instanceof Projectile)) {
+            return;
+        }
+
+        Player player = EntityUtil.responsiblePlayer(event.getEntity());
+        if (player == null) {
+            return;
+        }
+
+        Claim claim = claimManager.getClaimAt(event.getBlock().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.USE_REDSTONE)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useRedstone());
         event.setCancelled(true);
     }
 

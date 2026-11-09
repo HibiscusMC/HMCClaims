@@ -5,9 +5,11 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.util.EntityUtil;
 import com.hibiscusmc.hmcclaims.util.PlantUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.entity.Entity;
@@ -19,8 +21,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityPlaceEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -34,7 +39,7 @@ import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
 /**
- * Entity Interaction, Container Vehicles, Item Use, Item Pickup and Drop, Wind Burst, Vehicle Use
+ * Entity Interaction, Container Vehicles, Item Use, Item Pickup and Drop, Wind Burst, Wind Charge Explosions, Buckets, Vehicle Use
  */
 public class ItemPermissionListener implements Listener {
 
@@ -291,6 +296,65 @@ public class ItemPermissionListener implements Listener {
 
         text.sendNotification(player, messagesHolder.get().claims().permissions().useVehicle());
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onWindChargeExplode(EntityExplodeEvent event) {
+        if (!(event.getEntity() instanceof AbstractWindCharge charge)) {
+            return;
+        }
+
+        Player player = EntityUtil.responsiblePlayer(charge);
+
+        event.blockList().removeIf(block -> !canWindCharge(player, block));
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(event.getBlock().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.USE_ITEM)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useItem());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onBucketFill(PlayerBucketFillEvent event) {
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(event.getBlock().getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (claim.hasPermission(player.getUniqueId(), Permission.USE_ITEM)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().useItem());
+        event.setCancelled(true);
+    }
+
+    private boolean canWindCharge(Player player, Block block) {
+        Claim claim = claimManager.getClaimAt(block.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return true;
+        }
+
+        return player != null
+                && claim.hasPermission(player.getUniqueId(), Permission.USE_WIND_CHARGE);
     }
 
     private static boolean isHandledBySpecificPermission(Material type) {
