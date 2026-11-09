@@ -56,6 +56,7 @@ public class ClaimAccessChangeEvent extends Event {
         ROLE_PERMISSIONS_CHANGED,
         ROLE_DELETED,
         OWNER_TRANSFERRED,
-        PERMISSIONS_INHERITED
+        PERMISSIONS_INHERITED,
+        CLAIM_LOCKED
     }
 }

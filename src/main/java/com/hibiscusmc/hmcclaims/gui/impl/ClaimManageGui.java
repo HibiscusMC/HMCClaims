@@ -403,6 +403,10 @@ public class ClaimManageGui extends ClaimListGui {
                     claim.locked(!claim.locked());
                     storageHolder.get().claims().saveClaimMeta(claim);
 
+                    if (claim.locked()) {
+                        EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.CLAIM_LOCKED, null));
+                    }
+
                     it.notifyWindows();
                 })
                 .build();

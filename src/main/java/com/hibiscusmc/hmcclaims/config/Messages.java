@@ -79,6 +79,10 @@ public class Messages {
 
         private String memberBanned = "<prefix><green>Player <white><player_head> <name></white> was banned from the claim <white><claim></white>!";
 
+        private String ejectedBanned = "<prefix><red>You were banned from <white><claim></white> and sent out of it.";
+
+        private String ejectedLocked = "<prefix><red>The claim <white><claim></white> is locked, so you were sent out of it.";
+
         private Permissions permissions = new Permissions();
 
         private Settings settings = new Settings();

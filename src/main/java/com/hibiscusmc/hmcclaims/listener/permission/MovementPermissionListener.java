@@ -3,7 +3,6 @@ package com.hibiscusmc.hmcclaims.listener.permission;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
-import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -153,26 +152,16 @@ public class MovementPermissionListener implements Listener {
     }
 
     private @Nullable String entryDenial(@NotNull Player player, @NotNull Claim claim) {
-        if (access.isBypassing(player)) {
+        ClaimAccess.EntryDenial denial = access.entryDenial(player, claim);
+
+        if (denial == null) {
             return null;
         }
 
-        ClaimMember member = claim.getMember(player.getUniqueId())
-                .orElse(null);
-        boolean banned = member != null && member.banned();
-        boolean hasPermission = member != null ?
-                member.hasPermission(Permission.IGNORE_LOCKED) :
-                claim.roleRegistry().everyoneRole().hasPermission(Permission.IGNORE_LOCKED);
-
-        if (!banned && hasPermission) {
-            return null;
-        }
-
-        if (banned) {
-            return messagesHolder.get().claims().permissions().memberBanned();
-        }
-
-        return claim.locked() ? messagesHolder.get().claims().permissions().ignoreLocked() : null;
+        return switch (denial) {
+            case BANNED -> messagesHolder.get().claims().permissions().memberBanned();
+            case LOCKED -> messagesHolder.get().claims().permissions().ignoreLocked();
+        };
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

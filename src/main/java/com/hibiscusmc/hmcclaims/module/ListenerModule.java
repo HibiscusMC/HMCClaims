@@ -1,5 +1,6 @@
 package com.hibiscusmc.hmcclaims.module;
 
+import com.hibiscusmc.hmcclaims.listener.ClaimAccessListener;
 import com.hibiscusmc.hmcclaims.listener.ClaimLifecycleListener;
 import com.hibiscusmc.hmcclaims.listener.IntegrationListener;
 import com.hibiscusmc.hmcclaims.listener.PlayerDataListener;
@@ -26,6 +27,7 @@ public class ListenerModule extends AbstractModule {
                 .to(IntegrationListener.class)
                 .to(PlayerInputListener.class)
                 .to(ClaimLifecycleListener.class)
+                .to(ClaimAccessListener.class)
 
                 /* Permission Listeners */
                 .to(VanillaBlockListener.class)

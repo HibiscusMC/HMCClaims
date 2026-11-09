@@ -116,6 +116,26 @@ public class Settings {
 
     private Claiming claiming = new Claiming();
 
+    @Comment("Where players are sent when they're banned or locked out of the claim they're in. Leave the world empty to use the spawn of the world they're in.")
+    private EjectLocation ejectLocation = new EjectLocation();
+
+    @Getter
+    @Section
+    public static class EjectLocation {
+
+        private String world = "";
+
+        private double x = 0;
+
+        private double y = 64;
+
+        private double z = 0;
+
+        private float yaw = 0;
+
+        private float pitch = 0;
+    }
+
     @Getter
     @Section
     public static class Claiming {
