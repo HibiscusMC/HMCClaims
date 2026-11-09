@@ -6,7 +6,9 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
+import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -17,12 +19,20 @@ import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
+import team.unnamed.inject.Singleton;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Fly, Elytra, Locked Claim Entry
  */
+@Singleton
 public class MovementPermissionListener implements Listener {
 
     @Inject
@@ -36,6 +46,14 @@ public class MovementPermissionListener implements Listener {
 
     @Inject
     private TextUtil text;
+
+    private final Map<UUID, Location> lastRidingLocations
+            = new HashMap<>();
+
+    @Inject
+    public MovementPermissionListener(SchedulerUtil scheduler) {
+        scheduler.scheduleTimer(this::checkPassengers, 5L);
+    }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onLockedClaimEnter(PlayerMoveEvent event) {
@@ -58,28 +76,16 @@ public class MovementPermissionListener implements Listener {
         }
 
         Player player = event.getPlayer();
+        String denial = entryDenial(player, claim);
 
-        if (access.isBypassing(player)) {
+        if (denial == null) {
             return;
         }
 
-        ClaimMember member = claim.getMember(player.getUniqueId())
-                .orElse(null);
-        boolean banned = member != null && member.banned();
-        boolean hasPermission = member != null ?
-                member.hasPermission(Permission.IGNORE_LOCKED) :
-                claim.roleRegistry().everyoneRole().hasPermission(Permission.IGNORE_LOCKED);
+        text.sendNotification(player, denial);
 
-        if (!banned && hasPermission) {
-            return;
-        }
-
-        if (banned) {
-            text.sendNotification(player, messagesHolder.get().claims().permissions().memberBanned());
-        } else if (claim.locked()) {
-            text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
-        } else {
-            return;
+        if (player.isInsideVehicle()) {
+            player.leaveVehicle();
         }
 
         event.setTo(from);
@@ -96,9 +102,59 @@ public class MovementPermissionListener implements Listener {
         }
 
         Player player = event.getPlayer();
+        String denial = entryDenial(player, claim);
 
-        if (access.isBypassing(player)) {
+        if (denial == null) {
             return;
+        }
+
+        text.sendNotification(player, denial);
+        event.setCancelled(true);
+    }
+
+    // Passengers that aren't steering get no PlayerMoveEvent, so riders are checked on a timer instead.
+    private void checkPassengers() {
+        lastRidingLocations.keySet().removeIf(playerId -> {
+            Player player = Bukkit.getPlayer(playerId);
+
+            return player == null || !player.isInsideVehicle();
+        });
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!player.isInsideVehicle()) {
+                continue;
+            }
+
+            Location location = player.getLocation();
+            Location last = lastRidingLocations.put(player.getUniqueId(), location);
+
+            if (last == null || !location.getWorld().equals(last.getWorld())) {
+                continue;
+            }
+
+            Claim claim = claimManager.getClaimAt(location).orElse(null);
+
+            if (claim == null || claim.equals(claimManager.getClaimAt(last).orElse(null))) {
+                continue;
+            }
+
+            String denial = entryDenial(player, claim);
+
+            if (denial == null) {
+                continue;
+            }
+
+            text.sendNotification(player, denial);
+
+            lastRidingLocations.remove(player.getUniqueId());
+            player.leaveVehicle();
+            player.teleport(last, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        }
+    }
+
+    private @Nullable String entryDenial(@NotNull Player player, @NotNull Claim claim) {
+        if (access.isBypassing(player)) {
+            return null;
         }
 
         ClaimMember member = claim.getMember(player.getUniqueId())
@@ -109,18 +165,14 @@ public class MovementPermissionListener implements Listener {
                 claim.roleRegistry().everyoneRole().hasPermission(Permission.IGNORE_LOCKED);
 
         if (!banned && hasPermission) {
-            return;
+            return null;
         }
 
         if (banned) {
-            text.sendNotification(player, messagesHolder.get().claims().permissions().memberBanned());
-        } else if (claim.locked()) {
-            text.sendNotification(player, messagesHolder.get().claims().permissions().ignoreLocked());
-        } else {
-            return;
+            return messagesHolder.get().claims().permissions().memberBanned();
         }
 
-        event.setCancelled(true);
+        return claim.locked() ? messagesHolder.get().claims().permissions().ignoreLocked() : null;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
