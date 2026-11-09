@@ -118,11 +118,13 @@ public class TextUtil {
                     .orElse(null);
 
             if (user != null) {
-                if (System.currentTimeMillis() > (user.lastNotificationSent() + notificationCooldown)) {
+                long now = System.currentTimeMillis();
+
+                if (now < user.lastNotificationSent() + notificationCooldown) {
                     return;
                 }
 
-                user.lastNotificationSent(System.currentTimeMillis());
+                user.lastNotificationSent(now);
             }
         }
 
