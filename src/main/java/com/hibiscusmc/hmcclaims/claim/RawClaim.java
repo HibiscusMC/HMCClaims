@@ -3,7 +3,9 @@ package com.hibiscusmc.hmcclaims.claim;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
 import net.minecraft.server.players.NameAndId;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,6 +54,14 @@ public record RawClaim(
 
         Set<ClaimMember> members = ClaimSerializer.deserializeMembers(membersBytes, claim, claim.roleRegistry());
         members.forEach(claim::addMember);
+
+        if (claim.getMember(owner).isEmpty()) {
+            Logger.warning("Claim {} had no owner in its members, restoring {} as the owner", claimId, owner);
+            claim.addMember(new ClaimMember(
+                    owner, claim, ClaimSerializer.legacyName(owner),
+                    claim.roleRegistry().ownerRole(), new Object2BooleanArrayMap<>()
+            ));
+        }
 
         for (Map.Entry<Setting<?>, SettingHolder<?>> settingEntry : ClaimSerializer.deserializeSettings(settingsBytes).entrySet()) {
             claim.settings().put(settingEntry.getKey(), settingEntry.getValue());

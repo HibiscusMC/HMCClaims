@@ -22,6 +22,7 @@ import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -36,6 +37,7 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
@@ -114,9 +116,7 @@ public class PlayerSelectionListener implements Listener {
 
             for (Claim claim : claims) {
                 if (claims.size() == 1 || claim.main() != null) {
-                    String ownerName = claim.getMember(claim.owner())
-                            .map(ClaimMember::lastKnownName)
-                            .orElse("unknown");
+                    String ownerName = ownerName(claim);
 
                     text.send(player, messages.claims().ownedBy(), Map.of(
                             "name", claim.name(),
@@ -377,5 +377,19 @@ public class PlayerSelectionListener implements Listener {
             selectionManager.destroySelection(player);
             text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
         }
+    }
+
+    private String ownerName(@NotNull Claim claim) {
+        String stored = claim.getMember(claim.owner())
+                .map(ClaimMember::lastKnownName)
+                .orElse("");
+
+        if (!stored.isEmpty()) {
+            return stored;
+        }
+
+        String offlineName = Bukkit.getOfflinePlayer(claim.owner()).getName();
+
+        return offlineName != null ? offlineName : "unknown";
     }
 }

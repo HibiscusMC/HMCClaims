@@ -199,7 +199,7 @@ public class ClaimSerializer {
      * @return The name from the player data file, or an empty string if there is none.
      */
     @NotNull
-    private static String legacyName(@NotNull UUID playerId) {
+    static String legacyName(@NotNull UUID playerId) {
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
         String name = offlinePlayer.hasPlayedBefore() ? offlinePlayer.getName() : null;
 
