@@ -11,6 +11,8 @@ import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Ravager;
 import org.bukkit.entity.Silverfish;
 import org.bukkit.entity.Wither;
@@ -29,12 +31,18 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.projectiles.BlockProjectileSource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import team.unnamed.inject.Inject;
 
 /**
- * Pistons, Liquid Flow, Fire Spread, Dispensers, TNT Priming, Structure Growth, Mob Griefing and
- * Falling Blocks crossing into claims
+ * Pistons, Liquid Flow, Fire Spread, Dispensers and their Projectiles, TNT Priming, Structure Growth,
+ * Mob Griefing and Falling Blocks crossing into claims
  */
 public class BorderProtectionListener implements Listener {
 
@@ -163,6 +171,55 @@ public class BorderProtectionListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onDispensedProjectileHit(ProjectileHitEvent event) {
+        Projectile projectile = event.getEntity();
+        Location source = dispenserLocation(projectile);
+
+        if (source == null) {
+            return;
+        }
+
+        Location target = event.getHitEntity() != null ? event.getHitEntity().getLocation()
+                : event.getHitBlock() != null ? event.getHitBlock().getLocation()
+                : projectile.getLocation();
+
+        if (claimManager.canAffect(source, target)) {
+            return;
+        }
+
+        event.setCancelled(true);
+        projectile.remove();
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onDispensedProjectileDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Projectile projectile)) {
+            return;
+        }
+
+        Location source = dispenserLocation(projectile);
+
+        if (source != null && !claimManager.canAffect(source, event.getEntity().getLocation())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onDispensedPotionSplash(PotionSplashEvent event) {
+        Location source = dispenserLocation(event.getEntity());
+
+        if (source == null) {
+            return;
+        }
+
+        for (LivingEntity entity : event.getAffectedEntities()) {
+            if (!claimManager.canAffect(source, entity.getLocation())) {
+                event.setIntensity(entity, 0);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onStructureGrow(StructureGrowEvent event) {
         Location source = event.getLocation();
 
@@ -200,6 +257,12 @@ public class BorderProtectionListener implements Listener {
         if (claimManager.getClaimAt(event.getBlock().getLocation()).isPresent()) {
             event.setCancelled(true);
         }
+    }
+
+    private static @Nullable Location dispenserLocation(@NotNull Projectile projectile) {
+        return projectile.getShooter() instanceof BlockProjectileSource source
+                ? source.getBlock().getLocation()
+                : null;
     }
 
     private static boolean isGriefer(Entity entity) {
