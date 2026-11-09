@@ -25,7 +25,6 @@ public class ClaimResizeEvent extends Event {
     private final ClaimRegion newRegion;
 
     public ClaimResizeEvent(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimRegion oldRegion, @NotNull ClaimRegion newRegion) {
-        super(true);
         this.player = player;
         this.claim = claim;
         this.oldRegion = oldRegion;

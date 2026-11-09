@@ -28,7 +28,6 @@ public class PreClaimCreateEvent extends Event implements Cancellable {
     private final Claim mainClaim;
 
     public PreClaimCreateEvent(@NotNull Player player, @NotNull ClaimRegion region, @Nullable Claim mainClaim) {
-        super(true);
         this.player = player;
         this.region = region;
         this.mainClaim = mainClaim;

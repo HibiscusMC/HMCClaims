@@ -18,7 +18,6 @@ public class ClaimCreateEvent extends Event {
     private final Claim claim;
 
     public ClaimCreateEvent(@NotNull Player player, @NotNull Claim claim) {
-        super(true);
         this.player = player;
         this.claim = claim;
     }

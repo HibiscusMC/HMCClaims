@@ -23,7 +23,6 @@ public class PreClaimResizeEvent extends Event implements Cancellable {
     private final Claim claim;
 
     public PreClaimResizeEvent(@NotNull Player player, @NotNull Claim claim) {
-        super(true);
         this.player = player;
         this.claim = claim;
     }
