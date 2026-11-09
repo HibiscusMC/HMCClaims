@@ -4,47 +4,43 @@ import com.hibiscusmc.hmcclaims.input.type.PlayerInput;
 import com.hibiscusmc.hmcclaims.input.type.StringInput;
 import com.hibiscusmc.hmcclaims.user.PlayerResolver;
 import net.minecraft.server.players.NameAndId;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
- * Manages the lifecycle and retrieval of {@link Input} instances.
+ * Creates {@link Input} instances.
  * <p>
- * This registry acts as a central repository to map specific data types
- * (represented by {@code Class} objects) to their corresponding input handlers.
+ * Maps data types (represented by {@code Class} objects) to factories, so every
+ * prompt gets its own fresh input with its own callbacks.
  */
 public class InputRegistry {
 
-    private final static Map<Class<?>, Input<?>> INPUT_MAP
+    private final Map<Class<?>, Supplier<? extends Input<?>>> factories
             = new HashMap<>();
 
     protected InputRegistry(PlayerResolver resolver) {
-        register(String.class, new StringInput());
-        register(NameAndId.class, new PlayerInput(resolver));
+        register(String.class, StringInput::new);
+        register(NameAndId.class, () -> new PlayerInput(resolver));
+    }
+
+    private <T> void register(Class<T> type, Supplier<? extends Input<T>> factory) {
+        factories.put(type, factory);
     }
 
     /**
-     * Associates a specific class type with an input handler.
-     *
-     * @param <T>   The type of data handled by the input.
-     * @param clazz The class object representing the data type.
-     * @param input The input implementation to register.
-     */
-    private <T> void register(Class<T> clazz, Input<T> input) {
-        INPUT_MAP.put(clazz, input);
-    }
-
-    /**
-     * Retrieves the registered input handler for a given class type.
-     *
-     * @param <T>   The type of data expected.
-     * @param clazz The class object to look up.
-     * @return The {@link Input} instance associated with the type,
-     * or {@code null} if no handler is registered.
+     * Creates a new input for the type, or null if none is registered.
      */
     @SuppressWarnings("unchecked")
-    protected <T> Input<T> get(Class<T> clazz) {
-        return (Input<T>) INPUT_MAP.get(clazz);
+    protected <T> @Nullable Input<T> create(Class<T> type) {
+        Supplier<? extends Input<?>> factory = factories.get(type);
+
+        if (factory == null) {
+            return null;
+        }
+
+        return (Input<T>) factory.get();
     }
 }

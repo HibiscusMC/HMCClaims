@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.listener;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.input.Input;
 import com.hibiscusmc.hmcclaims.input.InputManager;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -10,6 +11,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
@@ -27,6 +29,7 @@ public class PlayerInputListener implements Listener {
 
     @Inject
     private SchedulerUtil scheduler;
+
     @Inject
     private TextUtil text;
 
@@ -40,17 +43,38 @@ public class PlayerInputListener implements Listener {
         }
 
         event.setCancelled(true);
+
+        if (!manager.beginSubmit(player)) {
+            return;
+        }
+
+        String raw = PLAIN_TEXT.serialize(event.message());
         Messages messages = messagesHolder.get();
-        scheduler.schedule(() -> input.submit(PLAIN_TEXT.serialize(event.message())).thenAccept(error -> {
-            if (error == null) {
-                manager.destroy(player);
+
+        scheduler.schedule(() -> {
+            if (manager.fetch(player) != input) {
+                manager.endSubmit(player);
                 return;
             }
 
-            switch (error) {
-                case PLAYER_NOT_FOUND -> text.send(player, messages.commands().playerNotFound());
-            }
-        }));
+            input.submit(raw).whenComplete((error, throwable) -> {
+                manager.endSubmit(player);
+
+                if (throwable != null) {
+                    Logger.error("Couldn't process chat input.", throwable);
+                    return;
+                }
+
+                if (error == null) {
+                    manager.destroy(player);
+                    return;
+                }
+
+                switch (error) {
+                    case PLAYER_NOT_FOUND -> text.send(player, messages.commands().playerNotFound());
+                }
+            });
+        });
     }
 
     @EventHandler
@@ -72,4 +96,8 @@ public class PlayerInputListener implements Listener {
         });
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        manager.destroy(event.getPlayer());
+    }
 }

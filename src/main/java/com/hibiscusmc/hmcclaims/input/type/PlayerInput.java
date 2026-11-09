@@ -34,7 +34,13 @@ public class PlayerInput implements Input<NameAndId> {
                 return;
             }
 
-            onSubmit.accept(player);
+            try {
+                onSubmit.accept(player);
+            } catch (RuntimeException ex) {
+                result.completeExceptionally(ex);
+                return;
+            }
+
             result.complete(null);
         });
 
@@ -57,5 +63,4 @@ public class PlayerInput implements Input<NameAndId> {
         this.onCancel = onCancel;
         return this;
     }
-
 }

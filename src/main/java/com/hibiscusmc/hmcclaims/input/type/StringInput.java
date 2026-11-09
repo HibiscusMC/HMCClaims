@@ -15,7 +15,11 @@ public class StringInput implements Input<String> {
 
     @Override
     public CompletableFuture<@Nullable InputErrorReason> submit(String raw) {
-        onSubmit.accept(raw);
+        try {
+            onSubmit.accept(raw);
+        } catch (RuntimeException ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
 
         return CompletableFuture.completedFuture(null);
     }
@@ -36,5 +40,4 @@ public class StringInput implements Input<String> {
         this.onCancel = onCancel;
         return this;
     }
-
 }
