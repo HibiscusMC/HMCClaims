@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.listener;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.RawClaim;
+import com.hibiscusmc.hmcclaims.claim.UnloadedClaims;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
@@ -48,12 +49,6 @@ public class ClaimLifecycleListener implements Listener {
     private static final int STARTUP_ATTEMPTS = 3;
     private static final long RETRY_DELAY_SECONDS = 3;
 
-    private final Map<String, Long2ObjectMap<Set<RawClaim>>> tempChunksHolder
-            = new ConcurrentHashMap<>();
-
-    private final Map<UUID, Set<RawClaim>> tempPlayersHolder
-            = new ConcurrentHashMap<>();
-
     private final Set<UUID> claimsUnloading
             = ConcurrentHashMap.newKeySet();
 
@@ -64,10 +59,13 @@ public class ClaimLifecycleListener implements Listener {
 
     private final StorageHolder storageHolder;
 
+    private final UnloadedClaims unloadedClaims;
+
     @Inject
-    public ClaimLifecycleListener(ClaimManager claimManager, StorageHolder storageHolder, SchedulerUtil scheduler) {
+    public ClaimLifecycleListener(ClaimManager claimManager, StorageHolder storageHolder, UnloadedClaims unloadedClaims, SchedulerUtil scheduler) {
         this.claimManager = claimManager;
         this.storageHolder = storageHolder;
+        this.unloadedClaims = unloadedClaims;
 
         scheduler.scheduleTimer(new Runnable() {
             private final static int BATCH_SIZE = 100;
@@ -151,10 +149,10 @@ public class ClaimLifecycleListener implements Listener {
                 continue;
             }
 
-            tempChunksHolder.put(worldName, holder.chunks());
+            unloadedClaims.chunks().put(worldName, holder.chunks());
 
             for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
-                tempPlayersHolder.computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
+                unloadedClaims.players().computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
                         .addAll(playerEntry.getValue());
             }
 
@@ -206,7 +204,7 @@ public class ClaimLifecycleListener implements Listener {
                 .getOrDefault(world.getName(), Set.of());
 
         saveClaims(claims, true);
-        tempChunksHolder.remove(world.getName());
+        unloadedClaims.chunks().remove(world.getName());
     }
 
     @EventHandler
@@ -215,7 +213,7 @@ public class ClaimLifecycleListener implements Listener {
         Chunk chunk = event.getChunk();
         long chunkKey = ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ());
 
-        Long2ObjectMap<Set<RawClaim>> chunksHolder = tempChunksHolder.get(worldName);
+        Long2ObjectMap<Set<RawClaim>> chunksHolder = unloadedClaims.chunks().get(worldName);
         if (chunksHolder == null) {
             return;
         }
@@ -232,9 +230,9 @@ public class ClaimLifecycleListener implements Listener {
     public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
         UUID playerId = event.getUniqueId();
 
-        Set<RawClaim> rawClaims = tempPlayersHolder.get(playerId);
+        Set<RawClaim> rawClaims = unloadedClaims.players().get(playerId);
         if (rawClaims == null || rawClaims.isEmpty()) {
-            tempPlayersHolder.remove(playerId);
+            unloadedClaims.players().remove(playerId);
             return;
         }
 
@@ -255,8 +253,8 @@ public class ClaimLifecycleListener implements Listener {
      * <li><b>Caching:</b> Both the parent claims and any nested sub-claims are registered
      * into the {@code claimManager} cache.</li>
      * <li><b>Cleanup:</b> Upon successful processing, the claims are removed from the pending status,
-     * and their tracking references are purged from both the {@code tempPlayersHolder} and
-     * {@code tempChunksHolder} temporary maps.</li>
+     * and their tracking references are purged from both the {@code unloadedClaims.players()} and
+     * {@code unloadedClaims.chunks()} temporary maps.</li>
      * <li><b>Error Handling:</b> If an exception occurs during the asynchronous task, all
      * claims targeted in this batch are stripped of their pending status to allow for future
      * retry attempts, and the error is logged.</li>
@@ -313,32 +311,32 @@ public class ClaimLifecycleListener implements Listener {
                     for (Claim claim : claimsSet) {
                         claimManager.removePendingClaim(claim.claimId());
 
-                        Set<RawClaim> playerClaims = tempPlayersHolder.get(claim.owner());
+                        Set<RawClaim> playerClaims = unloadedClaims.players().get(claim.owner());
                         playerClaims.removeIf(playerClaim -> playerClaim.claimId().equals(claim.claimId()));
 
                         if (playerClaims.isEmpty()) {
-                            tempPlayersHolder.remove(claim.owner());
+                            unloadedClaims.players().remove(claim.owner());
                         }
 
-                        Long2ObjectMap<Set<RawClaim>> chunksHolder = tempChunksHolder.get(claim.region().worldName());
+                        Long2ObjectMap<Set<RawClaim>> chunksHolder = unloadedClaims.chunks().get(claim.region().worldName());
 
                         for (long claimChunkKey : claim.chunks()) {
-                            Set<RawClaim> unloadedClaims = chunksHolder.get(claimChunkKey);
-                            if (unloadedClaims == null) {
+                            Set<RawClaim> chunkClaims = chunksHolder.get(claimChunkKey);
+                            if (chunkClaims == null) {
                                 continue;
                             }
 
-                            unloadedClaims.removeIf(unloadedClaim -> unloadedClaim.claimId().equals(claim.claimId()));
+                            chunkClaims.removeIf(unloadedClaim -> unloadedClaim.claimId().equals(claim.claimId()));
 
                             synchronized (chunksHolder) {
-                                if (unloadedClaims.isEmpty()) {
+                                if (chunkClaims.isEmpty()) {
                                     chunksHolder.remove(claimChunkKey);
                                 }
                             }
                         }
 
                         if (chunksHolder.isEmpty()) {
-                            tempChunksHolder.remove(claim.region().worldName());
+                            unloadedClaims.chunks().remove(claim.region().worldName());
                         }
                     }
                 });
@@ -359,11 +357,11 @@ public class ClaimLifecycleListener implements Listener {
                         .join();
 
                 RawClaim rawClaim = claim.deflate();
-                Long2ObjectMap<Set<RawClaim>> chunks = tempChunksHolder.computeIfAbsent(claim.region().worldName(), (k) ->
+                Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().computeIfAbsent(claim.region().worldName(), (k) ->
                         Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>())
                 );
 
-                tempPlayersHolder.computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet())
+                unloadedClaims.players().computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet())
                         .add(rawClaim);
 
                 for (long claimChunkKey : claim.chunks()) {

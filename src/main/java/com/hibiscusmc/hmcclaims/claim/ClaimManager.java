@@ -93,6 +93,9 @@ public class ClaimManager {
     @Inject
     private StorageHolder storageHolder;
 
+    @Inject
+    private UnloadedClaims unloadedClaims;
+
     /**
      * Checks if the claim is still loading.
      *
@@ -503,7 +506,7 @@ public class ClaimManager {
     }
 
     /**
-     * Checks if a new region overlaps with any existing claims.
+     * Checks if a new region overlaps with any existing claim, loaded or not.
      *
      * @param newRegion     The region to test.
      * @param playerId      The player attempting the claim.
@@ -518,41 +521,53 @@ public class ClaimManager {
         int minZ = newRegion.minZ() >> 4;
         int maxZ = newRegion.maxZ() >> 4;
 
-        Map<Long, Set<Claim>> worldClaims = worldChunkMaps.get(newRegion.worldName());
-        if (worldClaims == null || worldClaims.isEmpty()) {
-            return false;
-        }
+        String worldName = newRegion.worldName();
+        Map<Long, Set<Claim>> worldClaims = worldChunkMaps.get(worldName);
 
         for (int cx = minX; cx <= maxX; cx++) {
             for (int cz = minZ; cz <= maxZ; cz++) {
                 long chunkKey = ChunkUtil.getChunkKey(cx, cz);
-                Set<Claim> claimsInChunk = worldClaims.get(chunkKey);
+                Set<Claim> claimsInChunk = worldClaims == null ? null : worldClaims.get(chunkKey);
 
-                if (claimsInChunk == null) {
-                    continue;
-                }
+                if (claimsInChunk != null) {
+                    for (Claim existingClaim : claimsInChunk) {
+                        if (resizingClaim != null) {
+                            if (resizingClaim.claimId().equals(existingClaim.claimId())) {
+                                continue;
+                            }
 
-                for (Claim existingClaim : claimsInChunk) {
-                    if (resizingClaim != null) {
-                        if (resizingClaim.claimId().equals(existingClaim.claimId())) {
+                            if (existingClaim.main() != null && resizingClaim.claimId().equals(existingClaim.main().claimId())) {
+                                continue;
+                            }
+                        }
+
+                        if (checkForSub && existingClaim.owner().equals(playerId) && existingClaim.main() == null) {
                             continue;
                         }
 
-                        if (existingClaim.main() != null && resizingClaim.claimId().equals(existingClaim.main().claimId())) {
-                            continue;
+                        if (regionsOverlap(newRegion, existingClaim.region())) {
+                            return true;
                         }
                     }
+                }
 
-                    if (checkForSub && existingClaim.owner().equals(playerId) && existingClaim.main() == null) {
+                for (RawClaim raw : unloadedClaims.at(worldName, chunkKey)) {
+                    if (resizingClaim != null
+                            && (raw.claimId().equals(resizingClaim.claimId()) || resizingClaim.claimId().equals(raw.parentId()))) {
                         continue;
                     }
 
-                    if (regionsOverlap(newRegion, existingClaim.region())) {
+                    if (checkForSub && raw.owner().equals(playerId) && raw.parentId() == null) {
+                        continue;
+                    }
+
+                    if (regionsOverlap(newRegion, raw)) {
                         return true;
                     }
                 }
             }
         }
+
         return false;
     }
 
@@ -564,6 +579,15 @@ public class ClaimManager {
      * @return {@code true} if the regions overlap
      */
     private boolean regionsOverlap(@NotNull ClaimRegion a, @NotNull ClaimRegion b) {
+        if (!a.worldName().equals(b.worldName())) {
+            return false;
+        }
+
+        return a.minX() <= b.maxX() && a.maxX() >= b.minX() &&
+                a.minZ() <= b.maxZ() && a.maxZ() >= b.minZ();
+    }
+
+    private boolean regionsOverlap(@NotNull ClaimRegion a, @NotNull RawClaim b) {
         if (!a.worldName().equals(b.worldName())) {
             return false;
         }
