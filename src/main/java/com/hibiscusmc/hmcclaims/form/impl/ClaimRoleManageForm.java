@@ -255,8 +255,8 @@ public class ClaimRoleManageForm implements BaseForm {
             return;
         }
 
-        claim.roleRegistry().remove(metadata.role());
-        storageHolder.get().claims().saveRoles(claim);
+        claim.removeRole(metadata.role());
+        storageHolder.get().claims().saveClaim(claim);
 
         EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_DELETED, null));
 

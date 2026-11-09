@@ -198,8 +198,8 @@ public class ClaimRolesForm implements BaseForm {
                 case "delete" -> {
                     if (canDelete) {
                         builder.button(label, image(button.image(), formService), () -> {
-                            registry.remove(role);
-                            storageHolder.get().claims().saveRoles(claim);
+                            claim.removeRole(role);
+                            storageHolder.get().claims().saveClaim(claim);
 
                             EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_DELETED, null));
 

@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -158,7 +157,12 @@ public class ClaimSerializer {
                 UUID playerId = UUID.fromString(uuidStr);
                 UUID roleId = ByteUtil.byteStringToUUID(data.getRoleId());
 
-                Optional<ClaimRole> role = roleRegistry.find(roleId);
+                ClaimRole role = roleRegistry.find(roleId).orElse(null);
+
+                if (role == null) {
+                    Logger.warning("Member {} of claim {} had an unknown role, moving them to the default role", playerId, claim.claimId());
+                    role = roleRegistry.defaultRole();
+                }
 
                 Object2BooleanMap<Permission> overrides = new Object2BooleanArrayMap<>();
                 data.getPermissionsMap().forEach((permStr, status) -> {
@@ -171,7 +175,7 @@ public class ClaimSerializer {
 
                 ClaimMember member = new ClaimMember(
                         playerId, claim, data.getName().isEmpty() ? legacyName(playerId) : data.getName(),
-                        role.orElseThrow(), overrides);
+                        role, overrides);
                 member.banned(data.getBanned());
 
                 if (data.hasJoinDate()) {

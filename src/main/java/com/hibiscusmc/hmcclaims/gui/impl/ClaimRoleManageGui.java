@@ -4,7 +4,6 @@ import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
-import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Permissions;
@@ -211,13 +210,13 @@ public class ClaimRoleManageGui extends ClaimListGui {
             gui.addIngredient('*', Item.builder()
                     .setItemProvider(TextUtil.parseItemPlaceholders(metadata.canManageRole() ? deleteIcon.item() : cantDeleteIcon, player))
                     .addClickHandler(click -> {
-                        ClaimRoleRegistry registry = claim.roleRegistry();
-
                         if (!metadata.canManageRole()) {
                             return;
                         }
 
-                        registry.remove(role);
+                        claim.removeRole(role);
+                        storageHolder.get().claims().saveClaim(claim);
+
                         EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_DELETED, null));
                         guis.get(ClaimRolesGui.class)
                                 .open(player, metadata);

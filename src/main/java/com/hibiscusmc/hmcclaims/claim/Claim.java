@@ -347,6 +347,23 @@ public class Claim {
     }
 
     /**
+     * Deletes a role and moves every member that had it to the default role.
+     *
+     * @throws IllegalStateException if the role is the owner, default or everyone role.
+     */
+    public void removeRole(@NotNull ClaimRole role) {
+        roleRegistry.remove(role);
+
+        ClaimRole defaultRole = roleRegistry.defaultRole();
+
+        for (ClaimMember member : members.values()) {
+            if (member.role().id().equals(role.id())) {
+                member.role(defaultRole);
+            }
+        }
+    }
+
+    /**
      * Checks if the player is in the claim and has the permission, or if the {@code everyone} role has the permission
      *
      * @param playerId   the id of the player to check
