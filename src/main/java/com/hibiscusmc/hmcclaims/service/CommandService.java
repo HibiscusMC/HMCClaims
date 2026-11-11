@@ -75,10 +75,11 @@ public class CommandService implements Service {
             Messages messages = messagesHolder.get();
 
             CommandSender sender = namespace.getObject(CommandSender.class, "sender");
-            String message = error.getMessage();
+            String message = error.getMessage() == null ? "" : error.getMessage();
+            int keyStart = message.indexOf("translatable:");
 
-            if (message.contains("translatable")) {
-                message = message.split("translatable:")[1]
+            if (keyStart != -1) {
+                message = message.substring(keyStart + "translatable:".length())
                         .trim();
 
                 if (message.endsWith("%")) {
