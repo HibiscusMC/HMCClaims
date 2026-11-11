@@ -96,7 +96,7 @@ public class ClaimLifecycleListener implements Listener {
                         continue;
                     }
 
-                    if (System.currentTimeMillis() - claim.ttl() < TimeUnit.MINUTES.toMillis(1)) {
+                    if (System.currentTimeMillis() - claim.loadedAt() < TimeUnit.MINUTES.toMillis(1)) {
                         continue;
                     }
 

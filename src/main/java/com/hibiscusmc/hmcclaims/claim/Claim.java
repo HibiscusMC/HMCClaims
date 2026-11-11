@@ -99,7 +99,7 @@ public class Claim {
     private final Instant claimedTimestamp;
 
     @Getter
-    private final transient long ttl = System.currentTimeMillis();
+    private final transient long loadedAt = System.currentTimeMillis();
 
     /**
      * Creates a new Claim and initializes the owner with full permissions.
