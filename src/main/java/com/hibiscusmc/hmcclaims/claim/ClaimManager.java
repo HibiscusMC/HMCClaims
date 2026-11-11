@@ -205,10 +205,12 @@ public class ClaimManager {
 
         ClaimRepository claimRepository = storage.claims();
         if (!user.persistent()) {
+            RawClaim snapshot = newClaim.deflate();
+
             storage.users().saveUser(user)
                     .thenAccept(v -> {
                         user.persistent(true);
-                        claimRepository.saveClaim(newClaim);
+                        claimRepository.saveClaim(snapshot);
                     });
         } else {
             claimRepository.saveClaim(newClaim);

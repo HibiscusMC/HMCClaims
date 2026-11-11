@@ -29,6 +29,7 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -349,19 +350,27 @@ public class ClaimLifecycleListener implements Listener {
      * @param sync   If the execution should lock the main thread or an asynchronous thread.
      */
     private void saveClaims(@NotNull Set<Claim> claims, boolean sync) {
+        // Snapshot on the calling thread, the claims can still be edited while the async save runs.
+        Map<Claim, RawClaim> snapshots = new HashMap<>();
+        for (Claim claim : claims) {
+            snapshots.put(claim, claim.deflate());
+        }
+
         Runnable unload = () -> {
             Storage storage = storageHolder.get();
 
-            for (Claim claim : claims) {
-                storage.claims().saveClaim(claim)
+            for (Map.Entry<Claim, RawClaim> entry : snapshots.entrySet()) {
+                Claim claim = entry.getKey();
+                RawClaim rawClaim = entry.getValue();
+
+                storage.claims().saveClaim(rawClaim)
                         .join();
 
-                RawClaim rawClaim = claim.deflate();
-                Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().computeIfAbsent(claim.region().worldName(), (k) ->
+                Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().computeIfAbsent(rawClaim.worldName(), (k) ->
                         Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>())
                 );
 
-                unloadedClaims.players().computeIfAbsent(claim.owner(), k -> ConcurrentHashMap.newKeySet())
+                unloadedClaims.players().computeIfAbsent(rawClaim.owner(), k -> ConcurrentHashMap.newKeySet())
                         .add(rawClaim);
 
                 for (long claimChunkKey : claim.chunks()) {

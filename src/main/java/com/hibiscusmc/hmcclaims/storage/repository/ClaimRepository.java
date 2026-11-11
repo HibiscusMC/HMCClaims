@@ -39,6 +39,12 @@ public interface ClaimRepository {
     CompletableFuture<Void> saveClaim(@NotNull Claim claim);
 
     /**
+     * Persists a claim snapshot to the {@code claims} table. Its sub-claims aren't saved.
+     */
+    @NotNull
+    CompletableFuture<Void> saveClaim(@NotNull RawClaim claim);
+
+    /**
      * Updates the name of a claim.
      */
     @NotNull

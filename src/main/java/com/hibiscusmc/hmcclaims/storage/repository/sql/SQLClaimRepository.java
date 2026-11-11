@@ -1,12 +1,9 @@
 package com.hibiscusmc.hmcclaims.storage.repository.sql;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimMember;
+import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
 import com.hibiscusmc.hmcclaims.claim.ClaimSerializer;
 import com.hibiscusmc.hmcclaims.claim.RawClaim;
-import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
-import com.hibiscusmc.hmcclaims.claim.setting.Setting;
-import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.impl.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
@@ -202,31 +199,44 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaim(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            byte[] claimIdBytes = ByteUtil.UUIDtoBytes(claim.claimId());
+        ClaimRegion region = claim.region();
 
+        return saveClaim(new RawClaim(
+                claim.claimId(), claim.owner(), claim.name(),
+                claim.main() != null ? claim.main().claimId() : null, Set.of(),
+                region.worldName(), region.minX(), region.maxX(), region.minZ(), region.maxZ(),
+                ClaimSerializer.serialize(claim.roleRegistry()),
+                ClaimSerializer.serialize(claim.allMembers()),
+                ClaimSerializer.serialize(claim.settings()),
+                claim.locked(), claim.claimedTimestamp()
+        ));
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveClaim(@NotNull RawClaim claim) {
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimQuery)) {
-                ps.setBytes(1, claimIdBytes);
+                ps.setBytes(1, ByteUtil.UUIDtoBytes(claim.claimId()));
                 ps.setBytes(2, ByteUtil.UUIDtoBytes(claim.owner()));
                 ps.setString(3, claim.name());
-                ps.setString(4, claim.region().worldName());
-                ps.setInt(5, claim.region().minX());
-                ps.setInt(6, claim.region().maxX());
-                ps.setInt(7, claim.region().minZ());
-                ps.setInt(8, claim.region().maxZ());
+                ps.setString(4, claim.worldName());
+                ps.setInt(5, claim.minX());
+                ps.setInt(6, claim.maxX());
+                ps.setInt(7, claim.minZ());
+                ps.setInt(8, claim.maxZ());
 
-                if (claim.main() != null) {
-                    ps.setBytes(9, ByteUtil.UUIDtoBytes(claim.main().claimId()));
+                if (claim.parentId() != null) {
+                    ps.setBytes(9, ByteUtil.UUIDtoBytes(claim.parentId()));
                 } else {
                     ps.setNull(9, Types.BINARY);
                 }
 
                 ps.setBoolean(10, claim.locked());
 
-                ps.setBytes(11, ClaimSerializer.serialize(claim.roleRegistry()));
-                ps.setBytes(12, ClaimSerializer.serialize(claim.allMembers()));
-                ps.setBytes(13, ClaimSerializer.serialize(claim.settings()));
+                ps.setBytes(11, claim.rolesBytes());
+                ps.setBytes(12, claim.membersBytes());
+                ps.setBytes(13, claim.settingsBytes());
 
                 ps.setInt(14, SCHEMA_VERSION);
 
@@ -241,12 +251,13 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaimName(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            UUID claimId = claim.claimId();
+        UUID claimId = claim.claimId();
+        String name = claim.name();
 
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimNameQuery)) {
-                ps.setString(1, claim.name());
+                ps.setString(1, name);
                 ps.setBytes(2, ByteUtil.UUIDtoBytes(claimId));
 
                 ps.executeUpdate();
@@ -258,15 +269,21 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaimRegion(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            UUID claimId = claim.claimId();
+        UUID claimId = claim.claimId();
+        ClaimRegion region = claim.region();
 
+        int minX = region.minX();
+        int maxX = region.maxX();
+        int minZ = region.minZ();
+        int maxZ = region.maxZ();
+
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimRegionQuery)) {
-                ps.setInt(1, claim.region().minX());
-                ps.setInt(2, claim.region().maxX());
-                ps.setInt(3, claim.region().minZ());
-                ps.setInt(4, claim.region().maxZ());
+                ps.setInt(1, minX);
+                ps.setInt(2, maxX);
+                ps.setInt(3, minZ);
+                ps.setInt(4, maxZ);
                 ps.setBytes(5, ByteUtil.UUIDtoBytes(claimId));
 
                 ps.executeUpdate();
@@ -278,18 +295,25 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaimMeta(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            UUID claimId = claim.claimId();
-            Set<ClaimMember> members = claim.allMembers();
+        UUID claimId = claim.claimId();
+        String name = claim.name();
+        boolean locked = claim.locked();
+        ClaimRegion region = claim.region();
 
+        int minX = region.minX();
+        int maxX = region.maxX();
+        int minZ = region.minZ();
+        int maxZ = region.maxZ();
+
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimMetaQuery)) {
-                ps.setString(1, claim.name());
-                ps.setInt(2, claim.region().minX());
-                ps.setInt(3, claim.region().maxX());
-                ps.setInt(4, claim.region().minZ());
-                ps.setInt(5, claim.region().maxZ());
-                ps.setBoolean(6, claim.locked());
+                ps.setString(1, name);
+                ps.setInt(2, minX);
+                ps.setInt(3, maxX);
+                ps.setInt(4, minZ);
+                ps.setInt(5, maxZ);
+                ps.setBoolean(6, locked);
                 ps.setBytes(7, ByteUtil.UUIDtoBytes(claimId));
 
                 ps.executeUpdate();
@@ -301,13 +325,13 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveMembers(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            UUID claimId = claim.claimId();
-            Set<ClaimMember> members = claim.allMembers();
+        UUID claimId = claim.claimId();
+        byte[] members = ClaimSerializer.serialize(claim.allMembers());
 
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveMemberQuery)) {
-                ps.setBytes(1, ClaimSerializer.serialize(members));
+                ps.setBytes(1, members);
                 ps.setBytes(2, ByteUtil.UUIDtoBytes(claimId));
 
                 ps.executeUpdate();
@@ -319,13 +343,13 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveRoles(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            UUID claimId = claim.claimId();
-            ClaimRoleRegistry roles = claim.roleRegistry();
+        UUID claimId = claim.claimId();
+        byte[] roles = ClaimSerializer.serialize(claim.roleRegistry());
 
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveRoleQuery)) {
-                ps.setBytes(1, ClaimSerializer.serialize(roles));
+                ps.setBytes(1, roles);
                 ps.setBytes(2, ByteUtil.UUIDtoBytes(claimId));
 
                 ps.executeUpdate();
@@ -337,13 +361,13 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveSettings(@NotNull Claim claim) {
-        return CompletableFuture.runAsync(() -> {
-            UUID claimId = claim.claimId();
-            Map<Setting<?>, SettingHolder<?>> settings = claim.settings();
+        UUID claimId = claim.claimId();
+        byte[] settings = ClaimSerializer.serialize(claim.settings());
 
+        return CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
-                ps.setBytes(1, ClaimSerializer.serialize(settings));
+                ps.setBytes(1, settings);
                 ps.setBytes(2, ByteUtil.UUIDtoBytes(claimId));
 
                 ps.addBatch();
