@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -159,9 +160,16 @@ public class Claim {
             throw new IllegalStateException("A main claim can't inherit permissions");
         }
 
-        ClaimRoleRegistry mainRegistry = main.roleRegistry();
+        List<ClaimRole> copies = new ArrayList<>();
 
-        roleRegistry = new ClaimRoleRegistry(mainRegistry.allRoles());
+        for (ClaimRole role : main.roleRegistry().allRoles()) {
+            ClaimRole copy = new ClaimRole(role.id(), role.name(), new HashSet<>(role.permissions()));
+            copy.creationTimestamp(role.creationTimestamp());
+
+            copies.add(copy);
+        }
+
+        roleRegistry = new ClaimRoleRegistry(copies);
 
         List<ClaimRole> roles = roleRegistry.allRoles();
         members.clear();
@@ -175,7 +183,7 @@ public class Claim {
                     roles.stream().filter(role -> role.id().equals(member.role().id()))
                             .findAny()
                             .orElse(roleRegistry.defaultRole()),
-                    member.permissions()
+                    new Object2BooleanArrayMap<>(member.permissions())
             );
             newMember.banned(member.banned());
             newMember.joinedTimestamp(member.joinedTimestamp().plusMillis(start++));
