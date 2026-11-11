@@ -18,6 +18,7 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -168,6 +169,17 @@ public class UserManager {
         future.whenComplete((user, throwable) -> loadingUsers.remove(uuid, future));
 
         return future;
+    }
+
+    /**
+     * Queues a save of every cached user.
+     */
+    public void saveAll() {
+        storageHolder.get().users().saveUsers(List.copyOf(userMap.values())).whenComplete((ignored, ex) -> {
+            if (ex != null) {
+                Logger.error("Couldn't save users.", ex);
+            }
+        });
     }
 
     private void touch(UUID uuid) {

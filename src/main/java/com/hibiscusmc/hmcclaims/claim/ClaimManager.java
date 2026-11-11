@@ -121,6 +121,21 @@ public class ClaimManager {
     }
 
     /**
+     * Queues a save of every loaded claim, snapshotting each one on the calling thread.
+     */
+    public void saveAll() {
+        ClaimRepository repository = storageHolder.get().claims();
+
+        for (Claim claim : claims.values()) {
+            repository.saveClaim(claim).whenComplete((ignored, ex) -> {
+                if (ex != null) {
+                    Logger.error("Couldn't save claim " + claim.claimId() + ".", ex);
+                }
+            });
+        }
+    }
+
+    /**
      * Creates a new claim, registers it in the cache, and updates user claim blocks.
      *
      * @param user The owner of the claim.

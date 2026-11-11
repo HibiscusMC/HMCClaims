@@ -1,10 +1,12 @@
 package com.hibiscusmc.hmcclaims.service;
 
+import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.storage.impl.local.H2Storage;
 import com.hibiscusmc.hmcclaims.storage.impl.remote.MariaDBStorage;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.ExceptionUtil;
 import com.hibiscusmc.hmcclaims.util.Logger;
 import org.bukkit.Bukkit;
@@ -29,6 +31,12 @@ public class StorageService implements Service {
 
     @Inject
     private Injector injector;
+
+    @Inject
+    private ClaimManager claimManager;
+
+    @Inject
+    private UserManager userManager;
 
     @Override
     public void start() {
@@ -101,9 +109,13 @@ public class StorageService implements Service {
         try {
             // noinspection ResultOfMethodCallIgnored
             holder.get();
-
-            holder.close();
         } catch (IllegalStateException ignored) {
+            return;
         }
+
+        claimManager.saveAll();
+        userManager.saveAll();
+
+        holder.close();
     }
 }
