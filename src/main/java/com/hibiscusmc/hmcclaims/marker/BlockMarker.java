@@ -1,8 +1,10 @@
 package com.hibiscusmc.hmcclaims.marker;
 
 import com.hibiscusmc.hmcclaims.selection.BlockSelection;
+import com.hibiscusmc.hmcclaims.selection.BlockSelectionWithY;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -10,44 +12,35 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Manages visual indicators (marks) for players.
+ * <p>
+ * Marks are kept as desired state and re-applied every second, so displays that died or whose
+ * chunk was not loaded yet are respawned. Everything runs on the main thread.
  */
 @Singleton
 public class BlockMarker {
 
-    /**
-     * Maps a unique string key to a specific MarkedBlock instance for caching.
-     */
-    private final Map<String, MarkedBlock> blockCache = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<String, Mark>> playerMarks
+            = new ConcurrentHashMap<>();
 
-    /**
-     * Tracks all active visual marks currently visible to a specific player.
-     */
-    private final Map<UUID, Set<MarkedBlock>> playerMarks = new ConcurrentHashMap<>();
-
-    /**
-     * Tracks the expiration timestamps for specific player-block marker pairs.
-     */
-    private final Map<MarkKey, Long> expiryMap = new ConcurrentHashMap<>();
-
-    /**
-     * Internal key used to identify a specific mark for expiration tracking.
-     */
-    private record MarkKey(UUID uuid, MarkedBlock block) {
-    }
+    private final Map<String, MarkedBlock> blockCache
+            = new ConcurrentHashMap<>();
 
     private final Plugin plugin;
     private final SchedulerUtil scheduler;
 
+    private record Mark(String world, BlockSelection selection, MarkType type, long expiresAt) {
+    }
+
     /**
-     * Initializes the marker service and starts the expiration cleanup task.
+     * Initializes the marker service and starts the refresh task.
      *
      * @param plugin    The plugin instance.
      * @param scheduler Utility for handling asynchronous and timed tasks.
@@ -57,51 +50,7 @@ public class BlockMarker {
         this.plugin = plugin;
         this.scheduler = scheduler;
 
-        scheduler.scheduleTimer(() -> {
-            long now = System.currentTimeMillis();
-
-            expiryMap.entrySet().removeIf(entry -> {
-                MarkKey key = entry.getKey();
-                if (!key.block().isAlive()) {
-                    removeMarkedBlock(key.uuid(), key.block());
-                    return true;
-                }
-
-                if (now >= entry.getValue()) {
-                    removeMarkedBlock(key.uuid(), key.block());
-                    return true;
-                }
-
-                return false;
-            });
-
-            blockCache.entrySet().removeIf(entry -> {
-                MarkedBlock block = entry.getValue();
-                if (!block.isAlive()) {
-                    block.destroy();
-                    return true;
-                }
-
-                for (UUID uuid : block.players()) {
-                    if (Bukkit.getPlayer(uuid) == null) {
-                        block.forget(uuid);
-                    }
-                }
-
-                long ticksLived = block.blockDisplay().getTicksLived();
-
-                if (ticksLived < 60 * 20L) {
-                    return false;
-                }
-
-                if (!block.players().isEmpty()) {
-                    return false;
-                }
-
-                block.destroy();
-                return true;
-            });
-        }, 5 * 20L);
+        scheduler.scheduleTimer(this::refresh, 20L);
     }
 
     /**
@@ -114,59 +63,19 @@ public class BlockMarker {
      */
     public void mark(Player player, Collection<BlockSelection> selections, MarkType type, long durationMs) {
         scheduler.schedule(() -> {
-            UUID uuid = player.getUniqueId();
-            Set<MarkedBlock> activeMarks = playerMarks.computeIfAbsent(uuid, k -> new CopyOnWriteArraySet<>());
+            Map<String, Mark> marks = playerMarks.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
 
-            World world = player.getWorld();
+            String world = player.getWorld().getName();
+            long expiresAt = durationMs > 0 ? System.currentTimeMillis() + durationMs : 0L;
 
             for (BlockSelection selection : selections) {
-                if (!world.isChunkLoaded(selection.x() >> 4, selection.z() >> 4)) {
-                    continue;
-                }
+                String key = generateKey(world, selection, type);
+                Mark mark = new Mark(world, selection, type, expiresAt);
 
-                String cacheKey = generateKey(world, selection, type);
-                MarkedBlock markedBlock = blockCache.compute(cacheKey, (key, existing) -> {
-                    if (existing != null && existing.isAlive()) {
-                        return existing;
-                    }
-
-                    if (existing != null) {
-                        existing.destroy();
-                    }
-
-                    return MarkedBlock.from(world, selection, type, plugin);
-                });
-
-                markedBlock.mark(player);
-                activeMarks.add(markedBlock);
-
-                if (durationMs > 0) {
-                    expiryMap.put(new MarkKey(uuid, markedBlock), System.currentTimeMillis() + durationMs);
-                }
+                marks.put(key, mark);
+                show(player, key, mark);
             }
         });
-    }
-
-    /**
-     * Removes a specific marked block from a player's view and internal tracking.
-     *
-     * @param uuid        The UUID of the player.
-     * @param markedBlock The specific mark to hide.
-     */
-    public void removeMarkedBlock(UUID uuid, MarkedBlock markedBlock) {
-        Player player = Bukkit.getPlayer(uuid);
-        if (player != null) {
-            markedBlock.hide(player);
-        } else {
-            markedBlock.forget(uuid);
-        }
-
-        Set<MarkedBlock> set = playerMarks.get(uuid);
-        if (set != null) {
-            set.remove(markedBlock);
-        }
-
-        expiryMap.remove(new MarkKey(uuid, markedBlock));
     }
 
     /**
@@ -176,29 +85,135 @@ public class BlockMarker {
      */
     public void clearAllMarks(UUID uuid) {
         scheduler.schedule(() -> {
-            Set<MarkedBlock> marks = playerMarks.remove(uuid);
-            if (marks != null) {
-                Player player = Bukkit.getPlayer(uuid);
+            Map<String, Mark> marks = playerMarks.remove(uuid);
+            if (marks == null) {
+                return;
+            }
 
-                marks.forEach(mark -> {
-                    if (player != null) {
-                        mark.hide(player);
-                    } else {
-                        mark.forget(uuid);
-                    }
+            Player player = Bukkit.getPlayer(uuid);
 
-                    expiryMap.remove(new MarkKey(uuid, mark));
-                });
-
-                marks.clear();
+            for (String key : marks.keySet()) {
+                hide(player, uuid, key);
             }
         });
     }
 
-    /**
-     * Generates a unique cache key based on location and visual type.
-     */
-    private String generateKey(World world, BlockSelection sel, MarkType type) {
-        return world.getName() + ":" + sel.x() + ":" + sel.z() + ":" + type.name();
+    private void show(Player player, String key, Mark mark) {
+        World world = player.getWorld();
+        if (!world.getName().equals(mark.world())) {
+            return;
+        }
+
+        int chunkX = mark.selection().x() >> 4;
+        int chunkZ = mark.selection().z() >> 4;
+
+        if (!world.isChunkLoaded(chunkX, chunkZ)) {
+            return;
+        }
+
+        Chunk.LoadLevel level = world.getChunkAt(chunkX, chunkZ).getLoadLevel();
+        if (level == Chunk.LoadLevel.INACCESSIBLE || level == Chunk.LoadLevel.UNLOADED) {
+            return;
+        }
+
+        MarkedBlock block = blockCache.get(key);
+        if (block == null || !block.isAlive()) {
+            if (block != null) {
+                block.destroy();
+            }
+
+            block = MarkedBlock.from(world, mark.selection(), mark.type(), plugin);
+            blockCache.put(key, block);
+        }
+
+        if (block.players().contains(player.getUniqueId())) {
+            return;
+        }
+
+        block.mark(player);
+    }
+
+    private void hide(Player player, UUID uuid, String key) {
+        MarkedBlock block = blockCache.get(key);
+        if (block == null) {
+            return;
+        }
+
+        if (player != null) {
+            block.hide(player);
+        } else {
+            block.forget(uuid);
+        }
+    }
+
+    private void refresh() {
+        long now = System.currentTimeMillis();
+
+        Iterator<Map.Entry<UUID, Map<String, Mark>>> players = playerMarks.entrySet().iterator();
+        while (players.hasNext()) {
+            Map.Entry<UUID, Map<String, Mark>> entry = players.next();
+
+            UUID uuid = entry.getKey();
+            Player player = Bukkit.getPlayer(uuid);
+
+            if (player == null) {
+                players.remove();
+
+                for (String key : entry.getValue().keySet()) {
+                    hide(null, uuid, key);
+                }
+
+                continue;
+            }
+
+            for (Map.Entry<String, Mark> markEntry : new HashMap<>(entry.getValue()).entrySet()) {
+                String key = markEntry.getKey();
+                Mark mark = markEntry.getValue();
+
+                if (mark.expiresAt() > 0 && now >= mark.expiresAt()) {
+                    entry.getValue().remove(key);
+                    hide(player, uuid, key);
+
+                    continue;
+                }
+
+                show(player, key, mark);
+            }
+        }
+
+        blockCache.entrySet().removeIf(entry -> {
+            MarkedBlock block = entry.getValue();
+            if (!block.isAlive()) {
+                block.destroy();
+                return true;
+            }
+
+            for (UUID uuid : block.players()) {
+                if (Bukkit.getPlayer(uuid) == null) {
+                    block.forget(uuid);
+                }
+            }
+
+            if (block.blockDisplay().getTicksLived() < 60 * 20L) {
+                return false;
+            }
+
+            if (!block.players().isEmpty()) {
+                return false;
+            }
+
+            block.destroy();
+            return true;
+        });
+    }
+
+    private String generateKey(String world, BlockSelection selection, MarkType type) {
+        String key = world + ":" + selection.x() + ":" + selection.z() + ":" + type.name();
+
+        if (selection instanceof BlockSelectionWithY withY) {
+            return key + ":" + withY.y();
+        }
+
+        return key;
     }
 }

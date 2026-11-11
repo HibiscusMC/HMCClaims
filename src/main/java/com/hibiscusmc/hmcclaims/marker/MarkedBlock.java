@@ -45,6 +45,9 @@ public class MarkedBlock {
     private final static Display.Brightness BRIGHTNESS
             = new Display.Brightness(0, 0);
 
+    // The client multiplies this by 64 blocks, the server tracking range still caps it.
+    private final static float VIEW_RANGE = 4f;
+
     /**
      * Set of players that are currently looking at this marked block
      */
@@ -160,16 +163,17 @@ public class MarkedBlock {
                 block.z()
         );
 
-        BlockDisplay blockDisplay = world.spawn(location, BlockDisplay.class);
+        BlockDisplay blockDisplay = world.spawn(location, BlockDisplay.class, display -> {
+            display.setBlock(Material.BLACK_CONCRETE.createBlockData());
+            display.setGlowColorOverride(type.getColor());
+            display.setTransformation(TRANSFORMATION);
+            display.setBrightness(BRIGHTNESS);
+            display.setViewRange(VIEW_RANGE);
 
-        blockDisplay.setBlock(Material.BLACK_CONCRETE.createBlockData());
-        blockDisplay.setGlowColorOverride(type.getColor());
-        blockDisplay.setTransformation(TRANSFORMATION);
-        blockDisplay.setBrightness(BRIGHTNESS);
-
-        blockDisplay.setVisibleByDefault(false);
-        blockDisplay.setPersistent(false);
-        blockDisplay.setGlowing(true);
+            display.setVisibleByDefault(false);
+            display.setPersistent(false);
+            display.setGlowing(true);
+        });
 
         return new MarkedBlock(blockDisplay, plugin);
     }
