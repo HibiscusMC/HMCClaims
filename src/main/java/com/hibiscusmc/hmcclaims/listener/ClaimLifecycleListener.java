@@ -235,7 +235,7 @@ public class ClaimLifecycleListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onWorldUnload(WorldUnloadEvent event) {
         Set<Claim> claims = new HashSet<>();
 
