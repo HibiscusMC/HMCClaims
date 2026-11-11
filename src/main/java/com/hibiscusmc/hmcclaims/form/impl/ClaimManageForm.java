@@ -266,7 +266,7 @@ public class ClaimManageForm implements BaseForm {
                             "claim", claim.name()
                     ));
 
-                    claimManager.transferClaim(claim, oldOwner, target.id());
+                    claimManager.transferClaim(claim, oldOwner, recipient);
 
                     userManager.getUser(oldOwner).ifPresent(user -> userManager.calculateUsedBlocks(user));
                     userManager.calculateUsedBlocks(recipient);

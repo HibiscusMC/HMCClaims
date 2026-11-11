@@ -486,7 +486,8 @@ public class ClaimManager {
     /**
      * Transfers a player claim and all of its sub claims to a new player, then persists them
      */
-    public void transferClaim(@NotNull Claim claimToTransfer, @NotNull UUID oldId, @NotNull UUID newId) {
+    public void transferClaim(@NotNull Claim claimToTransfer, @NotNull UUID oldId, @NotNull User recipient) {
+        UUID newId = recipient.uuid();
         Set<Claim> claims = playerClaims.get(oldId);
 
         if (claims != null && !claims.isEmpty()) {
@@ -504,12 +505,28 @@ public class ClaimManager {
             });
         }
 
-        ClaimRepository repository = storageHolder.get().claims();
-        repository.saveClaim(claimToTransfer);
+        Storage storage = storageHolder.get();
+        ClaimRepository repository = storage.claims();
+        RawClaim snapshot = claimToTransfer.deflate();
 
-        for (Claim subClaim : claimToTransfer.subClaims()) {
-            repository.saveClaim(subClaim);
+        Runnable save = () -> {
+            repository.saveClaim(snapshot);
+
+            for (RawClaim subClaim : snapshot.subClaims()) {
+                repository.saveClaim(subClaim);
+            }
+        };
+
+        if (recipient.persistent()) {
+            save.run();
+            return;
         }
+
+        storage.users().saveUser(recipient)
+                .thenAccept(v -> {
+                    recipient.persistent(true);
+                    save.run();
+                });
     }
 
     /**

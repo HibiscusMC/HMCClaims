@@ -346,7 +346,7 @@ public class ClaimManageGui extends ClaimListGui {
                                             "claim", claim.name()
                                     ));
 
-                                    claimManager.transferClaim(claim, oldOwnerId, member.id());
+                                    claimManager.transferClaim(claim, oldOwnerId, recipient);
 
                                     userManager.getUser(oldOwnerId).ifPresent(user -> userManager.calculateUsedBlocks(user));
                                     userManager.calculateUsedBlocks(recipient);
