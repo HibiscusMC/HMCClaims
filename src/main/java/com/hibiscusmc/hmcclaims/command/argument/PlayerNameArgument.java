@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.command.argument;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import team.unnamed.commandflow.CommandContext;
 import team.unnamed.commandflow.annotated.part.PartFactory;
@@ -36,10 +37,15 @@ public class PlayerNameArgument implements PartFactory {
 
         @Override
         public List<String> getSuggestions(CommandContext commandContext, ArgumentStack stack) {
+            CommandSender sender = commandContext.getObject(CommandSender.class, "sender");
             String prefix = stack.hasNext() ? stack.next().toLowerCase() : "";
             List<String> suggestions = new ArrayList<>();
 
             for (Player player : Bukkit.getOnlinePlayers()) {
+                if (sender instanceof Player viewer && !viewer.canSee(player)) {
+                    continue;
+                }
+
                 String playerName = player.getName();
 
                 if (prefix.isEmpty() || playerName.toLowerCase().startsWith(prefix)) {

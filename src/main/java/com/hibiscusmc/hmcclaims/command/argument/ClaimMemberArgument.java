@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.command.argument;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
+import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import org.bukkit.command.CommandSender;
@@ -23,19 +24,24 @@ public class ClaimMemberArgument implements PartFactory {
     @Inject
     private ClaimManager manager;
 
+    @Inject
+    private ClaimAccess access;
+
     @Override
     public CommandPart createPart(String name, List<? extends Annotation> modifiers) {
-        return new ClaimMemberPart(name, manager);
+        return new ClaimMemberPart(name, manager, access);
     }
 
     public static class ClaimMemberPart implements ArgumentPart {
 
         private final String name;
         private final ClaimManager manager;
+        private final ClaimAccess access;
 
-        public ClaimMemberPart(String name, ClaimManager manager) {
+        public ClaimMemberPart(String name, ClaimManager manager, ClaimAccess access) {
             this.name = name;
             this.manager = manager;
+            this.access = access;
         }
 
         @Override
@@ -60,6 +66,11 @@ public class ClaimMemberArgument implements PartFactory {
         public List<String> getSuggestions(CommandContext context, ArgumentStack stack) {
             Claim claim = claimOf(context);
             if (claim == null) {
+                return Collections.emptyList();
+            }
+
+            CommandSender sender = context.getObject(CommandSender.class, "sender");
+            if (!(sender instanceof Player player) || !access.canOpen(player, claim)) {
                 return Collections.emptyList();
             }
 
