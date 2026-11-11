@@ -13,11 +13,14 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Injector;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class StorageService implements Service {
 
     private static final int STARTUP_ATTEMPTS = 3;
     private static final long RETRY_DELAY_SECONDS = 3;
+
+    private static final Pattern VALID_PREFIX = Pattern.compile("[A-Za-z0-9_]{0,32}");
 
     @Inject
     private ConfigHolder<Settings> settings;
@@ -30,6 +33,14 @@ public class StorageService implements Service {
     @Override
     public void start() {
         Settings.Storage storage = settings.get().storage();
+
+        if (!VALID_PREFIX.matcher(storage.prefix()).matches()) {
+            Logger.error("Invalid storage prefix '{}': use up to 32 letters, digits or underscores."
+                    + " Shutting down the server so claims aren't left unprotected.", storage.prefix());
+            Bukkit.shutdown();
+
+            throw new IllegalStateException("Invalid storage prefix: " + storage.prefix());
+        }
 
         Storage impl;
         switch (storage.method()) {

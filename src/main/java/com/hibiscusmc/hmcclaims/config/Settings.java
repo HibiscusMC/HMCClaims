@@ -56,7 +56,7 @@ public class Settings {
         @Comment("The name of the database where the data will be stored")
         private String database = "hmcclaims";
 
-        @Comment("The prefix that will be used for every table / collection.")
+        @Comment("The prefix that will be used for every table. Up to 32 letters, digits or underscores.")
         private String prefix = "hmcclaims_";
 
         @Comment("Settings for the remote connection. Don't worry about this if you're using a local method!")
