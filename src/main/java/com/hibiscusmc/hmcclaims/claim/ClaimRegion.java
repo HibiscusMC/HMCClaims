@@ -59,12 +59,11 @@ public class ClaimRegion {
     }
 
     /**
-     * Resizes the claim region along a horizontal direction.
+     * Expands the region by moving one horizontal face outward.
      *
      * @param face   The horizontal BlockFace to move (NORTH, SOUTH, EAST, WEST).
-     * @param amount The number of blocks to move the face. Positive expands, negative shrinks.
-     * @return {@code true} if the claim was resized successfully, {@code false} otherwise.
-     * @throws IllegalArgumentException If an invalid face is provided or if resizing makes the region invalid.
+     * @param amount The number of blocks to move the face outward.
+     * @return {@code false} if the amount isn't positive or the face isn't horizontal, {@code true} otherwise.
      */
     public boolean resize(@NotNull BlockFace face, int amount) {
         if (amount <= 0) {
