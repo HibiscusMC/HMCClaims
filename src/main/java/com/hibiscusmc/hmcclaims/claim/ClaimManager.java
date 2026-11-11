@@ -458,7 +458,7 @@ public class ClaimManager {
         claimRepository.deleteClaim(claim.claimId());
 
         if (!claim.subClaims().isEmpty()) {
-            claim.subClaims().forEach(this::deleteClaim);
+            List.copyOf(claim.subClaims()).forEach(this::deleteClaim);
         }
 
         if (claim.main() != null) {
