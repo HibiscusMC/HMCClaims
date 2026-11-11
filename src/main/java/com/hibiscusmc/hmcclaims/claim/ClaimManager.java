@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -183,14 +184,10 @@ public class ClaimManager {
         if (!user.persistent()) {
             RawClaim snapshot = newClaim.deflate();
 
-            storage.users().saveUser(user)
-                    .whenComplete((v, ex) -> {
-                        if (ex == null) {
-                            user.persistent(true);
-                        }
+            CompletableFuture<Void> userSave = storage.users().saveUser(user);
+            userSave.thenRun(() -> user.persistent(true));
 
-                        claimRepository.saveClaim(snapshot);
-                    });
+            claimRepository.saveClaim(snapshot, userSave);
         } else {
             claimRepository.saveClaim(newClaim);
         }
@@ -523,27 +520,19 @@ public class ClaimManager {
         ClaimRepository repository = storage.claims();
         RawClaim snapshot = claimToTransfer.deflate();
 
-        Runnable save = () -> {
-            repository.saveClaim(snapshot);
+        CompletableFuture<Void> userSave = recipient.persistent()
+                ? CompletableFuture.completedFuture(null)
+                : storage.users().saveUser(recipient);
 
-            for (RawClaim subClaim : snapshot.subClaims()) {
-                repository.saveClaim(subClaim);
-            }
-        };
-
-        if (recipient.persistent()) {
-            save.run();
-            return;
+        if (!recipient.persistent()) {
+            userSave.thenRun(() -> recipient.persistent(true));
         }
 
-        storage.users().saveUser(recipient)
-                .whenComplete((v, ex) -> {
-                    if (ex == null) {
-                        recipient.persistent(true);
-                    }
+        repository.saveClaim(snapshot, userSave);
 
-                    save.run();
-                });
+        for (RawClaim subClaim : snapshot.subClaims()) {
+            repository.saveClaim(subClaim, userSave);
+        }
     }
 
     /**

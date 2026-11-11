@@ -38,6 +38,9 @@ public class SQLClaimRepository implements ClaimRepository {
     private final HikariStorage storage;
     private final ExecutorService executor;
 
+    private final Map<UUID, CompletableFuture<Void>> queues
+            = new ConcurrentHashMap<>();
+
     private final String getAllClaimsQuery;
     private final String getAllSubClaimsQuery;
     private final String getClaimQuery;
@@ -184,7 +187,12 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaim(@NotNull RawClaim claim) {
-        return logged(CompletableFuture.runAsync(() -> {
+        return saveClaim(claim, CompletableFuture.completedFuture(null));
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Void> saveClaim(@NotNull RawClaim claim, @NotNull CompletableFuture<?> after) {
+        return logged(enqueue(claim.claimId(), after, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimQuery)) {
                 ps.setBytes(1, ByteUtil.UUIDtoBytes(claim.claimId()));
@@ -216,7 +224,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save claim " + claim.claimId(), e);
             }
-        }, executor));
+        }));
     }
 
     @Override
@@ -224,7 +232,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         String name = claim.name();
 
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimNameQuery)) {
                 ps.setString(1, name);
@@ -234,7 +242,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save name for claim " + claimId, e);
             }
-        }, executor));
+        }));
     }
 
     @Override
@@ -247,7 +255,7 @@ public class SQLClaimRepository implements ClaimRepository {
         int minZ = region.minZ();
         int maxZ = region.maxZ();
 
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimRegionQuery)) {
                 ps.setInt(1, minX);
@@ -260,7 +268,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save region for claim " + claimId, e);
             }
-        }, executor));
+        }));
     }
 
     @Override
@@ -275,7 +283,7 @@ public class SQLClaimRepository implements ClaimRepository {
         int minZ = region.minZ();
         int maxZ = region.maxZ();
 
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimMetaQuery)) {
                 ps.setString(1, name);
@@ -290,7 +298,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save meta for claim " + claimId, e);
             }
-        }, executor));
+        }));
     }
 
     @Override
@@ -298,7 +306,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         byte[] members = ClaimSerializer.serialize(claim.allMembers());
 
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveMemberQuery)) {
                 ps.setBytes(1, members);
@@ -308,7 +316,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save members for claim " + claimId, e);
             }
-        }, executor));
+        }));
     }
 
     @Override
@@ -316,7 +324,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         byte[] roles = ClaimSerializer.serialize(claim.roleRegistry());
 
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveRoleQuery)) {
                 ps.setBytes(1, roles);
@@ -326,7 +334,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save roles for claim " + claimId, e);
             }
-        }, executor));
+        }));
     }
 
     @Override
@@ -334,7 +342,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         byte[] settings = ClaimSerializer.serialize(claim.settings());
 
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
                 ps.setBytes(1, settings);
@@ -344,12 +352,12 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save settings for claim " + claimId, e);
             }
-        }, executor));
+        }));
     }
 
     @Override
     public @NotNull CompletableFuture<Void> deleteClaim(@NotNull UUID claimId) {
-        return logged(CompletableFuture.runAsync(() -> {
+        return logged(enqueue(claimId, () -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.deleteClaimQuery)) {
                 ps.setBytes(1, ByteUtil.UUIDtoBytes(claimId));
@@ -358,7 +366,28 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to delete claim " + claimId, e);
             }
-        }, executor));
+        }));
+    }
+
+    private CompletableFuture<Void> enqueue(UUID claimId, Runnable task) {
+        return enqueue(claimId, CompletableFuture.completedFuture(null), task);
+    }
+
+    private CompletableFuture<Void> enqueue(UUID claimId, CompletableFuture<?> after, Runnable task) {
+        CompletableFuture<Void> afterDone = after.handle((v, ex) -> (Void) null);
+
+        CompletableFuture<Void> tail = queues.compute(claimId, (id, previous) -> {
+            CompletableFuture<Void> previousDone = previous == null
+                    ? CompletableFuture.completedFuture(null)
+                    : previous.handle((v, ex) -> (Void) null);
+
+            return previousDone.thenCombine(afterDone, (a, b) -> (Void) null)
+                    .thenRunAsync(task, executor);
+        });
+
+        tail.whenComplete((v, ex) -> queues.remove(claimId, tail));
+
+        return tail;
     }
 
     private static CompletableFuture<Void> logged(CompletableFuture<Void> future) {

@@ -38,6 +38,12 @@ public interface ClaimRepository {
     CompletableFuture<Void> saveClaim(@NotNull RawClaim claim);
 
     /**
+     * Saves the snapshot once {@code after} completes (successfully or not), keeping its place in the claim's write order.
+     */
+    @NotNull
+    CompletableFuture<Void> saveClaim(@NotNull RawClaim claim, @NotNull CompletableFuture<?> after);
+
+    /**
      * Updates the name of a claim.
      */
     @NotNull
