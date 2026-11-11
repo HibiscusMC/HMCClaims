@@ -338,7 +338,13 @@ public class ClaimRolesGui extends ClaimListGui {
                                                 return;
                                             }
 
-                                            role.rename(newName);
+                                            try {
+                                                role.rename(newName);
+                                            } catch (IllegalArgumentException e) {
+                                                text.send(player, messagesHolder.get().claims().invalidRoleName());
+                                                return;
+                                            }
+
                                             storageHolder.get().claims()
                                                     .saveRoles(claim);
 

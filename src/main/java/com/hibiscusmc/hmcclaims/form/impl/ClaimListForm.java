@@ -226,7 +226,14 @@ public class ClaimListForm implements BaseForm {
         inputs.prompt(
                 player, inputs.config().renameClaim(), Map.of("claim_name", claim.name()), claim.name(),
                 newName -> {
-                    claim.rename(newName);
+                    try {
+                        claim.rename(newName);
+                    } catch (IllegalArgumentException e) {
+                        text.send(player, messagesHolder.get().claims().invalidClaimName());
+                        openActions(player, claim);
+                        return;
+                    }
+
                     storageHolder.get().claims().saveClaimName(claim);
 
                     openActions(player, claim);

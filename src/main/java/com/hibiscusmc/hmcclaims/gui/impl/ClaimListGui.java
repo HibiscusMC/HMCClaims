@@ -432,7 +432,13 @@ public class ClaimListGui implements BaseGui {
                                             return;
                                         }
 
-                                        claim.rename(newName);
+                                        try {
+                                            claim.rename(newName);
+                                        } catch (IllegalArgumentException e) {
+                                            text.send(player, messagesHolder.get().claims().invalidClaimName());
+                                            return;
+                                        }
+
                                         storageHolder.get().claims()
                                                 .saveClaimName(claim);
 

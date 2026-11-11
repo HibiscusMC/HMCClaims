@@ -236,7 +236,14 @@ public class ClaimRolesForm implements BaseForm {
         inputs.prompt(
                 player, inputs.config().renameRole(), Map.of("role_name", role.name()), role.name(),
                 newName -> {
-                    role.rename(newName);
+                    try {
+                        role.rename(newName);
+                    } catch (IllegalArgumentException e) {
+                        text.send(player, messagesHolder.get().claims().invalidRoleName());
+                        reopen.run();
+                        return;
+                    }
+
                     storageHolder.get().claims().saveRoles(metadata.claim());
 
                     reopen.run();

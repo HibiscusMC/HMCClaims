@@ -58,6 +58,7 @@ public class ClaimRole {
      * Changes the name of the role
      *
      * @param newName the new name of the role
+     * @throws IllegalArgumentException if the role name is not valid (is empty, less than 2 or higher than 40 characters) once tags are removed
      */
     public void rename(@NotNull String newName) {
         String name = TextUtil.strip(newName);

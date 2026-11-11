@@ -381,7 +381,14 @@ public class ClaimManageGui extends ClaimListGui {
                                     return;
                                 }
 
-                                claim.rename(newName);
+                                try {
+                                    claim.rename(newName);
+                                } catch (IllegalArgumentException e) {
+                                    text.send(player, messagesHolder.get().claims().invalidClaimName());
+                                    open(player, metadata);
+                                    return;
+                                }
+
                                 storageHolder.get().claims().saveClaimName(claim);
 
                                 open(player, metadata);

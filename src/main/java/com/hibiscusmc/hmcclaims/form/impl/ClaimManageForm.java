@@ -205,7 +205,14 @@ public class ClaimManageForm implements BaseForm {
         inputs.prompt(
                 player, inputs.config().renameClaim(), Map.of("claim_name", claim.name()), claim.name(),
                 newName -> {
-                    claim.rename(newName);
+                    try {
+                        claim.rename(newName);
+                    } catch (IllegalArgumentException e) {
+                        text.send(player, messagesHolder.get().claims().invalidClaimName());
+                        context.refresh();
+                        return;
+                    }
+
                     storageHolder.get().claims().saveClaimName(claim);
 
                     context.refresh();
