@@ -8,6 +8,7 @@ import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -171,6 +172,10 @@ public class MovementPermissionListener implements Listener {
         }
 
         Player player = event.getPlayer();
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
+            return;
+        }
+
         Claim claim = claimManager.getClaimAt(player.getLocation())
                 .orElse(null);
 
@@ -191,6 +196,10 @@ public class MovementPermissionListener implements Listener {
     public void onFlyInClaim(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (!player.isFlying()) {
+            return;
+        }
+
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) {
             return;
         }
 
