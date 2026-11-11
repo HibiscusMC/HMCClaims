@@ -20,9 +20,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,17 +71,40 @@ public class MovementSettingListener implements Listener {
             return;
         }
 
-        if (userClaim != null && toClaim == null) {
-            // Player left claim
-            EventUtil.call(new ClaimLeaveEvent(player, userClaim));
-            sendLeaveMessage(player, userClaim);
-            user.currentClaim(null);
-        } else {
-            // Player join claim
-            EventUtil.call(new ClaimEnterEvent(player, toClaim));
-            user.currentClaim(toClaim);
-            sendJoinMessage(player, toClaim);
+        List<Claim> oldChain = chain(userClaim);
+        List<Claim> newChain = chain(toClaim);
+
+        for (Claim left : oldChain.reversed()) {
+            if (newChain.contains(left)) {
+                continue;
+            }
+
+            EventUtil.call(new ClaimLeaveEvent(player, left));
+            sendLeaveMessage(player, left);
         }
+
+        for (Claim entered : newChain) {
+            if (oldChain.contains(entered)) {
+                continue;
+            }
+
+            EventUtil.call(new ClaimEnterEvent(player, entered));
+            sendJoinMessage(player, entered);
+        }
+
+        user.currentClaim(toClaim);
+    }
+
+    private List<Claim> chain(@Nullable Claim claim) {
+        if (claim == null) {
+            return List.of();
+        }
+
+        if (claim.main() == null) {
+            return List.of(claim);
+        }
+
+        return List.of(claim.main(), claim);
     }
 
     private void sendJoinMessage(@NotNull Player player, @NotNull Claim claim) {
