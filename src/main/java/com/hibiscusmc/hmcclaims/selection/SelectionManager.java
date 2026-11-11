@@ -85,9 +85,9 @@ public class SelectionManager {
                 .orElse(null);
 
         Selection selection;
-        if (!user.hasActiveSelection()) {
+        boolean fresh = !user.hasActiveSelection();
+        if (fresh) {
             selection = new Selection(player, blockMarker, claim != null ? claim.main() != null ? claim.main() : claim : null);
-            user.currentSelection(selection);
         } else {
             selection = user.currentSelection();
         }
@@ -204,7 +204,13 @@ public class SelectionManager {
                 text.send(player, messages.claims().selecting().claimOverlaps());
                 return;
             }
-            case NONE -> selection.addBlock(blockSelection);
+            case NONE -> {
+                if (fresh) {
+                    user.currentSelection(selection);
+                }
+
+                selection.addBlock(blockSelection);
+            }
         }
 
         if (selection.points().size() == 1) {
