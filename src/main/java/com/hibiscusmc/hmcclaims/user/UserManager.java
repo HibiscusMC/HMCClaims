@@ -83,8 +83,13 @@ public class UserManager {
     @NotNull
     @Contract(pure = true)
     public Optional<User> getUser(@NotNull UUID uuid) {
-        touch(uuid);
-        return Optional.ofNullable(userMap.get(uuid));
+        User user = userMap.get(uuid);
+
+        if (user != null) {
+            touch(uuid);
+        }
+
+        return Optional.ofNullable(user);
     }
 
     /**
