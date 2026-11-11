@@ -90,6 +90,12 @@ public class SelectionManager {
             selection = new Selection(player, blockMarker, claim != null ? claim.main() != null ? claim.main() : claim : null);
         } else {
             selection = user.currentSelection();
+
+            if (isStale(player, selection)) {
+                destroySelection(player);
+                text.send(player, messages.claims().selecting().selectionRemoved());
+                return;
+            }
         }
 
         Claim resizingClaim = selection.resizingClaim();
@@ -411,6 +417,30 @@ public class SelectionManager {
         }
 
         return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(claiming.claimTool().stack()));
+    }
+
+    /**
+     * Whether the selection refers to a claim that was deleted, replaced or transferred away from the player.
+     *
+     * @param player    The player owning the selection.
+     * @param selection The selection to check.
+     * @return {@code true} if the selection can no longer be committed.
+     */
+    public boolean isStale(@NotNull Player player, @NotNull Selection selection) {
+        Claim resizing = selection.resizingClaim();
+
+        return isStaleClaim(player, selection.main())
+                || isStaleClaim(player, resizing)
+                || (resizing != null && isStaleClaim(player, resizing.main()));
+    }
+
+    private boolean isStaleClaim(Player player, @Nullable Claim claim) {
+        if (claim == null) {
+            return false;
+        }
+
+        return claimManager.getClaim(claim.claimId()).orElse(null) != claim
+                || !claim.owner().equals(player.getUniqueId());
     }
 
     /**

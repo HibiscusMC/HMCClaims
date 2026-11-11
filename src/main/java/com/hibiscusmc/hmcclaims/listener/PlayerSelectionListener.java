@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims.listener;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimCreateEvent;
+import com.hibiscusmc.hmcclaims.api.event.ClaimDeleteEvent;
 import com.hibiscusmc.hmcclaims.api.event.ClaimResizeEvent;
 import com.hibiscusmc.hmcclaims.api.event.PreClaimCreateEvent;
 import com.hibiscusmc.hmcclaims.api.event.PreClaimResizeEvent;
@@ -27,6 +28,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
@@ -164,6 +166,12 @@ public class PlayerSelectionListener implements Listener {
 
         Selection selection = user.currentSelection();
 
+        if (selectionManager.isStale(player, selection)) {
+            selectionManager.destroySelection(player);
+            text.send(player, messages.claims().selecting().selectionRemoved());
+            return;
+        }
+
         if (selection.points().size() < 2) {
             text.send(player, messages.claims().selecting().mustSelectPoints());
             return;
@@ -290,6 +298,37 @@ public class PlayerSelectionListener implements Listener {
 
         selectionManager.destroySelection(player);
         marker.clearAllMarks(player.getUniqueId());
+    }
+
+    /**
+     * Drops selections that refer to a claim that is being deleted.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onClaimDelete(ClaimDeleteEvent event) {
+        Claim deleted = event.claim();
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            User user = userManager.getUser(player.getUniqueId())
+                    .orElse(null);
+
+            if (user == null || !user.hasActiveSelection()) {
+                continue;
+            }
+
+            Selection selection = user.currentSelection();
+            Claim resizing = selection.resizingClaim();
+
+            boolean affected = selection.main() == deleted
+                    || resizing == deleted
+                    || (resizing != null && resizing.main() == deleted);
+
+            if (!affected) {
+                continue;
+            }
+
+            selectionManager.destroySelection(player);
+            text.send(player, messagesHolder.get().claims().selecting().selectionRemoved());
+        }
     }
 
     /**
