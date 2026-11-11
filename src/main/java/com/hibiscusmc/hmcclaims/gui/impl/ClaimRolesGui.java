@@ -339,6 +339,9 @@ public class ClaimRolesGui extends ClaimListGui {
                                             }
 
                                             role.rename(newName);
+                                            storageHolder.get().claims()
+                                                    .saveRoles(claim);
+
                                             it.notifyWindows();
                                         })
                                         .show(player);
