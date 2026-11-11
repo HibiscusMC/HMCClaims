@@ -25,7 +25,9 @@ import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -65,18 +67,8 @@ public class MovementPermissionListener implements Listener {
             return;
         }
 
-        Claim claim = claimManager.getClaimAt(to).orElse(null);
-
-        if (claim == null) {
-            return;
-        }
-
-        if (claim.equals(claimManager.getClaimAt(from).orElse(null))) {
-            return;
-        }
-
         Player player = event.getPlayer();
-        String denial = entryDenial(player, claim);
+        String denial = firstDenial(player, to, from);
 
         if (denial == null) {
             return;
@@ -95,14 +87,8 @@ public class MovementPermissionListener implements Listener {
     public void onLockedClaimTeleport(PlayerTeleportEvent event) {
         Location to = event.getTo();
 
-        Claim claim = claimManager.getClaimAt(to).orElse(null);
-
-        if (claim == null) {
-            return;
-        }
-
         Player player = event.getPlayer();
-        String denial = entryDenial(player, claim);
+        String denial = firstDenial(player, to, null);
 
         if (denial == null) {
             return;
@@ -132,13 +118,7 @@ public class MovementPermissionListener implements Listener {
                 continue;
             }
 
-            Claim claim = claimManager.getClaimAt(location).orElse(null);
-
-            if (claim == null || claim.equals(claimManager.getClaimAt(last).orElse(null))) {
-                continue;
-            }
-
-            String denial = entryDenial(player, claim);
+            String denial = firstDenial(player, location, last);
 
             if (denial == null) {
                 continue;
@@ -150,6 +130,32 @@ public class MovementPermissionListener implements Listener {
             player.leaveVehicle();
             player.teleport(last, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
+    }
+
+    private @Nullable String firstDenial(@NotNull Player player, @NotNull Location to, @Nullable Location from) {
+        List<Claim> claims = claimManager.getClaimsAt(to).stream()
+                .sorted(Comparator.comparing(claim -> claim.main() != null))
+                .toList();
+
+        if (claims.isEmpty()) {
+            return null;
+        }
+
+        List<Claim> alreadyInside = from == null ? List.of() : claimManager.getClaimsAt(from);
+
+        for (Claim claim : claims) {
+            if (alreadyInside.contains(claim)) {
+                continue;
+            }
+
+            String denial = entryDenial(player, claim);
+
+            if (denial != null) {
+                return denial;
+            }
+        }
+
+        return null;
     }
 
     private @Nullable String entryDenial(@NotNull Player player, @NotNull Claim claim) {
