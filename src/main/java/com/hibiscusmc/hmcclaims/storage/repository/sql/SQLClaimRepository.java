@@ -8,6 +8,7 @@ import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.impl.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.util.ByteUtil;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
@@ -214,7 +215,7 @@ public class SQLClaimRepository implements ClaimRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveClaim(@NotNull RawClaim claim) {
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimQuery)) {
                 ps.setBytes(1, ByteUtil.UUIDtoBytes(claim.claimId()));
@@ -246,7 +247,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save claim " + claim.claimId(), e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
@@ -254,7 +255,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         String name = claim.name();
 
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimNameQuery)) {
                 ps.setString(1, name);
@@ -264,7 +265,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save name for claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
@@ -277,7 +278,7 @@ public class SQLClaimRepository implements ClaimRepository {
         int minZ = region.minZ();
         int maxZ = region.maxZ();
 
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimRegionQuery)) {
                 ps.setInt(1, minX);
@@ -290,7 +291,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save region for claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
@@ -305,7 +306,7 @@ public class SQLClaimRepository implements ClaimRepository {
         int minZ = region.minZ();
         int maxZ = region.maxZ();
 
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveClaimMetaQuery)) {
                 ps.setString(1, name);
@@ -320,7 +321,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save meta for claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
@@ -328,7 +329,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         byte[] members = ClaimSerializer.serialize(claim.allMembers());
 
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveMemberQuery)) {
                 ps.setBytes(1, members);
@@ -338,7 +339,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save members for claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
@@ -346,7 +347,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         byte[] roles = ClaimSerializer.serialize(claim.roleRegistry());
 
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveRoleQuery)) {
                 ps.setBytes(1, roles);
@@ -356,7 +357,7 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save roles for claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
@@ -364,7 +365,7 @@ public class SQLClaimRepository implements ClaimRepository {
         UUID claimId = claim.claimId();
         byte[] settings = ClaimSerializer.serialize(claim.settings());
 
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
                 ps.setBytes(1, settings);
@@ -376,12 +377,12 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save settings for claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
     public @NotNull CompletableFuture<Void> deleteClaim(@NotNull UUID claimId) {
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.deleteClaimQuery)) {
                 ps.setBytes(1, ByteUtil.UUIDtoBytes(claimId));
@@ -390,7 +391,15 @@ public class SQLClaimRepository implements ClaimRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to delete claim " + claimId, e);
             }
-        }, executor);
+        }, executor));
+    }
+
+    private static CompletableFuture<Void> logged(CompletableFuture<Void> future) {
+        return future.whenComplete((ignored, ex) -> {
+            if (ex != null) {
+                Logger.error("A database write failed.", ex);
+            }
+        });
     }
 
     /**

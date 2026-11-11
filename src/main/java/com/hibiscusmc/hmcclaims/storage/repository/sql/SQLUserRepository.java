@@ -5,6 +5,7 @@ import com.hibiscusmc.hmcclaims.storage.impl.HikariStorage;
 import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.util.ByteUtil;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -97,7 +98,7 @@ public class SQLUserRepository implements UserRepository {
 
     @Override
     public @NotNull CompletableFuture<Void> saveUser(@NotNull User user) {
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             try (Connection con = storage.getConnection();
                  PreparedStatement ps = con.prepareStatement(this.saveUserQuery)) {
                 ps.setBytes(1, ByteUtil.UUIDtoBytes(user.uuid()));
@@ -109,12 +110,12 @@ public class SQLUserRepository implements UserRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to save user " + user.uuid(), e);
             }
-        }, executor);
+        }, executor));
     }
 
     @Override
     public @NotNull CompletableFuture<Void> saveUsers(@NotNull List<User> users) {
-        return CompletableFuture.runAsync(() -> {
+        return logged(CompletableFuture.runAsync(() -> {
             if (users.isEmpty()) return;
 
             try (Connection con = storage.getConnection()) {
@@ -137,7 +138,15 @@ public class SQLUserRepository implements UserRepository {
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to batch save users", e);
             }
-        }, executor);
+        }, executor));
+    }
+
+    private static CompletableFuture<Void> logged(CompletableFuture<Void> future) {
+        return future.whenComplete((ignored, ex) -> {
+            if (ex != null) {
+                Logger.error("A database write failed.", ex);
+            }
+        });
     }
 
     /**

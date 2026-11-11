@@ -106,11 +106,7 @@ public class PlayerDataListener implements Listener {
         manager.getUser(uuid).ifPresent(user -> {
             user.bypassMode(false);
 
-            storage.users().saveUser(user).whenComplete((value, ex) -> {
-                if (ex != null) {
-                    Logger.error("Couldn't save player data.", ex);
-                }
-            });
+            storage.users().saveUser(user);
         });
     }
 }

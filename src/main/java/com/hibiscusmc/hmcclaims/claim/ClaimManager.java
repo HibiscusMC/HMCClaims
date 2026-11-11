@@ -127,11 +127,7 @@ public class ClaimManager {
         ClaimRepository repository = storageHolder.get().claims();
 
         for (Claim claim : claims.values()) {
-            repository.saveClaim(claim).whenComplete((ignored, ex) -> {
-                if (ex != null) {
-                    Logger.error("Couldn't save claim " + claim.claimId() + ".", ex);
-                }
-            });
+            repository.saveClaim(claim);
         }
     }
 

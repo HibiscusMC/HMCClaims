@@ -4,7 +4,6 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
-import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMaps;
@@ -175,11 +174,8 @@ public class UserManager {
      * Queues a save of every cached user.
      */
     public void saveAll() {
-        storageHolder.get().users().saveUsers(List.copyOf(userMap.values())).whenComplete((ignored, ex) -> {
-            if (ex != null) {
-                Logger.error("Couldn't save users.", ex);
-            }
-        });
+        storageHolder.get().users()
+                .saveUsers(List.copyOf(userMap.values()));
     }
 
     private void touch(UUID uuid) {
@@ -218,13 +214,8 @@ public class UserManager {
             it.remove();
             lastAccess.removeLong(uuid);
 
-            storage.users().saveUser(user).whenComplete((ignored, ex) -> {
-                if (ex != null) {
-                    Logger.error("Couldn't save user " + uuid + ".", ex);
-                }
-
-                evictingUsers.remove(uuid, user);
-            });
+            storage.users().saveUser(user)
+                    .whenComplete((ignored, ex) -> evictingUsers.remove(uuid, user));
         }
     }
 }
