@@ -29,6 +29,9 @@ import java.util.concurrent.CompletableFuture;
 @Command(names = {"claimblocks", "cbs"}, permission = "hmcclaims.commands.claimblocks")
 public class ClaimBlocksCommand implements CommandClass {
 
+    // The users.claim_blocks column is an INT.
+    private static final long MAX_CLAIM_BLOCKS = Integer.MAX_VALUE;
+
     @Inject
     private UserManager userManager;
 
@@ -105,6 +108,13 @@ public class ClaimBlocksCommand implements CommandClass {
             return;
         }
 
+        if (user.claimBlocks() + amount > MAX_CLAIM_BLOCKS) {
+            text.send(sender, messages.commands().claimBlocks().limitReached(), Map.of(
+                    "max", MAX_CLAIM_BLOCKS + ""
+            ));
+            return;
+        }
+
         double cost = amount * purchase.price();
         double balance = economy.balance(sender);
 
@@ -175,8 +185,10 @@ public class ClaimBlocksCommand implements CommandClass {
 
             long current = user.claimBlocks();
 
-            if (current + amount < 0) {
-                text.send(sender, messages.commands().claimBlocks().invalid());
+            if (current + amount > MAX_CLAIM_BLOCKS) {
+                text.send(sender, messages.commands().claimBlocks().limitReached(), Map.of(
+                        "max", MAX_CLAIM_BLOCKS + ""
+                ));
                 return;
             }
 

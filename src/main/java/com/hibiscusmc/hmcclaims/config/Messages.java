@@ -301,6 +301,8 @@ public class Messages {
             private String notEnoughMoney = "<prefix><red>You don't have enough money! <gray>Cost: <white><cost></white>, <gray>Balance: <white><balance>";
 
             private String purchaseFailed = "<prefix><red>The purchase couldn't be completed. Please try again later.";
+
+            private String limitReached = "<prefix><red>That would go over the limit of <white><max></white> claim blocks!";
         }
     }
 
