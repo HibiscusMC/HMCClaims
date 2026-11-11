@@ -7,6 +7,7 @@ import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.storage.repository.UserRepository;
 import com.hibiscusmc.hmcclaims.storage.repository.sql.SQLClaimRepository;
 import com.hibiscusmc.hmcclaims.storage.repository.sql.SQLUserRepository;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Setter;
@@ -29,15 +30,13 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class HikariStorage implements Storage {
 
+    private static final long CLOSE_TIMEOUT_SECONDS = 30;
+
     /**
      * Dedicated thread pool for executing database operations off the main server thread.
+     * Created on {@link #initialize(Settings.Storage)} and drained on {@link #close()}.
      */
-    private final ExecutorService executor = Executors.newFixedThreadPool(10,
-            new ThreadFactoryBuilder()
-                    .setNameFormat("hmcclaims-hikari-%d")
-                    .setDaemon(true)
-                    .build()
-    );
+    private ExecutorService executor;
 
     private HikariDataSource dataSource;
 
@@ -135,12 +134,29 @@ public abstract class HikariStorage implements Storage {
 
         this.setup(storage);
 
+        this.executor = Executors.newFixedThreadPool(10, new ThreadFactoryBuilder()
+                .setNameFormat("hmcclaims-hikari-%d")
+                .setDaemon(true)
+                .build());
+
         this.users = new SQLUserRepository(storage, this, executor);
         this.claims = new SQLClaimRepository(storage, this, executor);
     }
 
     @Override
     public void close() {
+        if (executor != null) {
+            executor.shutdown();
+
+            try {
+                if (!executor.awaitTermination(CLOSE_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                    Logger.warning("Pending database writes didn't finish within {}s; closing the connection pool anyway.", CLOSE_TIMEOUT_SECONDS);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
         if (dataSource == null) {
             return;
         }
