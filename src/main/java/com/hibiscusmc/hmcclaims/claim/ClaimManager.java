@@ -184,8 +184,11 @@ public class ClaimManager {
             RawClaim snapshot = newClaim.deflate();
 
             storage.users().saveUser(user)
-                    .thenAccept(v -> {
-                        user.persistent(true);
+                    .whenComplete((v, ex) -> {
+                        if (ex == null) {
+                            user.persistent(true);
+                        }
+
                         claimRepository.saveClaim(snapshot);
                     });
         } else {
@@ -534,8 +537,11 @@ public class ClaimManager {
         }
 
         storage.users().saveUser(recipient)
-                .thenAccept(v -> {
-                    recipient.persistent(true);
+                .whenComplete((v, ex) -> {
+                    if (ex == null) {
+                        recipient.persistent(true);
+                    }
+
                     save.run();
                 });
     }
