@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}users`
     claim_blocks    INT       DEFAULT 0,
     last_online     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    INDEX idx_name (last_known_name)
+    INDEX `{prefix}idx_name` (last_known_name)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS `{prefix}claims`
 
     schema_version INT       DEFAULT 1     NOT NULL,
 
-    CONSTRAINT fk_parent FOREIGN KEY (parent_uuid)
+    CONSTRAINT `{prefix}fk_parent` FOREIGN KEY (parent_uuid)
         REFERENCES `{prefix}claims` (uuid) ON DELETE CASCADE,
-    CONSTRAINT fk_claim_owner FOREIGN KEY (owner)
+    CONSTRAINT `{prefix}fk_claim_owner` FOREIGN KEY (owner)
         REFERENCES `{prefix}users` (uuid) ON DELETE CASCADE,
 
-    INDEX idx_claims_spatial (world_name, min_x, max_x, min_z, max_z)
+    INDEX `{prefix}idx_claims_spatial` (world_name, min_x, max_x, min_z, max_z)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;

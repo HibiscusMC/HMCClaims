@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS `{prefix}users`
     last_online     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_name ON `{prefix}users` (last_known_name);
+DROP INDEX IF EXISTS idx_name;
+
+CREATE INDEX IF NOT EXISTS `{prefix}idx_name` ON `{prefix}users` (last_known_name);
 
 CREATE TABLE IF NOT EXISTS `{prefix}claims`
 (
@@ -28,10 +30,12 @@ CREATE TABLE IF NOT EXISTS `{prefix}claims`
 
     schema_version INT       DEFAULT 1     NOT NULL,
 
-    CONSTRAINT fk_parent FOREIGN KEY (parent_uuid)
+    CONSTRAINT `{prefix}fk_parent` FOREIGN KEY (parent_uuid)
         REFERENCES `{prefix}claims` (uuid) ON DELETE CASCADE,
-    CONSTRAINT fk_claim_owner FOREIGN KEY (owner)
+    CONSTRAINT `{prefix}fk_claim_owner` FOREIGN KEY (owner)
         REFERENCES `{prefix}users` (uuid) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_claims_spatial ON `{prefix}claims` (world_name, min_x, max_x, min_z, max_z);
+DROP INDEX IF EXISTS idx_claims_spatial;
+
+CREATE INDEX IF NOT EXISTS `{prefix}idx_claims_spatial` ON `{prefix}claims` (world_name, min_x, max_x, min_z, max_z);
