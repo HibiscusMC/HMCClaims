@@ -478,7 +478,7 @@ public class ClaimManager {
     @NotNull
     @Contract(pure = true)
     public Set<Claim> getPlayerClaims(@NotNull UUID uuid) {
-        return playerClaims.getOrDefault(uuid, Collections.emptySet());
+        return Collections.unmodifiableSet(playerClaims.getOrDefault(uuid, Collections.emptySet()));
     }
 
     /**
