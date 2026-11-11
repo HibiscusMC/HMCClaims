@@ -4,6 +4,7 @@ import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.util.Logger;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMaps;
@@ -39,6 +40,9 @@ public class UserManager {
     // De-duplicates concurrent DB loads for the same UUID
     private final Map<UUID, CompletableFuture<User>> loadingUsers = new ConcurrentHashMap<>();
 
+    // Evicted users whose final save hasn't finished; loads reuse them instead of reading a stale row
+    private final Map<UUID, User> evictingUsers = new ConcurrentHashMap<>();
+
     private final ClaimManager claimManager;
 
     private final ConfigHolder<Settings> settings;
@@ -62,16 +66,6 @@ public class UserManager {
     public void cacheUser(@NotNull User user) {
         userMap.put(user.uuid(), user);
         touch(user.uuid());
-    }
-
-    /**
-     * Removes a user from the local cache.
-     *
-     * @param uuid The {@link UUID} of the user to invalidate.
-     */
-    public void invalidateUser(@NotNull UUID uuid) {
-        userMap.remove(uuid);
-        lastAccess.removeLong(uuid);
     }
 
     /**
@@ -154,6 +148,12 @@ public class UserManager {
             return CompletableFuture.completedFuture(cached);
         }
 
+        User evicting = evictingUsers.get(uuid);
+        if (evicting != null) {
+            cacheUser(evicting);
+            return CompletableFuture.completedFuture(evicting);
+        }
+
         CompletableFuture<User> future = loadingUsers.computeIfAbsent(uuid, id ->
                 storageHolder.get().users().getUser(id).thenApply(user -> {
                     if (user == null) {
@@ -200,9 +200,19 @@ public class UserManager {
                 continue;
             }
 
+            User user = entry.getValue();
+
+            evictingUsers.put(uuid, user);
             it.remove();
             lastAccess.removeLong(uuid);
-            storage.users().saveUser(entry.getValue());
+
+            storage.users().saveUser(user).whenComplete((ignored, ex) -> {
+                if (ex != null) {
+                    Logger.error("Couldn't save user " + uuid + ".", ex);
+                }
+
+                evictingUsers.remove(uuid, user);
+            });
         }
     }
 }
