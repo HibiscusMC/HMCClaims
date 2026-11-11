@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.selection;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimRegion;
+import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.marker.BlockMarker;
@@ -44,6 +45,11 @@ public class SelectionManager {
     private final Map<UUID, Player> resizingPlayers = new ConcurrentHashMap<>();
 
     private ResizeDisplayTask displayTask;
+
+    private volatile ToolKey toolKey;
+
+    private record ToolKey(ConfigItem item, String value) {
+    }
 
     @Inject
     private Plugin plugin;
@@ -411,12 +417,19 @@ public class SelectionManager {
         }
 
         Settings.Claiming claiming = settingsHolder.get().claiming();
+        ConfigItem configured = claiming.claimTool();
 
         if (claiming.claimToolStrict()) {
-            return tool.isSimilar(claiming.claimTool().stack());
+            return tool.isSimilar(configured.stack());
         }
 
-        return Hooks.getStringItem(tool).equalsIgnoreCase(Hooks.getStringItem(claiming.claimTool().stack()));
+        ToolKey key = toolKey;
+        if (key == null || key.item() != configured) {
+            key = new ToolKey(configured, Hooks.getStringItem(configured.stack()));
+            toolKey = key;
+        }
+
+        return Hooks.getStringItem(tool).equalsIgnoreCase(key.value());
     }
 
     /**

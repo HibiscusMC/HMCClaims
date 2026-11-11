@@ -65,7 +65,7 @@ public class SQLClaimRepository implements ClaimRepository {
         this.getAllClaimsQuery = "SELECT * FROM " + prefix + "claims " +
                 "WHERE world_name = ? AND parent_uuid IS NULL;";
         this.getAllSubClaimsQuery = "SELECT * FROM " + prefix + "claims " +
-                "WHERE parent_uuid IS NOT NULL;";
+                "WHERE parent_uuid IS NOT NULL AND world_name = ?;";
         this.getClaimQuery = "SELECT * FROM " + prefix + "claims " +
                 "WHERE uuid = ?;";
 
@@ -99,6 +99,8 @@ public class SQLClaimRepository implements ClaimRepository {
                 Map<UUID, Set<RawClaim>> subClaims = new HashMap<>();
 
                 try (PreparedStatement ps = con.prepareStatement(this.getAllSubClaimsQuery)) {
+                    ps.setString(1, worldName);
+
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
                             UUID parentId = ByteUtil.bytesToUUID(rs.getBytes("parent_uuid"));

@@ -19,8 +19,9 @@ import com.hibiscusmc.hmcclaims.util.Logger;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArraySet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
 import lombok.Getter;
 import net.kyori.adventure.key.InvalidKeyException;
 import net.minecraft.server.players.NameAndId;
@@ -34,7 +35,6 @@ import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -217,7 +217,8 @@ public class ClaimManager {
         int minZ = region.minZ() >> 4;
         int maxZ = region.maxZ() >> 4;
 
-        LongSet chunks = new LongArraySet();
+        long chunkCount = (long) (maxX - minX + 1) * (maxZ - minZ + 1);
+        LongSet chunks = new LongOpenHashSet((int) Math.min(chunkCount, 1 << 16));
 
         for (int cx = minX; cx <= maxX; cx++) {
             for (int cz = minZ; cz <= maxZ; cz++) {
@@ -289,7 +290,7 @@ public class ClaimManager {
             }
         }
 
-        claim.chunks(new LongArraySet());
+        claim.chunks(LongSets.EMPTY_SET);
     }
 
     /**
@@ -301,7 +302,7 @@ public class ClaimManager {
     @NotNull
     @Contract(pure = true)
     public List<Claim> getClaimsAt(@NotNull Location loc) {
-        Map<Long, Set<Claim>> chunkMap = worldChunkMaps.get(loc.getWorld().getName());
+        Long2ObjectMap<Set<Claim>> chunkMap = worldChunkMaps.get(loc.getWorld().getName());
         if (chunkMap == null) {
             return List.of();
         }
@@ -313,9 +314,15 @@ public class ClaimManager {
             return List.of();
         }
 
-        return claimsInChunk.stream()
-                .filter(claim -> claim.region().contains(loc))
-                .toList();
+        List<Claim> found = new ArrayList<>();
+
+        for (Claim claim : claimsInChunk) {
+            if (claim.region().contains(loc)) {
+                found.add(claim);
+            }
+        }
+
+        return found;
     }
 
     /**
@@ -324,7 +331,7 @@ public class ClaimManager {
     @NotNull
     @Contract(pure = true)
     public Set<Claim> getClaimsNear(@NotNull Location center, double radius) {
-        Map<Long, Set<Claim>> chunkMap = worldChunkMaps.get(center.getWorld().getName());
+        Long2ObjectMap<Set<Claim>> chunkMap = worldChunkMaps.get(center.getWorld().getName());
         if (chunkMap == null) {
             return Set.of();
         }
@@ -369,13 +376,29 @@ public class ClaimManager {
     @NotNull
     @Contract(pure = true)
     public Optional<Claim> getClaimAt(@NotNull Location loc) {
-        List<Claim> claims = getClaimsAt(loc);
-        if (claims.isEmpty()) {
+        Long2ObjectMap<Set<Claim>> chunkMap = worldChunkMaps.get(loc.getWorld().getName());
+        if (chunkMap == null) {
             return Optional.empty();
         }
 
-        return claims.stream()
-                .max(Comparator.comparingInt(this::getClaimDepth));
+        Set<Claim> claimsInChunk = chunkMap.get(ChunkUtil.getChunkKey(loc.getBlockX() >> 4, loc.getBlockZ() >> 4));
+        if (claimsInChunk == null) {
+            return Optional.empty();
+        }
+
+        Claim deepest = null;
+
+        for (Claim claim : claimsInChunk) {
+            if (!claim.region().contains(loc)) {
+                continue;
+            }
+
+            if (deepest == null || getClaimDepth(claim) > getClaimDepth(deepest)) {
+                deepest = claim;
+            }
+        }
+
+        return Optional.ofNullable(deepest);
     }
 
     /**
@@ -552,7 +575,7 @@ public class ClaimManager {
         int maxZ = newRegion.maxZ() >> 4;
 
         String worldName = newRegion.worldName();
-        Map<Long, Set<Claim>> worldClaims = worldChunkMaps.get(worldName);
+        Long2ObjectMap<Set<Claim>> worldClaims = worldChunkMaps.get(worldName);
 
         for (int cx = minX; cx <= maxX; cx++) {
             for (int cz = minZ; cz <= maxZ; cz++) {

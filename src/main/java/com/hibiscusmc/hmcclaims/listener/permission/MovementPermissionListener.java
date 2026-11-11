@@ -239,7 +239,13 @@ public class MovementPermissionListener implements Listener {
 
         Location to = event.getTo();
 
-        Claim fromClaim = claimManager.getClaimAt(event.getFrom()).orElse(null);
+        Location from = event.getFrom();
+        if (from.getBlockX() == to.getBlockX()
+                && from.getBlockZ() == to.getBlockZ()) {
+            return;
+        }
+
+        Claim fromClaim = claimManager.getClaimAt(from).orElse(null);
         Claim toClaim = claimManager.getClaimAt(to).orElse(null);
         if (toClaim == null || toClaim.equals(fromClaim)) {
             return;

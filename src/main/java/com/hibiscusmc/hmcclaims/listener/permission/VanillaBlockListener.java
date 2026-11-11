@@ -69,8 +69,7 @@ public class VanillaBlockListener implements Listener {
             return;
         }
 
-        BlockState state = block.getState();
-        if (!(state instanceof Container)) {
+        if (!(block.getState(false) instanceof Container)) {
             return;
         }
 
@@ -242,8 +241,7 @@ public class VanillaBlockListener implements Listener {
         }
 
         Material type = block.getType();
-        if (block.getState() instanceof Container
-                || isDoor(type)
+        if (isDoor(type)
                 || Tag.TRAPDOORS.isTagged(type)
                 || type == Material.LECTERN
                 || isRedstone(type, event.getAction())) {
@@ -259,6 +257,10 @@ public class VanillaBlockListener implements Listener {
         }
 
         if (access.hasPermission(player, claim, Permission.PLAYER_INTERACT)) {
+            return;
+        }
+
+        if (block.getState(false) instanceof Container) {
             return;
         }
 
