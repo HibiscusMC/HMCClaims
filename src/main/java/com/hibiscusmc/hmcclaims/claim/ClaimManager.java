@@ -77,13 +77,6 @@ public class ClaimManager {
     private final Map<UUID, Claim> claims
             = new ConcurrentHashMap<>();
 
-    /**
-     * Set of claims that are still loading and players shouldn't be able to
-     * interact in.
-     */
-    private final Set<UUID> pendingClaims
-            = ConcurrentHashMap.newKeySet();
-
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
 
@@ -95,34 +88,6 @@ public class ClaimManager {
 
     @Inject
     private UnloadedClaims unloadedClaims;
-
-    /**
-     * Checks if the claim is still loading.
-     *
-     * @param claimId The id of the claim to check.
-     * @return {@code true} if the claim is still loading, {@code false} otherwise.
-     */
-    public boolean isClaimLoading(UUID claimId) {
-        return pendingClaims.contains(claimId);
-    }
-
-    /**
-     * Adds a claim to the pending set.
-     *
-     * @param claimId The id of the claim to check.
-     */
-    public void addPendingClaim(UUID claimId) {
-        pendingClaims.add(claimId);
-    }
-
-    /**
-     * Removes a claim from the pending set.
-     *
-     * @param claimId The id of the claim to check.
-     */
-    public void removePendingClaim(UUID claimId) {
-        pendingClaims.remove(claimId);
-    }
 
     @NotNull
     private ClaimRole defaultRole(@NotNull Permissions.DefaultRole role) {

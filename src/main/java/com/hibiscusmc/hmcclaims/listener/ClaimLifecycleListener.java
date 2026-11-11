@@ -16,12 +16,13 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +30,7 @@ import team.unnamed.inject.Inject;
 import team.unnamed.inject.Singleton;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -50,7 +51,7 @@ public class ClaimLifecycleListener implements Listener {
     private static final int STARTUP_ATTEMPTS = 3;
     private static final long RETRY_DELAY_SECONDS = 3;
 
-    private final Set<UUID> claimsUnloading
+    private final Set<String> indexedWorlds
             = ConcurrentHashMap.newKeySet();
 
     private final ExecutorService executor
@@ -61,6 +62,8 @@ public class ClaimLifecycleListener implements Listener {
     private final StorageHolder storageHolder;
 
     private final UnloadedClaims unloadedClaims;
+
+    private volatile boolean started;
 
     @Inject
     public ClaimLifecycleListener(ClaimManager claimManager, StorageHolder storageHolder, UnloadedClaims unloadedClaims, SchedulerUtil scheduler) {
@@ -89,43 +92,26 @@ public class ClaimLifecycleListener implements Listener {
                 while (iterator.hasNext() && checked++ < BATCH_SIZE) {
                     Claim claim = iterator.next();
 
+                    if (claim.main() != null) {
+                        continue;
+                    }
+
                     if (System.currentTimeMillis() - claim.ttl() < TimeUnit.MINUTES.toMillis(1)) {
                         continue;
                     }
 
-                    if (claimsUnloading.contains(claim.claimId())) {
-                        continue;
-                    }
-
-                    Player owner = Bukkit.getPlayer(claim.owner());
-                    if (owner != null) {
-                        continue;
-                    }
-
-                    World world = claim.region().bukkitWorld();
-                    boolean shouldUnload = true;
-                    for (long chunkKey : claim.chunks()) {
-                        ChunkUtil.ChunkHolder chunkHolder = ChunkUtil.fromChunkKey(chunkKey);
-
-                        if (world.isChunkLoaded(chunkHolder.x(), chunkHolder.z())) {
-                            shouldUnload = false;
-                            break;
-                        }
-                    }
-
-                    if (!shouldUnload) {
+                    if (!isUnloadable(claim)) {
                         continue;
                     }
 
                     claimsToUnload.add(claim);
-                    claimsUnloading.add(claim.claimId());
                 }
 
                 if (claimsToUnload.isEmpty()) {
                     return;
                 }
 
-                saveClaims(claimsToUnload, false);
+                unloadClaims(claimsToUnload, false);
             }
         }, 5L);
     }
@@ -135,6 +121,8 @@ public class ClaimLifecycleListener implements Listener {
         if (event.getType() != ServerLoadEvent.LoadType.STARTUP) {
             return;
         }
+
+        started = true;
 
         Storage storage = storageHolder.get();
         List<String> failedWorlds = new ArrayList<>();
@@ -150,12 +138,8 @@ public class ClaimLifecycleListener implements Listener {
                 continue;
             }
 
-            unloadedClaims.chunks().put(worldName, holder.chunks());
-
-            for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
-                unloadedClaims.players().computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
-                        .addAll(playerEntry.getValue());
-            }
+            indexWorld(worldName, holder);
+            loadLoadedChunks(world);
 
             long end = System.currentTimeMillis() - start;
 
@@ -198,14 +182,40 @@ public class ClaimLifecycleListener implements Listener {
     }
 
     @EventHandler
-    public void onWorldUnload(WorldUnloadEvent event) {
+    public void onWorldLoad(WorldLoadEvent event) {
+        if (!started) {
+            return;
+        }
+
         World world = event.getWorld();
+        String worldName = world.getName();
 
-        Set<Claim> claims = claimManager.worldClaims()
-                .getOrDefault(world.getName(), Set.of());
+        if (indexedWorlds.contains(worldName)) {
+            loadLoadedChunks(world);
+            return;
+        }
 
-        saveClaims(claims, true);
-        unloadedClaims.chunks().remove(world.getName());
+        RawClaim.CacheHolder holder = loadWorldClaims(storageHolder.get(), worldName);
+        if (holder == null) {
+            Logger.error("Couldn't load the claims of world '{}', they won't be protected until it's loaded again", worldName);
+            return;
+        }
+
+        indexWorld(worldName, holder);
+        loadLoadedChunks(world);
+    }
+
+    @EventHandler
+    public void onWorldUnload(WorldUnloadEvent event) {
+        Set<Claim> claims = new HashSet<>();
+
+        for (Claim claim : claimManager.worldClaims().getOrDefault(event.getWorld().getName(), Set.of())) {
+            if (claim.main() == null) {
+                claims.add(claim);
+            }
+        }
+
+        unloadClaims(claims, true);
     }
 
     @EventHandler
@@ -227,9 +237,9 @@ public class ClaimLifecycleListener implements Listener {
         loadClaims(chunkClaims);
     }
 
-    @EventHandler
-    public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
-        UUID playerId = event.getUniqueId();
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        UUID playerId = event.getPlayer().getUniqueId();
 
         Set<RawClaim> rawClaims = unloadedClaims.players().get(playerId);
         if (rawClaims == null || rawClaims.isEmpty()) {
@@ -240,153 +250,181 @@ public class ClaimLifecycleListener implements Listener {
         loadClaims(rawClaims);
     }
 
-    /**
-     * Asynchronously loads, inflates, and caches a set of raw claims.
-     * <p>
-     * This method filters out claims that are already in the process of loading,
-     * marks the remaining claims as pending, and then processes them asynchronously
-     * using the configured {@link #executor}.
-     * </p>
-     * <p>
-     * <b>Asynchronous Lifecycle:</b>
-     * <ul>
-     * <li><b>Inflation:</b> Each raw claim is inflated into a full {@link Claim} object.</li>
-     * <li><b>Caching:</b> Both the parent claims and any nested sub-claims are registered
-     * into the {@code claimManager} cache.</li>
-     * <li><b>Cleanup:</b> Upon successful processing, the claims are removed from the pending status,
-     * and their tracking references are purged from both the {@code unloadedClaims.players()} and
-     * {@code unloadedClaims.chunks()} temporary maps.</li>
-     * <li><b>Error Handling:</b> If an exception occurs during the asynchronous task, all
-     * claims targeted in this batch are stripped of their pending status to allow for future
-     * retry attempts, and the error is logged.</li>
-     * </ul>
-     * </p>
-     *
-     * @param claims a {@link Set} of {@link RawClaim} objects to be processed; must not be null
-     * @see ClaimManager#addPendingClaim(UUID)
-     * @see ClaimManager#addClaimToCache(Claim)
-     * @see ClaimManager#removePendingClaim(UUID)
-     */
-    private void loadClaims(@NotNull Set<RawClaim> claims) {
-        Set<RawClaim> claimsToLoad = ConcurrentHashMap.newKeySet();
-        for (RawClaim rawClaim : claims) {
-            if (claimManager.isClaimLoading(rawClaim.claimId())) {
+    private boolean isUnloadable(@NotNull Claim claim) {
+        if (Bukkit.getPlayer(claim.owner()) != null) {
+            return false;
+        }
+
+        for (Claim subClaim : claim.subClaims()) {
+            if (Bukkit.getPlayer(subClaim.owner()) != null) {
+                return false;
+            }
+        }
+
+        World world = claim.region().bukkitWorld();
+        if (world == null) {
+            return true;
+        }
+
+        for (long chunkKey : claim.chunks()) {
+            ChunkUtil.ChunkHolder chunkHolder = ChunkUtil.fromChunkKey(chunkKey);
+
+            if (world.isChunkLoaded(chunkHolder.x(), chunkHolder.z())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void indexWorld(@NotNull String worldName, @NotNull RawClaim.CacheHolder holder) {
+        Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().computeIfAbsent(worldName, k ->
+                Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>())
+        );
+
+        for (Long2ObjectMap.Entry<Set<RawClaim>> chunkEntry : holder.chunks().long2ObjectEntrySet()) {
+            chunks.computeIfAbsent(chunkEntry.getLongKey(), k -> ConcurrentHashMap.newKeySet())
+                    .addAll(chunkEntry.getValue());
+        }
+
+        for (Map.Entry<UUID, Set<RawClaim>> playerEntry : holder.players().entrySet()) {
+            unloadedClaims.players().computeIfAbsent(playerEntry.getKey(), k -> ConcurrentHashMap.newKeySet())
+                    .addAll(playerEntry.getValue());
+        }
+
+        indexedWorlds.add(worldName);
+    }
+
+    private void loadLoadedChunks(@NotNull World world) {
+        Set<RawClaim> toLoad = new HashSet<>();
+
+        for (Chunk chunk : world.getLoadedChunks()) {
+            toLoad.addAll(unloadedClaims.at(world.getName(), ChunkUtil.getChunkKey(chunk.getX(), chunk.getZ())));
+        }
+
+        loadClaims(toLoad);
+    }
+
+    // Main thread only: the caches and the unloaded index aren't touched anywhere else.
+    private void loadClaims(@NotNull Collection<RawClaim> raws) {
+        for (RawClaim raw : List.copyOf(raws)) {
+            if (claimManager.getClaim(raw.claimId()).isPresent()) {
+                unindex(raw);
                 continue;
             }
 
-            claimManager.addPendingClaim(rawClaim.claimId());
-            claimsToLoad.add(rawClaim);
+            try {
+                Claim claim = raw.inflate(null);
+
+                claimManager.addClaimToCache(claim);
+
+                for (Claim subClaim : claim.subClaims()) {
+                    claimManager.addClaimToCache(subClaim);
+                }
+            } catch (RuntimeException ex) {
+                Logger.error("Couldn't load claim " + raw.claimId(), ex);
+                continue;
+            }
+
+            unindex(raw);
+        }
+    }
+
+    // Main thread only: the caches and the unloaded index aren't touched anywhere else.
+    private void unloadClaims(@NotNull Collection<Claim> topLevelClaims, boolean sync) {
+        List<RawClaim> raws = new ArrayList<>();
+
+        for (Claim claim : topLevelClaims) {
+            RawClaim raw = claim.deflate();
+
+            for (Claim subClaim : claim.subClaims()) {
+                claimManager.removeClaimFromCache(subClaim);
+            }
+
+            claimManager.removeClaimFromCache(claim);
+            index(raw);
+            raws.add(raw);
         }
 
-        if (claimsToLoad.isEmpty()) {
+        if (raws.isEmpty()) {
             return;
         }
 
-        CompletableFuture
-                .supplyAsync(() -> {
-                    Set<Claim> claimsSet = ConcurrentHashMap.newKeySet();
-
-                    for (RawClaim rawClaim : claimsToLoad) {
-                        Claim claim = rawClaim.inflate(null);
-
-                        claimsSet.add(claim);
-                        claimManager.addClaimToCache(claim);
-
-                        for (Claim subClaim : claim.subClaims()) {
-                            claimManager.addClaimToCache(subClaim);
-                        }
-                    }
-
-                    return claimsSet;
-                }, executor)
-                .whenComplete((claimsSet, throwable) -> {
-                    if (throwable != null) {
-                        for (RawClaim claimId : claimsToLoad) {
-                            claimManager.removePendingClaim(claimId.claimId());
-                        }
-
-                        Logger.error("Something went wrong while loading the claims", throwable);
-                        return;
-                    }
-
-                    for (Claim claim : claimsSet) {
-                        claimManager.removePendingClaim(claim.claimId());
-
-                        Set<RawClaim> playerClaims = unloadedClaims.players().get(claim.owner());
-                        playerClaims.removeIf(playerClaim -> playerClaim.claimId().equals(claim.claimId()));
-
-                        if (playerClaims.isEmpty()) {
-                            unloadedClaims.players().remove(claim.owner());
-                        }
-
-                        Long2ObjectMap<Set<RawClaim>> chunksHolder = unloadedClaims.chunks().get(claim.region().worldName());
-
-                        for (long claimChunkKey : claim.chunks()) {
-                            Set<RawClaim> chunkClaims = chunksHolder.get(claimChunkKey);
-                            if (chunkClaims == null) {
-                                continue;
-                            }
-
-                            chunkClaims.removeIf(unloadedClaim -> unloadedClaim.claimId().equals(claim.claimId()));
-
-                            synchronized (chunksHolder) {
-                                if (chunkClaims.isEmpty()) {
-                                    chunksHolder.remove(claimChunkKey);
-                                }
-                            }
-                        }
-
-                        if (chunksHolder.isEmpty()) {
-                            unloadedClaims.chunks().remove(claim.region().worldName());
-                        }
-                    }
-                });
-    }
-
-    /**
-     * Saves the claims sequentially to avoid database locks.
-     *
-     * @param claims The list of claims to save.
-     * @param sync   If the execution should lock the main thread or an asynchronous thread.
-     */
-    private void saveClaims(@NotNull Set<Claim> claims, boolean sync) {
-        // Snapshot on the calling thread, the claims can still be edited while the async save runs.
-        Map<Claim, RawClaim> snapshots = new HashMap<>();
-        for (Claim claim : claims) {
-            snapshots.put(claim, claim.deflate());
-        }
-
-        Runnable unload = () -> {
+        Runnable save = () -> {
             Storage storage = storageHolder.get();
 
-            for (Map.Entry<Claim, RawClaim> entry : snapshots.entrySet()) {
-                Claim claim = entry.getKey();
-                RawClaim rawClaim = entry.getValue();
+            for (RawClaim raw : raws) {
+                saveRow(storage, raw);
 
-                storage.claims().saveClaim(rawClaim)
-                        .join();
-
-                Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().computeIfAbsent(rawClaim.worldName(), (k) ->
-                        Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>())
-                );
-
-                unloadedClaims.players().computeIfAbsent(rawClaim.owner(), k -> ConcurrentHashMap.newKeySet())
-                        .add(rawClaim);
-
-                for (long claimChunkKey : claim.chunks()) {
-                    chunks.computeIfAbsent(claimChunkKey, k -> ConcurrentHashMap.newKeySet())
-                            .add(rawClaim);
+                for (RawClaim subRaw : raw.subClaims()) {
+                    saveRow(storage, subRaw);
                 }
-
-                claimManager.removeClaimFromCache(claim);
-                claimsUnloading.remove(claim.claimId());
             }
         };
 
         if (sync) {
-            unload.run();
+            save.run();
         } else {
-            CompletableFuture.runAsync(unload, executor);
+            CompletableFuture.runAsync(save, executor);
+        }
+    }
+
+    private void saveRow(@NotNull Storage storage, @NotNull RawClaim raw) {
+        try {
+            storage.claims().saveClaim(raw).join();
+        } catch (RuntimeException ex) {
+            Logger.error("Couldn't save claim " + raw.claimId() + " while unloading it", ex);
+        }
+    }
+
+    private void index(@NotNull RawClaim raw) {
+        unloadedClaims.players().computeIfAbsent(raw.owner(), k -> ConcurrentHashMap.newKeySet())
+                .add(raw);
+
+        Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().computeIfAbsent(raw.worldName(), k ->
+                Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>())
+        );
+
+        for (int x = raw.minX() >> 4; x <= raw.maxX() >> 4; x++) {
+            for (int z = raw.minZ() >> 4; z <= raw.maxZ() >> 4; z++) {
+                chunks.computeIfAbsent(ChunkUtil.getChunkKey(x, z), k -> ConcurrentHashMap.newKeySet())
+                        .add(raw);
+            }
+        }
+    }
+
+    private void unindex(@NotNull RawClaim raw) {
+        UUID id = raw.claimId();
+
+        Set<RawClaim> playerClaims = unloadedClaims.players().get(raw.owner());
+        if (playerClaims != null) {
+            playerClaims.removeIf(r -> r.claimId().equals(id));
+
+            if (playerClaims.isEmpty()) {
+                unloadedClaims.players().remove(raw.owner());
+            }
+        }
+
+        Long2ObjectMap<Set<RawClaim>> chunks = unloadedClaims.chunks().get(raw.worldName());
+        if (chunks == null) {
+            return;
+        }
+
+        for (int x = raw.minX() >> 4; x <= raw.maxX() >> 4; x++) {
+            for (int z = raw.minZ() >> 4; z <= raw.maxZ() >> 4; z++) {
+                long key = ChunkUtil.getChunkKey(x, z);
+                Set<RawClaim> chunkClaims = chunks.get(key);
+
+                if (chunkClaims == null) {
+                    continue;
+                }
+
+                chunkClaims.removeIf(r -> r.claimId().equals(id));
+
+                if (chunkClaims.isEmpty()) {
+                    chunks.remove(key);
+                }
+            }
         }
     }
 }
