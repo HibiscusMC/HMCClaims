@@ -1,7 +1,7 @@
 package com.hibiscusmc.hmcclaims.gui;
 
+import com.hibiscusmc.hmcclaims.hook.papi.Placeholders;
 import lombok.Getter;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -62,21 +62,21 @@ public abstract class Action {
             case "CONSOLE" -> new Action(input) {
                 @Override
                 public void execute(Player player) {
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), PlaceholderAPI.setPlaceholders(player, value));
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Placeholders.apply(player, value));
                 }
             };
 
             case "COMMAND" -> new Action(input) {
                 @Override
                 public void execute(Player player) {
-                    player.performCommand(PlaceholderAPI.setPlaceholders(player, value));
+                    player.performCommand(Placeholders.apply(player, value));
                 }
             };
 
             case "MESSAGE" -> new Action(input) {
                 @Override
                 public void execute(Player player) {
-                    player.sendRichMessage(PlaceholderAPI.setPlaceholders(player, value));
+                    player.sendRichMessage(Placeholders.apply(player, value));
                 }
             };
             default -> throw new IllegalArgumentException("Invalid action: " + action);

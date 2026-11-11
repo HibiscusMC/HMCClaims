@@ -3,10 +3,9 @@ package com.hibiscusmc.hmcclaims.util;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.Settings;
+import com.hibiscusmc.hmcclaims.hook.papi.Placeholders;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
-import me.clip.placeholderapi.PAPIComponents;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -337,7 +336,7 @@ public class TextUtil {
         }
 
         if (data.isEmpty()) {
-            return MINI_MESSAGE.deserialize(player == null ? string : PlaceholderAPI.setPlaceholders(player, string))
+            return MINI_MESSAGE.deserialize(Placeholders.apply(player, string))
                     .colorIfAbsent(NamedTextColor.WHITE)
                     .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
         }
@@ -345,7 +344,7 @@ public class TextUtil {
         TagResolver resolver = resolvePlaceholders(data);
 
         return MINI_MESSAGE
-                .deserialize(player == null ? string : PlaceholderAPI.setPlaceholders(player, string), resolver)
+                .deserialize(Placeholders.apply(player, string), resolver)
                 .colorIfAbsent(NamedTextColor.WHITE)
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
@@ -400,11 +399,11 @@ public class TextUtil {
     public static ItemStack parseItemPlaceholders(@NotNull ItemStack stack, Player player) {
         stack.editMeta(meta -> {
             if (meta.hasItemName()) {
-                meta.itemName(PAPIComponents.setPlaceholders(player, meta.itemName()));
+                meta.itemName(Placeholders.apply(player, meta.itemName()));
             }
 
             if (meta.hasLore()) { // noinspection DataFlowIssue
-                meta.lore(PAPIComponents.setPlaceholders(player, meta.lore()));
+                meta.lore(Placeholders.apply(player, meta.lore()));
             }
         });
 
