@@ -87,6 +87,8 @@ public class Messages {
 
         private String invalidRoleName = "<prefix><red>Role names must be between 2 and 40 characters long!";
 
+        private String roleLimitReached = "<prefix><red>This claim can't have more than <max> custom roles!";
+
         private Permissions permissions = new Permissions();
 
         private Settings settings = new Settings();

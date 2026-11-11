@@ -114,6 +114,9 @@ public class Settings {
     @Comment("Defines the cooldown between sending missing permission notifications. Set to -1 to disable.")
     private long notificationCooldown = 1_000;
 
+    @Comment("Maximum custom roles per claim, not counting the owner, default and everyone roles. Set to -1 for no limit.")
+    private int maxRoles = -1;
+
     private Claiming claiming = new Claiming();
 
     @Comment("Where players are sent when they're banned or locked out of the claim they're in. Leave the world empty to use the spawn of the world they're in.")

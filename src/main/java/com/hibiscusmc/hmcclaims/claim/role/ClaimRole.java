@@ -56,27 +56,37 @@ public class ClaimRole {
     }
 
     /**
-     * Changes the name of the role
+     * Checks that a role name is usable once tags are removed.
      *
-     * @param newName the new name of the role
-     * @throws IllegalArgumentException if the role name is not valid (is empty, less than 2 or higher than 40 characters) once tags are removed
+     * @param name the name to check
+     * @throws IllegalArgumentException if the name is empty, shorter than 2 or longer than 40 characters
      */
-    public void rename(@NotNull String newName) {
-        String name = TextUtil.strip(newName);
+    public static void validateName(@NotNull String name) {
+        String stripped = TextUtil.strip(name);
 
-        if (name.isEmpty()) {
+        if (stripped.isEmpty()) {
             throw new IllegalArgumentException("role name cannot be empty");
         }
 
-        if (name.length() < 2) {
+        if (stripped.length() < 2) {
             throw new IllegalArgumentException("role name cannot be less than 2 characters");
         }
 
-        if (name.length() > 40) {
+        if (stripped.length() > 40) {
             throw new IllegalArgumentException("role name cannot be longer than 40 characters");
         }
+    }
 
-        this.name = name;
+    /**
+     * Changes the name of the role
+     *
+     * @param newName the new name of the role
+     * @throws IllegalArgumentException if the role name is not valid, see {@link #validateName(String)}
+     */
+    public void rename(@NotNull String newName) {
+        validateName(newName);
+
+        this.name = TextUtil.strip(newName);
     }
 
     /**
