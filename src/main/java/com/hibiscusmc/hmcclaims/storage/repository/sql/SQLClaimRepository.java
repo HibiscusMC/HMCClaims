@@ -21,11 +21,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -151,38 +148,10 @@ public class SQLClaimRepository implements ClaimRepository {
     }
 
     @Override
-    public @NotNull CompletableFuture<List<RawClaim>> getClaims(@NotNull List<UUID> claimIds) {
-        return CompletableFuture.supplyAsync(() -> {
-            String placeholders = String.join(",", Collections.nCopies(claimIds.size(), "?"));
-
-            try (Connection con = storage.getConnection();
-                 PreparedStatement ps = con.prepareStatement(this.getClaimQuery
-                         .replace(":id_comparison", "IN (" + placeholders + ")"))) {
-                for (int i = 0; i < claimIds.size(); i++) {
-                    ps.setBytes(i + 1, ByteUtil.UUIDtoBytes(claimIds.get(i)));
-                }
-
-                List<RawClaim> claims = new ArrayList<>();
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        claims.add(buildRawClaim(rs, new HashSet<>()));
-                    }
-                }
-
-                return claims;
-            } catch (SQLException e) {
-                throw new RuntimeException("Failed to load claim " + claimIds, e);
-            }
-        }, executor);
-    }
-
-    @Override
     public @NotNull CompletableFuture<RawClaim> getClaim(@NotNull UUID claimId) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection con = storage.getConnection();
-                 PreparedStatement ps = con.prepareStatement(this.getClaimQuery
-                         .replace(":id_comparison", "= ?"))) {
+                 PreparedStatement ps = con.prepareStatement(this.getClaimQuery)) {
                 ps.setBytes(1, ByteUtil.UUIDtoBytes(claimId));
 
                 try (ResultSet rs = ps.executeQuery()) {
@@ -370,8 +339,6 @@ public class SQLClaimRepository implements ClaimRepository {
                  PreparedStatement ps = con.prepareStatement(this.saveSettingQuery)) {
                 ps.setBytes(1, settings);
                 ps.setBytes(2, ByteUtil.UUIDtoBytes(claimId));
-
-                ps.addBatch();
 
                 ps.executeUpdate();
             } catch (SQLException e) {

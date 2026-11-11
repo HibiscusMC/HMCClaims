@@ -4,7 +4,6 @@ import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.RawClaim;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -19,12 +18,6 @@ public interface ClaimRepository {
      */
     @NotNull
     CompletableFuture<RawClaim.CacheHolder> getAllClaims(String worldName);
-
-    /**
-     * Retrieves multiple claims with all its relational data (members, roles, etc.).
-     */
-    @NotNull
-    CompletableFuture<List<RawClaim>> getClaims(@NotNull List<UUID> claimIds);
 
     /**
      * Retrieves a single claim with all its relational data (members, roles, etc.).

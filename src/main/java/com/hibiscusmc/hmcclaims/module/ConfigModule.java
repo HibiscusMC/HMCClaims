@@ -70,10 +70,6 @@ public class ConfigModule extends AbstractModule {
             │                                                                     │
             └─────────────────────────────────────────────────────────────────────┘""";
 
-    private final static List<String> LEGACY_FILES = List.of(
-            "config.yml", "messages.yml", "default-roles.yml", "default-settings.yml", "guis", "forms"
-    );
-
     private final Plugin plugin;
 
     private final List<ConfigHolder<?>> holders = new ArrayList<>();

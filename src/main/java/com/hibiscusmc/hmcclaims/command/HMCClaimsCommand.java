@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.command;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
-import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.ConfigRegistry;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.form.FormRegistry;
@@ -36,9 +35,6 @@ public class HMCClaimsCommand implements CommandClass {
 
     @Inject
     private DisabledWorlds disabledWorlds;
-
-    @Inject
-    private ClaimManager claimManager;
 
     @Inject
     private GuiRegistry guis;
