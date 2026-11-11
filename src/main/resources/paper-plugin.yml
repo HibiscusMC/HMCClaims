@@ -11,6 +11,7 @@ loader: com.hibiscusmc.hmcclaims.HMCClaimsLoader
 dependencies:
   server:
     HibiscusCommons:
+      load: BEFORE
       required: true
       join-classpath: true
 
