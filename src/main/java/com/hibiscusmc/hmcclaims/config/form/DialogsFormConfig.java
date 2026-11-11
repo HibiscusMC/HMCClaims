@@ -68,6 +68,18 @@ public class DialogsFormConfig extends FormTemplate {
     @Comment("Shown before saving permission changes that have a configured warning")
     private Confirm confirm = new Confirm();
 
+    private Confirmation expandClaim = new Confirmation(
+            "Expand <claim_name>",
+            List.of(
+                    "<gray>Expand <white><claim_name></white> by <white><amount></white> blocks to the <white><direction></white>?",
+                    "",
+                    "<gray>New size: <white><width>x<length>",
+                    "<gray>Price: <white><price></white> claim blocks <dark_gray>(<remaining_blocks> left after)"
+            ),
+            "Expand",
+            "Cancel"
+    );
+
     @Getter
     @Section
     public static class Confirm {
@@ -100,6 +112,29 @@ public class DialogsFormConfig extends FormTemplate {
             this.title = title;
             this.content = content;
             this.input = input;
+        }
+    }
+
+    @Getter
+    @Section
+    public static class Confirmation {
+
+        private String title = "Confirm";
+
+        private List<String> content = List.of();
+
+        private String confirm = "Confirm";
+
+        private String cancel = "Cancel";
+
+        public Confirmation() {
+        }
+
+        public Confirmation(String title, List<String> content, String confirm, String cancel) {
+            this.title = title;
+            this.content = content;
+            this.confirm = confirm;
+            this.cancel = cancel;
         }
     }
 }

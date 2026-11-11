@@ -6,6 +6,7 @@ import team.hypox.config.core.annotation.Config;
 import team.hypox.config.core.annotation.Key;
 import team.hypox.config.core.annotation.Section;
 
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -96,6 +97,8 @@ public class Messages {
         private Selecting selecting = new Selecting();
 
         private Resizing resizing = new Resizing();
+
+        private Expanding expanding = new Expanding();
 
         @Getter
         @Section
@@ -201,6 +204,30 @@ public class Messages {
             private String claimWithinSub = "<prefix><red>Can't create a claim within a sub claim";
 
             private String subOutsideBoundaries = "<prefix><red>Sub claim can't be outside of main claim boundaries";
+        }
+
+        @Getter
+        @Section
+        public static class Expanding {
+
+            private String invalidAmount = "<prefix><red>The amount must be at least 1!";
+
+            private String outsideWorldBorder = "<prefix><red>The claim can't be expanded past the world border!";
+
+            private String unavailable = "<prefix><red>This claim can't be expanded anymore.";
+
+            private String cancelled = "<prefix><gray>Expansion cancelled.";
+
+            private String expanded = "<prefix><gray>The claim <#d24c9f><name> <gray>has been expanded <#d24c9f><amount> <gray>blocks <#d24c9f><direction><gray>! Price: <#d24c9f><price>";
+
+            private String subExpanded = "<prefix><gray>The sub claim <#d24c9f><name> <gray>has been expanded <#d24c9f><amount> <gray>blocks <#d24c9f><direction><gray>!";
+
+            private Map<String, String> directions = MapUtil.ordered(
+                    "north", "north",
+                    "south", "south",
+                    "east", "east",
+                    "west", "west"
+            );
         }
 
         @Getter
@@ -368,6 +395,8 @@ public class Messages {
 
         private Confirm confirm = new Confirm();
 
+        private ExpandClaim expandClaim = new ExpandClaim();
+
         @Getter
         @Section
         public static class Confirm {
@@ -380,6 +409,29 @@ public class Messages {
                     ),
                     "cancel", new Button(
                             "Cancel", "Click to keep things as they are"
+                    )
+            );
+        }
+
+        @Getter
+        @Section
+        public static class ExpandClaim {
+
+            private String title = "Expand <claim_name>";
+
+            private List<String> body = List.of(
+                    "<gray>Expand <white><claim_name></white> by <white><amount></white> blocks to the <white><direction></white>?",
+                    "",
+                    "<gray>New size: <white><width>x<length>",
+                    "<gray>Price: <white><price></white> claim blocks <dark_gray>(<remaining_blocks> left after)"
+            );
+
+            private Map<String, Button> buttons = MapUtil.ordered(
+                    "confirm", new Button(
+                            "Expand", "Click to expand the claim"
+                    ),
+                    "cancel", new Button(
+                            "Cancel", "Click to keep the claim as it is"
                     )
             );
         }

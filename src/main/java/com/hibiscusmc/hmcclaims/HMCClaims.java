@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmcclaims;
 
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
+import com.hibiscusmc.hmcclaims.claim.ClaimExpander;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.UnloadedClaims;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
@@ -121,6 +122,7 @@ public final class HMCClaims extends JavaPlugin implements Module {
         binder.bind(SelectionManager.class).to(SelectionManager.class);
         binder.bind(DisabledWorlds.class).to(DisabledWorlds.class);
         binder.bind(ClaimManager.class).to(ClaimManager.class);
+        binder.bind(ClaimExpander.class).to(ClaimExpander.class);
         binder.bind(UnloadedClaims.class).to(UnloadedClaims.class);
         binder.bind(UserManager.class).to(UserManager.class);
         binder.bind(ClaimAccess.class).to(ClaimAccess.class);

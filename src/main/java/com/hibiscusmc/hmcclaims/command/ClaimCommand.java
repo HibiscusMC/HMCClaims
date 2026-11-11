@@ -3,6 +3,7 @@ package com.hibiscusmc.hmcclaims.command;
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
+import com.hibiscusmc.hmcclaims.claim.ClaimExpander;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
@@ -37,6 +38,9 @@ public class ClaimCommand implements CommandClass {
 
     @Inject
     private ClaimManager claimManager;
+
+    @Inject
+    private ClaimExpander expander;
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
@@ -94,6 +98,32 @@ public class ClaimCommand implements CommandClass {
         }
 
         menus.open(ClaimDeleteGui.class, sender, new GuiMetadata(claim));
+    }
+
+    @Command(names = {"expand"}, permission = "hmcclaims.commands.claim.expand")
+    @Usage("<amount>")
+    public void expand(@Sender Player sender, int amount) {
+        Messages messages = messagesHolder.get();
+
+        Claim claim = claimManager.getClaimAt(sender.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            text.send(sender, messages.commands().notInClaim());
+            return;
+        }
+
+        if (!claim.owner().equals(sender.getUniqueId())) {
+            text.send(sender, messages.commands().notYourClaim());
+            return;
+        }
+
+        if (amount <= 0) {
+            text.send(sender, messages.claims().expanding().invalidAmount());
+            return;
+        }
+
+        expander.prompt(sender, claim, sender.getFacing(), amount);
     }
 
     @Command(names = {"add", "trust"})

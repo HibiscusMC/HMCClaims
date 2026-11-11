@@ -18,7 +18,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings({"UnstableApiUsage"})
 public class ConfirmationDialog implements Dialog {
 
     private io.papermc.paper.dialog.Dialog dialog;
@@ -27,6 +26,10 @@ public class ConfirmationDialog implements Dialog {
     private Runnable onCancel;
 
     public Dialog create(Messages.Dialogs.Confirm messages, Map<String, String> titlePlaceholders, List<String> body) {
+        return create(messages.title(), messages.buttons(), titlePlaceholders, body);
+    }
+
+    public Dialog create(String title, Map<String, Messages.Dialogs.Button> buttons, Map<String, String> titlePlaceholders, List<String> body) {
         Component text = Component.join(
                 JoinConfiguration.newlines(),
                 body.stream().map(line -> TextUtil.parse(line, titlePlaceholders)).toList()
@@ -34,15 +37,15 @@ public class ConfirmationDialog implements Dialog {
 
         this.dialog = io.papermc.paper.dialog.Dialog.create(builder -> builder.empty()
                 .base(DialogBase
-                        .builder(TextUtil.parse(messages.title(), titlePlaceholders))
+                        .builder(TextUtil.parse(title, titlePlaceholders))
                         .canCloseWithEscape(true)
                         .body(List.of(DialogBody.plainMessage(text)))
                         .build()
                 )
                 .type(DialogType.confirmation(
                         ActionButton.create(
-                                TextUtil.parse(messages.buttons().get("confirm").label()),
-                                TextUtil.parse(messages.buttons().get("confirm").tooltip()),
+                                TextUtil.parse(buttons.get("confirm").label()),
+                                TextUtil.parse(buttons.get("confirm").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {
@@ -57,8 +60,8 @@ public class ConfirmationDialog implements Dialog {
                                 )
                         ),
                         ActionButton.create(
-                                TextUtil.parse(messages.buttons().get("cancel").label()),
-                                TextUtil.parse(messages.buttons().get("cancel").tooltip()),
+                                TextUtil.parse(buttons.get("cancel").label()),
+                                TextUtil.parse(buttons.get("cancel").tooltip()),
                                 100,
                                 DialogAction.customClick(
                                         (view, audience) -> {

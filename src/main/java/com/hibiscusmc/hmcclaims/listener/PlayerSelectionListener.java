@@ -2,9 +2,7 @@ package com.hibiscusmc.hmcclaims.listener;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimCreateEvent;
 import com.hibiscusmc.hmcclaims.api.event.ClaimDeleteEvent;
-import com.hibiscusmc.hmcclaims.api.event.ClaimResizeEvent;
 import com.hibiscusmc.hmcclaims.api.event.PreClaimCreateEvent;
-import com.hibiscusmc.hmcclaims.api.event.PreClaimResizeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
@@ -16,9 +14,6 @@ import com.hibiscusmc.hmcclaims.marker.MarkType;
 import com.hibiscusmc.hmcclaims.selection.DisabledWorlds;
 import com.hibiscusmc.hmcclaims.selection.Selection;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
-import com.hibiscusmc.hmcclaims.storage.Storage;
-import com.hibiscusmc.hmcclaims.storage.StorageHolder;
-import com.hibiscusmc.hmcclaims.storage.repository.ClaimRepository;
 import com.hibiscusmc.hmcclaims.user.User;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
@@ -72,9 +67,6 @@ public class PlayerSelectionListener implements Listener {
 
     @Inject
     private DisabledWorlds disabledWorlds;
-
-    @Inject
-    private StorageHolder storageHolder;
 
     @Inject
     private TextUtil text;
@@ -186,8 +178,6 @@ public class PlayerSelectionListener implements Listener {
 
         Claim resizingClaim = selection.resizingClaim();
 
-        Storage storage = storageHolder.get();
-
         if (selection.main() == null) {
             long surfaceArea = region.getSurfaceArea();
             long currentBlocks = userManager.getRemainingBlocks(user);
@@ -202,7 +192,7 @@ public class PlayerSelectionListener implements Listener {
                 return;
             }
 
-            Claim claim = createOrUpdateClaim(player, user, selection, region, resizingClaim, storage);
+            Claim claim = createOrUpdateClaim(player, user, selection, region, resizingClaim);
             if (claim == null) {
                 return;
             }
@@ -214,7 +204,7 @@ public class PlayerSelectionListener implements Listener {
 
             marker.mark(player, claim.region().getLCornerBlocks(), MarkType.CREATE, TimeUnit.SECONDS.toMillis(10));
         } else {
-            Claim claim = createOrUpdateClaim(player, user, selection, region, resizingClaim, storage);
+            Claim claim = createOrUpdateClaim(player, user, selection, region, resizingClaim);
             if (claim == null) {
                 return;
             }
@@ -343,8 +333,7 @@ public class PlayerSelectionListener implements Listener {
      * while updating the claim's region, cache, and persistent storage.
      * <p>
      * If {@code resizingClaim} is present, its region is updated to the new {@code region} and
-     * it is re-added to the cache and saved to the {@code storage} (if available). Finally,
-     * the player's active visual selection is destroyed.
+     * it is re-indexed and saved. Finally, the player's active visual selection is destroyed.
      * </p>
      *
      * @param player        The {@link Player} who owns or is modifying the claim.
@@ -353,10 +342,9 @@ public class PlayerSelectionListener implements Listener {
      * @param region        The new {@link ClaimRegion} boundaries to apply to the claim.
      * @param resizingClaim The existing {@link Claim} currently being resized, or {@code null}
      *                      if a new claim should be created.
-     * @param storage       The {@link Storage} system used to persist claim data.
      * @return The newly created or updated {@link Claim} instance, or {@code null} if the event was cancelled.
      */
-    private Claim createOrUpdateClaim(Player player, User user, Selection selection, ClaimRegion region, Claim resizingClaim, Storage storage) {
+    private Claim createOrUpdateClaim(Player player, User user, Selection selection, ClaimRegion region, Claim resizingClaim) {
         Claim claim;
         if (resizingClaim == null) {
             PreClaimCreateEvent event = new PreClaimCreateEvent(player, region, selection.main());
@@ -370,20 +358,10 @@ public class PlayerSelectionListener implements Listener {
             EventUtil.call(new ClaimCreateEvent(player, claim));
         } else {
             claim = resizingClaim;
-            PreClaimResizeEvent event = new PreClaimResizeEvent(player, claim);
-            EventUtil.call(event);
 
-            if (event.isCancelled()) {
+            if (!claimManager.resizeClaim(player, claim, region)) {
                 return null;
             }
-
-            EventUtil.call(new ClaimResizeEvent(player, claim, claim.region(), region));
-
-            claim.region(region);
-            claimManager.addClaimToCache(claim);
-
-            ClaimRepository claimRepository = storage.claims();
-            claimRepository.saveClaim(claim);
         }
 
         selectionManager.destroySelection(player);

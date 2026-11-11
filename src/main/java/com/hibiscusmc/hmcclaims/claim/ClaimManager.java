@@ -1,6 +1,8 @@
 package com.hibiscusmc.hmcclaims.claim;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimDeleteEvent;
+import com.hibiscusmc.hmcclaims.api.event.ClaimResizeEvent;
+import com.hibiscusmc.hmcclaims.api.event.PreClaimResizeEvent;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.permission.PermissionRegistry;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
@@ -26,6 +28,7 @@ import lombok.Getter;
 import net.kyori.adventure.key.InvalidKeyException;
 import net.minecraft.server.players.NameAndId;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -231,6 +234,30 @@ public class ClaimManager {
         }
 
         claim.chunks(chunks);
+    }
+
+    /**
+     * Applies a new region to an existing claim, firing the resize events, then re-indexes and saves it.
+     *
+     * @return false if a listener cancelled the resize.
+     */
+    public boolean resizeClaim(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimRegion region) {
+        PreClaimResizeEvent event = new PreClaimResizeEvent(player, claim);
+        EventUtil.call(event);
+
+        if (event.isCancelled()) {
+            return false;
+        }
+
+        EventUtil.call(new ClaimResizeEvent(player, claim, claim.region(), region));
+
+        removeClaimFromCache(claim);
+        claim.region(region);
+        addClaimToCache(claim);
+
+        storageHolder.get().claims().saveClaim(claim);
+
+        return true;
     }
 
     /**
