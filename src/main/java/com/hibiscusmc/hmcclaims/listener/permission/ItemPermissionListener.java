@@ -29,6 +29,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -114,6 +115,33 @@ public class ItemPermissionListener implements Listener {
         if (event.getHand() == EquipmentSlot.HAND) {
             text.sendNotification(player, message);
         }
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onFishEntity(PlayerFishEvent event) {
+        if (event.getState() != PlayerFishEvent.State.CAUGHT_ENTITY) {
+            return;
+        }
+
+        Entity caught = event.getCaught();
+        if (caught == null || caught instanceof Player) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(caught.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (access.hasPermission(player, claim, Permission.INTERACT_ENTITY)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().interactEntity());
         event.setCancelled(true);
     }
 

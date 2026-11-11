@@ -24,6 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockMultiPlaceEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.TNTPrimeEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
@@ -31,6 +32,7 @@ import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
+import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.inventory.ItemStack;
 import team.hypox.config.core.ConfigHolder;
 import team.unnamed.inject.Inject;
@@ -40,7 +42,7 @@ import java.util.List;
 /**
  * Place Blocks, Break Blocks, Use Containers, Doors, Trapdoors, Lecterns,
  * Redstone, Player Interact, Ignite, TNT Priming, Projectile Block Interaction, Harvest, Plant,
- * Trample Soil
+ * Trample Soil, Portal Creation
  */
 public class VanillaBlockListener implements Listener {
 
@@ -411,6 +413,11 @@ public class VanillaBlockListener implements Listener {
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
+        if (event instanceof BlockMultiPlaceEvent multi && !canPlaceAll(player, multi)) {
+            event.setCancelled(true);
+            return;
+        }
+
         Claim claim = claimManager.getClaimAt(block.getLocation())
                 .orElse(null);
 
@@ -435,6 +442,31 @@ public class VanillaBlockListener implements Listener {
 
         text.sendNotification(player, messagesHolder.get().claims().permissions().placeBlock());
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPortalCreate(PortalCreateEvent event) {
+        Player player = EntityUtil.responsiblePlayer(event.getEntity());
+
+        for (BlockState state : event.getBlocks()) {
+            Claim claim = claimManager.getClaimAt(state.getLocation())
+                    .orElse(null);
+
+            if (claim == null) {
+                continue;
+            }
+
+            if (player != null && access.hasPermission(player, claim, Permission.PLACE_BLOCK)) {
+                continue;
+            }
+
+            if (player != null) {
+                text.sendNotification(player, messagesHolder.get().claims().permissions().placeBlock());
+            }
+
+            event.setCancelled(true);
+            return;
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -518,6 +550,60 @@ public class VanillaBlockListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
+    public void onTrampleTurtleEgg(PlayerInteractEvent event) {
+        if (event.getAction() != Action.PHYSICAL) {
+            return;
+        }
+
+        Block block = event.getClickedBlock();
+        if (block == null || block.getType() != Material.TURTLE_EGG) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(block.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (access.hasPermission(player, claim, Permission.BREAK_BLOCK)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().breakBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDragonEggClick(PlayerInteractEvent event) {
+        if (event.getAction() != Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
+
+        Block block = event.getClickedBlock();
+        if (block == null || block.getType() != Material.DRAGON_EGG) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        Claim claim = claimManager.getClaimAt(block.getLocation())
+                .orElse(null);
+
+        if (claim == null) {
+            return;
+        }
+
+        if (access.hasPermission(player, claim, Permission.BREAK_BLOCK)) {
+            return;
+        }
+
+        text.sendNotification(player, messagesHolder.get().claims().permissions().breakBlock());
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityTrampleSoil(EntityChangeBlockEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
             return;
@@ -568,6 +654,31 @@ public class VanillaBlockListener implements Listener {
         event.setCancelled(true);
     }
 
+    private boolean canPlaceAll(Player player, BlockMultiPlaceEvent event) {
+        boolean plantable = PlantUtil.isPlantableBlock(event.getBlockPlaced().getType());
+
+        for (BlockState state : event.getReplacedBlockStates()) {
+            Claim claim = claimManager.getClaimAt(state.getLocation())
+                    .orElse(null);
+
+            if (claim == null || access.hasPermission(player, claim, Permission.PLACE_BLOCK)) {
+                continue;
+            }
+
+            if (plantable && access.hasPermission(player, claim, Permission.PLANT_CROPS)) {
+                continue;
+            }
+
+            text.sendNotification(player, plantable
+                    ? messagesHolder.get().claims().permissions().plantCrops()
+                    : messagesHolder.get().claims().permissions().placeBlock());
+
+            return false;
+        }
+
+        return true;
+    }
+
     private boolean isAllowedPlacement(Claim claim, Player player, Material type) {
         if (PlantUtil.isPlantableItem(type)) {
             return access.hasPermission(player, claim, Permission.PLANT_CROPS)
@@ -587,7 +698,7 @@ public class VanillaBlockListener implements Listener {
     }
 
     private static boolean isRedstone(Material type, Action action) {
-        if (Tag.PRESSURE_PLATES.isTagged(type)) {
+        if (Tag.PRESSURE_PLATES.isTagged(type) || type == Material.TRIPWIRE) {
             return action == Action.PHYSICAL;
         }
 

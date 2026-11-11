@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
@@ -86,6 +87,29 @@ public class CombatPermissionListener implements Listener {
 
         text.sendNotification(attacker, messagesHolder.get().claims().settings().pvpDisabled());
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onCloudApply(AreaEffectCloudApplyEvent event) {
+        Player owner = EntityUtil.responsiblePlayer(event.getEntity());
+        if (owner == null) {
+            return;
+        }
+
+        boolean denied = event.getAffectedEntities().removeIf(entity -> {
+            if (entity instanceof Player) {
+                return false;
+            }
+
+            Claim claim = claimManager.getClaimAt(entity.getLocation())
+                    .orElse(null);
+
+            return claim != null && !access.hasPermission(owner, claim, Permission.DAMAGE_ENTITY);
+        });
+
+        if (denied) {
+            text.sendNotification(owner, messagesHolder.get().claims().permissions().damageEntity());
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
