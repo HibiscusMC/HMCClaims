@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -38,7 +37,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
     private GuiRegistry guis;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     private GuiTemplate.SimpleIcon kickIcon;
     private ConfigItem cantKickIcon;
@@ -131,9 +130,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
             @NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target,
             @NotNull GuiTemplate.SimpleIcon kickIcon, @NotNull ConfigItem cantKickIcon
     ) {
-        boolean canKick = access.actor(player, claim)
-                .map(member -> member.canManage(target) && member.hasPermission(Permission.MANAGE_MEMBERS))
-                .orElse(false);
+        boolean canKick = canKick(player, claim, target);
 
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(
@@ -142,7 +139,9 @@ public abstract class ClaimMemberManageGui implements BaseGui {
                                 cantKickIcon, player)
                 ))
                 .addClickHandler(click -> {
-                    if (!canKick) {
+                    if (!canKick(player, claim, target)) {
+                        guard.deny(player);
+                        player.closeInventory();
                         return;
                     }
 
@@ -161,9 +160,7 @@ public abstract class ClaimMemberManageGui implements BaseGui {
             @NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target,
             @NotNull GuiTemplate.SimpleIcon banIcon, @NotNull ConfigItem cantBanIcon
     ) {
-        boolean canBan = access.actor(player, claim)
-                .map(member -> member.canManage(target) && member.hasPermission(Permission.BAN_MEMBERS))
-                .orElse(false);
+        boolean canBan = canBan(player, claim, target);
 
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(
@@ -172,7 +169,9 @@ public abstract class ClaimMemberManageGui implements BaseGui {
                                 cantBanIcon, player)
                 ))
                 .addClickHandler(click -> {
-                    if (!canBan) {
+                    if (!canBan(player, claim, target)) {
+                        guard.deny(player);
+                        player.closeInventory();
                         return;
                     }
 
@@ -187,5 +186,13 @@ public abstract class ClaimMemberManageGui implements BaseGui {
                             .open(player, new GuiMetadata(claim));
                 })
                 .build();
+    }
+
+    private boolean canKick(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target) {
+        return guard.canManage(player, claim, target) && guard.hasPermission(player, claim, Permission.MANAGE_MEMBERS);
+    }
+
+    private boolean canBan(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target) {
+        return guard.canManage(player, claim, target) && guard.hasPermission(player, claim, Permission.BAN_MEMBERS);
     }
 }

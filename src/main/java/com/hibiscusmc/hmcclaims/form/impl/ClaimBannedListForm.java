@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -17,6 +16,7 @@ import com.hibiscusmc.hmcclaims.form.SharedContext;
 import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.MapUtil;
@@ -45,7 +45,7 @@ public class ClaimBannedListForm implements BaseForm {
     @Inject
     private ConfigHolder<ClaimBannedListFormConfig> configHolder;
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -80,12 +80,12 @@ public class ClaimBannedListForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
 
-        if (!access.actor(player, metadata.claim()).map(member -> member.hasPermission(Permission.BAN_MEMBERS)).orElse(false)) {
+        if (!guard.hasPermission(player, metadata.claim(), Permission.BAN_MEMBERS)) {
             text.send(player, messagesHolder.get().commands().noPermission());
             return;
         }
@@ -187,6 +187,12 @@ public class ClaimBannedListForm implements BaseForm {
                 case "unban" -> builder.button(label, image(button.image(), formService), () -> {
                     Claim claim = metadata.claim();
 
+                    if (!guard.hasPermission(player, claim, Permission.BAN_MEMBERS)
+                            || claim.getMember(member.uuid()).orElse(null) != member || !member.banned()) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     claim.removeMember(member.uuid());
                     storageHolder.get().claims().saveMembers(claim);
 
@@ -209,10 +215,20 @@ public class ClaimBannedListForm implements BaseForm {
         Claim claim = metadata.claim();
         Runnable reopen = () -> render(player, metadata);
 
+        if (!guard.hasPermission(player, claim, Permission.BAN_MEMBERS)) {
+            guard.deny(player);
+            return;
+        }
+
         inputs.promptPlayer(
                 player, inputs.config().banMember(), Map.of("claim_name", claim.name()),
                 target -> {
                     Messages messages = messagesHolder.get();
+
+                    if (!guard.hasPermission(player, claim, Permission.BAN_MEMBERS)) {
+                        guard.deny(player);
+                        return;
+                    }
 
                     ClaimMember existing = claim.getMember(target.id()).orElse(null);
                     ClaimMember member = existing != null ? existing : new ClaimMember(
@@ -220,7 +236,7 @@ public class ClaimBannedListForm implements BaseForm {
                             claim.roleRegistry().defaultRole(), new Object2BooleanArrayMap<>()
                     );
 
-                    ClaimMember self = access.actor(player, claim).orElse(null);
+                    ClaimMember self = guard.actor(player, claim).orElse(null);
 
                     if (member.uuid().equals(player.getUniqueId()) || (self == null || !self.canManage(member))) {
                         text.send(player, messages.claims().cantBanMember());

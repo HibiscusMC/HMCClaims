@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.config.ClaimSettings;
@@ -16,6 +15,7 @@ import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.FormComponent;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
@@ -50,7 +50,7 @@ public class ClaimSettingsForm implements BaseForm {
     private PlaceholderUtil placeholders;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
@@ -72,7 +72,7 @@ public class ClaimSettingsForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.isOwner(player, metadata.claim())) {
+        if (!guard.isOwner(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -180,6 +180,11 @@ public class ClaimSettingsForm implements BaseForm {
         builder.component(navigation);
 
         builder.onSubmit(values -> {
+            if (!guard.isOwner(player, claim)) {
+                guard.deny(player);
+                return;
+            }
+
             for (Row row : rows) {
                 apply(row, values.has(row.key()) ? values.values().get(row.key()) : null);
             }

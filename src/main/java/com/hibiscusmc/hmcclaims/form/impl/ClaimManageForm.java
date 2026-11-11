@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimManageFormConfig;
@@ -16,6 +15,7 @@ import com.hibiscusmc.hmcclaims.form.SharedContext;
 import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.selection.SelectionManager;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.user.User;
@@ -68,7 +68,7 @@ public class ClaimManageForm implements BaseForm {
     @Inject
     protected TextUtil text;
     @Inject
-    protected ClaimAccess access;
+    protected MenuGuard guard;
 
     private MainClaimManageFormConfig config;
 
@@ -84,7 +84,7 @@ public class ClaimManageForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -190,7 +190,7 @@ public class ClaimManageForm implements BaseForm {
 
     protected Runnable ownerOnly(@NotNull Player player, @NotNull Claim claim, @NotNull Runnable action) {
         return () -> {
-            if (!access.isOwner(player, claim)) {
+            if (!guard.isOwner(player, claim)) {
                 text.send(player, messagesHolder.get().commands().notYourClaim());
                 return;
             }
@@ -205,6 +205,11 @@ public class ClaimManageForm implements BaseForm {
         inputs.prompt(
                 player, inputs.config().renameClaim(), Map.of("claim_name", claim.name()), claim.name(),
                 newName -> {
+                    if (!guard.isOwner(player, claim)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     try {
                         claim.rename(newName);
                     } catch (IllegalArgumentException e) {
@@ -223,12 +228,18 @@ public class ClaimManageForm implements BaseForm {
 
     private void transfer(@NotNull Player player, @NotNull GuiMetadata metadata, @NotNull SharedContext context) {
         Claim claim = metadata.claim();
-        UUID oldOwner = claim.owner();
 
         inputs.promptPlayer(
                 player, inputs.config().transferOwnership(), Map.of("claim_name", claim.name()),
                 target -> {
                     Messages messages = messagesHolder.get();
+
+                    if (!guard.isOwner(player, claim)) {
+                        text.send(player, messages.commands().notYourClaim());
+                        return;
+                    }
+
+                    UUID oldOwner = claim.owner();
 
                     if (target.id().equals(claim.owner())) {
                         text.send(player, target.id().equals(player.getUniqueId())

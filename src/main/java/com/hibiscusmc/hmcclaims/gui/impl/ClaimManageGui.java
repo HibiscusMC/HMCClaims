@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -78,7 +77,7 @@ public class ClaimManageGui extends ClaimListGui {
     @Inject
     protected TextUtil text;
     @Inject
-    protected ClaimAccess access;
+    protected MenuGuard guard;
 
     protected GuiTemplate.GuiTitle title;
     protected int rows = 1;
@@ -141,7 +140,7 @@ public class ClaimManageGui extends ClaimListGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -249,7 +248,7 @@ public class ClaimManageGui extends ClaimListGui {
             gui.addIngredient('*', Item.builder()
                     .setItemProvider(TextUtil.parseItemPlaceholders(deleteIcon.item(), player))
                     .addClickHandler(click -> {
-                        if (!access.isOwner(player, claim)) {
+                        if (!guard.isOwner(player, claim)) {
                             text.send(player, messagesHolder.get().commands().notYourClaim());
                             return;
                         }
@@ -273,7 +272,7 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(transferIcon.item(), player))
                 .addClickHandler(click -> {
-                    if (!access.isOwner(player, claim)) {
+                    if (!guard.isOwner(player, claim)) {
                         text.send(player, messagesHolder.get().commands().notYourClaim());
                         return;
                     }
@@ -285,7 +284,6 @@ public class ClaimManageGui extends ClaimListGui {
                     }
 
                     AtomicReference<Runnable> inputRunnable = new AtomicReference<>();
-                    UUID oldOwnerId = claim.owner();
 
                     inputRunnable.set(() -> {
                         Input<NameAndId> input = inputManager.create(player, NameAndId.class);
@@ -301,6 +299,13 @@ public class ClaimManageGui extends ClaimListGui {
                                 })
                                 .onSubmit((member) -> {
                                     Messages messages = messagesHolder.get();
+
+                                    if (!guard.isOwner(player, claim)) {
+                                        text.send(player, messages.commands().notYourClaim());
+                                        return;
+                                    }
+
+                                    UUID oldOwnerId = claim.owner();
 
                                     if (member.id().equals(claim.owner())) {
                                         text.send(player, member.id().equals(player.getUniqueId()) ?
@@ -364,7 +369,7 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(renameIcon.item(), player))
                 .addClickHandler(click -> {
-                    if (!access.isOwner(player, claim)) {
+                    if (!guard.isOwner(player, claim)) {
                         text.send(player, messagesHolder.get().commands().notYourClaim());
                         return;
                     }
@@ -378,6 +383,11 @@ public class ClaimManageGui extends ClaimListGui {
                             .onSubmit(view -> {
                                 String newName = view.getText("input");
                                 if (newName == null) {
+                                    return;
+                                }
+
+                                if (!guard.isOwner(player, claim)) {
+                                    guard.deny(player);
                                     return;
                                 }
 
@@ -402,7 +412,7 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(claim.locked() ? unlockIcon : lockIcon.item(), player)))
                 .addClickHandler((it, click) -> {
-                    if (!access.isOwner(player, claim)) {
+                    if (!guard.isOwner(player, claim)) {
                         text.send(player, messagesHolder.get().commands().notYourClaim());
                         return;
                     }
@@ -423,7 +433,7 @@ public class ClaimManageGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(resizeIcon.item(), player))
                 .addClickHandler(click -> {
-                    if (!access.isOwner(player, claim)) {
+                    if (!guard.isOwner(player, claim)) {
                         text.send(player, messagesHolder.get().commands().notYourClaim());
                         return;
                     }

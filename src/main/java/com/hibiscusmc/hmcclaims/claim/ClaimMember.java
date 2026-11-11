@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -133,6 +134,39 @@ public class ClaimMember {
         int otherRoleIndex = roles.indexOf(other.role);
 
         return roleIndex < otherRoleIndex;
+    }
+
+    /**
+     * Whether this member may edit the permissions of the role: only roles ranked strictly below
+     * their own, never the owner role, while the owner edits every other role.
+     */
+    public boolean canEditRolePermissions(@NotNull ClaimRole target) {
+        ClaimRoleRegistry registry = claim.roleRegistry();
+        if (target.equals(registry.ownerRole())) {
+            return false;
+        }
+
+        if (isOwner()) {
+            return true;
+        }
+
+        if (!hasPermission(Permission.MANAGE_ROLE_PERMISSIONS)) {
+            return false;
+        }
+
+        List<ClaimRole> roles = registry.allRoles();
+
+        int targetIndex = roles.indexOf(target);
+
+        return targetIndex != -1 && roles.indexOf(role) < targetIndex;
+    }
+
+    /**
+     * Whether this member may hand out or take away the permission: the owner always, anyone else only
+     * for permissions they hold themselves.
+     */
+    public boolean canGrant(@NotNull Permission permission) {
+        return isOwner() || hasPermission(permission);
     }
 
     /**

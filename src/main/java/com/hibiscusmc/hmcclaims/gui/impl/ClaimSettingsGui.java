@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.setting.Setting;
 import com.hibiscusmc.hmcclaims.claim.setting.SettingHolder;
 import com.hibiscusmc.hmcclaims.config.ClaimSettings;
@@ -60,7 +59,7 @@ public class ClaimSettingsGui extends ClaimListGui {
     private SchedulerUtil scheduler;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private TextUtil text;
@@ -125,7 +124,7 @@ public class ClaimSettingsGui extends ClaimListGui {
         Claim claim = metadata.claim();
         int currentPage = metadata.currentPage();
 
-        if (!access.isOwner(player, claim)) {
+        if (!guard.isOwner(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -284,6 +283,12 @@ public class ClaimSettingsGui extends ClaimListGui {
                 return;
             }
 
+            if (!guard.isOwner(click.player(), claim)) {
+                guard.deny(click.player());
+                click.player().closeInventory();
+                return;
+            }
+
             boolean shouldUpdate = false;
 
             Object holderValue = holder.value();
@@ -312,6 +317,11 @@ public class ClaimSettingsGui extends ClaimListGui {
                             return;
                         }
 
+                        if (!guard.isOwner(player, claim)) {
+                            guard.deny(player);
+                            return;
+                        }
+
                         holder.value(setting.parser().apply(newValue));
 
                         it.notifyWindows();
@@ -321,11 +331,11 @@ public class ClaimSettingsGui extends ClaimListGui {
 
         return new SettingItem(
                 Item.builder()
-                        .setItemProvider(p -> new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
-                                entry.icon(), settingList.icon().name(), settingList.icon().lore(),
+                        .setItemProvider(p -> new ItemWrapper(EntryIcon.build(
+                                p, entry.icon(), settingList.icon().name(), settingList.icon().lore(),
                                 "setting", entry.name(), entry.description(),
                                 Map.of("setting_value", valueOf(holder))
-                        ), player)))
+                        )))
                         .addClickHandler((it, click) -> {
                             if (settingList.hasToggle()) {
                                 return;
@@ -346,11 +356,11 @@ public class ClaimSettingsGui extends ClaimListGui {
                                         icon = settingList.toggle().disabled();
                                     }
 
-                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
-                                            icon.item(), icon.name(), icon.lore(),
+                                    return new ItemWrapper(EntryIcon.build(
+                                            p, icon.item(), icon.name(), icon.lore(),
                                             "setting", entry.name(), entry.description(),
                                             Map.of("setting_value", valueOf(holder))
-                                    ), player));
+                                    ));
                                 })
                                 .addClickHandler(action)
                                 .build()

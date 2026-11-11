@@ -53,7 +53,7 @@ public class SubClaimManageGui extends ClaimManageGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -107,7 +107,7 @@ public class SubClaimManageGui extends ClaimManageGui {
                 .addClickHandler((it, click) -> {
                     Player player = click.player();
 
-                    if (!access.isOwner(player, claim)) {
+                    if (!guard.isOwner(player, claim)) {
                         text.send(player, messagesHolder.get().commands().notYourClaim());
                         return;
                     }

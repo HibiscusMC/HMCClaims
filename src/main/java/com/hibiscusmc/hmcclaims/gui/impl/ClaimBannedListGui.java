@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -59,7 +58,7 @@ public class ClaimBannedListGui extends ClaimListGui {
     @Inject
     private ConfigHolder<ClaimBannedListConfig> configHolder;
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -139,12 +138,12 @@ public class ClaimBannedListGui extends ClaimListGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
 
-        if (!access.actor(player, claim).map(member -> member.hasPermission(Permission.BAN_MEMBERS)).orElse(false)) {
+        if (!guard.hasPermission(player, claim, Permission.BAN_MEMBERS)) {
             text.send(player, messagesHolder.get().commands().noPermission());
             return;
         }
@@ -293,6 +292,13 @@ public class ClaimBannedListGui extends ClaimListGui {
             parsedMembers.put(member, Item.builder()
                     .setItemProvider(player -> new ItemWrapper(TextUtil.parseItemPlaceholders(head, player)))
                     .addClickHandler(click -> {
+                        if (!guard.hasPermission(click.player(), claim, Permission.BAN_MEMBERS)
+                                || claim.getMember(member.uuid()).orElse(null) != member || !member.banned()) {
+                            guard.deny(click.player());
+                            click.player().closeInventory();
+                            return;
+                        }
+
                         claim.removeMember(member.uuid());
                         storageHolder.get().claims().saveMembers(claim);
 
@@ -309,6 +315,11 @@ public class ClaimBannedListGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(banMemberIcon.item(), player))
                 .addClickHandler(click -> {
+                    if (!guard.hasPermission(player, claim, Permission.BAN_MEMBERS)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     Input<?> currentInput = inputManager.fetch(player);
 
                     if (currentInput != null) {
@@ -330,13 +341,18 @@ public class ClaimBannedListGui extends ClaimListGui {
                                     open(player, metadata);
                                 })
                                 .onSubmit((member) -> {
+                                    if (!guard.hasPermission(player, claim, Permission.BAN_MEMBERS)) {
+                                        guard.deny(player);
+                                        return;
+                                    }
+
                                     ClaimMember existing = claim.getMember(member.id()).orElse(null);
                                     ClaimMember claimMember = existing != null ? existing : new ClaimMember(
                                             member.id(), claim, member.name(),
                                             claim.roleRegistry().defaultRole(), new Object2BooleanArrayMap<>()
                                     );
 
-                                    ClaimMember selfMember = access.actor(player, claim)
+                                    ClaimMember selfMember = guard.actor(player, claim)
                                             .orElse(null);
 
                                     if (claimMember.uuid().equals(player.getUniqueId()) ||

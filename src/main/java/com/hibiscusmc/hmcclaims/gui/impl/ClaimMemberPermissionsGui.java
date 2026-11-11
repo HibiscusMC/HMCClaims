@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -52,7 +51,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
     private ConfigHolder<ClaimMemberPermissionsConfig> configHolder;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
@@ -149,7 +148,7 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         ClaimMember member = metadata.member();
         int currentPage = metadata.currentPage();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -306,16 +305,17 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         Claim claim = metadata.claim();
         Permissions.Entry entry = permissions.entry(permission);
 
-        boolean hasPermission = access.actor(player, claim)
-                .map(member -> member.hasPermission(Permission.MANAGE_MEMBER_PERMISSIONS) && member.canManage(target))
-                .orElse(false);
-
         BiConsumer<Item, Click> action = (it, click) -> {
-            if (!hasPermission) {
+            if (click.clickType() == ClickType.DOUBLE_CLICK) {
                 return;
             }
 
-            if (click.clickType() == ClickType.DOUBLE_CLICK) {
+            if (!canToggle(click.player(), claim, target, permission)) {
+                if (!guard.isActive(claim)) {
+                    guard.deny(click.player());
+                    click.player().closeInventory();
+                }
+
                 return;
             }
 
@@ -339,6 +339,11 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
             new ConfirmationDialog()
                     .create(messagesHolder.get().dialogs().confirm(), Map.of("permission", entry.name()), warning)
                     .onSubmit(() -> {
+                        if (!canToggle(clicker, claim, target, permission)) {
+                            guard.deny(clicker);
+                            return;
+                        }
+
                         applyOverride(claim, target, permission, next);
 
                         open(clicker, metadata);
@@ -350,13 +355,13 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
         return new PermissionItem(
                 Item.builder()
                         .setItemProvider(p -> {
-                            GuiTemplate.DynamicIcon icon = hasPermission ? permissionList.icon() : permissionList.noAccessIcon();
+                            GuiTemplate.DynamicIcon icon = canToggle(player, claim, target, permission) ? permissionList.icon() : permissionList.noAccessIcon();
 
-                            return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
-                                    entry.icon(), icon.name(), icon.lore(),
+                            return new ItemWrapper(EntryIcon.build(
+                                    player, entry.icon(), icon.name(), icon.lore(),
                                     "permission", entry.name(), entry.description(),
                                     Map.of("permission_value", stateOf(target, permission))
-                            ), player));
+                            ));
                         })
                         .addClickHandler((it, click) -> {
                             if (!permissionList.hasToggle()) {
@@ -377,16 +382,23 @@ public class ClaimMemberPermissionsGui extends ClaimMemberManageGui {
                                         icon = overrides.getBoolean(permission) ? toggles.enabled() : toggles.disabled();
                                     }
 
-                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
-                                            icon.item(), icon.name(), hasPermission ? icon.lore() : icon.cantChangeLore(),
+                                    return new ItemWrapper(EntryIcon.build(
+                                            player, icon.item(), icon.name(),
+                                            canToggle(player, claim, target, permission) ? icon.lore() : icon.cantChangeLore(),
                                             "permission", entry.name(), entry.description(),
                                             Map.of("permission_value", stateOf(target, permission))
-                                    ), player));
+                                    ));
                                 })
                                 .addClickHandler(action)
                                 .build()
                         : null
         );
+    }
+
+    private boolean canToggle(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember target, @NotNull Permission permission) {
+        return guard.hasPermission(player, claim, Permission.MANAGE_MEMBER_PERMISSIONS)
+                && guard.canManage(player, claim, target)
+                && guard.canGrant(player, claim, permission);
     }
 
     private void applyOverride(@NotNull Claim claim, @NotNull ClaimMember target, @NotNull Permission permission, @Nullable Boolean value) {

@@ -1,8 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
-import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
@@ -14,6 +12,7 @@ import com.hibiscusmc.hmcclaims.gui.Action;
 import com.hibiscusmc.hmcclaims.gui.BaseGui;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
 import com.hibiscusmc.hmcclaims.gui.GuiRegistry;
+import com.hibiscusmc.hmcclaims.hook.papi.Placeholders;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.RangeUtil;
@@ -52,12 +51,13 @@ public class ClaimRolesGui extends ClaimListGui {
     @Inject
     private ConfigHolder<ClaimRolesConfig> configHolder;
     @Inject
-    private ClaimAccess access;
-    @Inject
     private ConfigHolder<Messages> messagesHolder;
 
     @Inject
     private StorageHolder storageHolder;
+
+    @Inject
+    private MenuGuard guard;
 
     @Inject
     private GuiRegistry guis;
@@ -128,7 +128,7 @@ public class ClaimRolesGui extends ClaimListGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -251,39 +251,14 @@ public class ClaimRolesGui extends ClaimListGui {
 
     private List<Item> buildRoles(AtomicReference<PagedGui<Item>> gui, Player player, Claim claim, GuiMetadata metadata) {
         ClaimRoleRegistry registry = claim.roleRegistry();
-        List<ClaimRole> allRoles = registry.allRoles();
-        int allRolesQty = allRoles.size();
-
-        ClaimMember playerMember = access.actor(player, claim)
-                .orElse(null);
-        ClaimRole playerRole = playerMember != null ?
-                playerMember.role() :
-                registry.everyoneRole();
-        int playerRolePosition = allRoles.indexOf(playerRole);
 
         List<Item> roleList = new ArrayList<>();
 
-        for (ClaimRole role : allRoles) {
-            int rolePosition = allRoles.indexOf(role);
-
-            boolean isOwnerRole = role.equals(registry.ownerRole());
-
-            boolean isDefaultRole = isOwnerRole || role.equals(registry.defaultRole()) || role.equals(registry.everyoneRole());
-
-            boolean canManage = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLES) &&
-                    playerRolePosition < rolePosition && !isOwnerRole;
-
-            boolean canManagePermissions = playerMember != null && playerMember.hasPermission(Permission.MANAGE_ROLE_PERMISSIONS) &&
-                    !isOwnerRole;
-
-            boolean canRename = (playerRole.equals(registry.ownerRole()) || canManage) && !role.equals(registry.everyoneRole());
-
-            boolean canSwapPrev = canManage && rolePosition > 1 && playerRolePosition < rolePosition - 1 && rolePosition < allRolesQty - 2;
-
-            boolean canSwapNext = canManage && rolePosition < allRolesQty - 3;
-
+        for (ClaimRole role : registry.allRoles()) {
             Item item = Item.builder()
                     .setItemProvider(p -> {
+                        MenuGuard.RoleCapabilities caps = guard.roleCapabilities(player, claim, role);
+
                         ItemStack stack = roleIcon.icon().stack();
                         stack.editMeta(meta -> {
                             meta.itemName(TextUtil.parseItem(roleIcon.name(), player, Map.of(
@@ -295,34 +270,32 @@ public class ClaimRolesGui extends ClaimListGui {
                                     .count();
 
                             ClaimRolesConfig.RoleIcon.RoleIconLore lore = roleIcon.lore();
-                            meta.lore(TextUtil.parseItemLore(lore.base(), player, Map.of(
+                            meta.lore(Placeholders.apply(player, TextUtil.parseItemLore(lore.base(), player, Map.of(
                                     "members", roleMembers + "",
                                     "creation_date", StringUtil.formatDate(role.creationTimestamp()),
-                                    "manage", (canManage || canManagePermissions) ? lore.manage() : lore.cantManage(),
-                                    "rename", canRename ? lore.rename() : lore.cantRename(),
-                                    "swap_previous", canSwapPrev ? lore.swapPrevious() : lore.cantSwapPrevious(),
-                                    "swap_next", canSwapNext ? lore.swapNext() : lore.cantSwapNext()
-                            )));
+                                    "manage", (caps.canManage() || caps.canManagePermissions()) ? lore.manage() : lore.cantManage(),
+                                    "rename", caps.canRename() ? lore.rename() : lore.cantRename(),
+                                    "swap_previous", caps.canSwapPrevious() ? lore.swapPrevious() : lore.cantSwapPrevious(),
+                                    "swap_next", caps.canSwapNext() ? lore.swapNext() : lore.cantSwapNext()
+                            ))));
                         });
 
-                        return new ItemWrapper(TextUtil.parseItemPlaceholders(stack, player));
+                        return new ItemWrapper(stack);
                     })
                     .addClickHandler((it, click) -> {
+                        MenuGuard.RoleCapabilities caps = guard.roleCapabilities(player, claim, role);
+
                         switch (click.clickType()) {
                             case LEFT -> {
-                                if (!canManage && !canManagePermissions) {
+                                if (!caps.canManage() && !caps.canManagePermissions()) {
                                     return;
                                 }
 
                                 guis.get(ClaimRoleManageGui.class)
-                                        .open(player, metadata
-                                                .role(role)
-                                                .canManageRole(canManage && !isDefaultRole)
-                                                .canManageRolePermissions(canManagePermissions)
-                                        );
+                                        .open(player, metadata.role(role));
                             }
                             case RIGHT -> {
-                                if (!canRename) {
+                                if (!caps.canRename()) {
                                     return;
                                 }
 
@@ -335,6 +308,11 @@ public class ClaimRolesGui extends ClaimListGui {
                                         .onSubmit(view -> {
                                             String newName = view.getText("input");
                                             if (newName == null) {
+                                                return;
+                                            }
+
+                                            if (!guard.roleCapabilities(player, claim, role).canRename()) {
+                                                guard.deny(player);
                                                 return;
                                             }
 
@@ -353,19 +331,25 @@ public class ClaimRolesGui extends ClaimListGui {
                                         .show(player);
                             }
                             case SHIFT_LEFT -> {
-                                if (!canSwapPrev) {
+                                if (!caps.canSwapPrevious()) {
                                     return;
                                 }
 
-                                registry.swap(allRoles.get(rolePosition - 1), role);
+                                List<ClaimRole> current = registry.allRoles();
+                                int position = current.indexOf(role);
+
+                                registry.swap(current.get(position - 1), role);
                                 updateRoles(gui, player, claim, metadata);
                             }
                             case SHIFT_RIGHT -> {
-                                if (!canSwapNext) {
+                                if (!caps.canSwapNext()) {
                                     return;
                                 }
 
-                                registry.swap(role, allRoles.get(rolePosition + 1));
+                                List<ClaimRole> current = registry.allRoles();
+                                int position = current.indexOf(role);
+
+                                registry.swap(role, current.get(position + 1));
                                 updateRoles(gui, player, claim, metadata);
                             }
                         }
@@ -381,25 +365,43 @@ public class ClaimRolesGui extends ClaimListGui {
     private Item buildCreateRoleIcon(@NotNull Player player, @NotNull Claim claim, AtomicReference<PagedGui<Item>> gui, GuiMetadata metadata) {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(createRoleIcon.item(), player))
-                .addClickHandler(click ->
-                        new SingleInputDialog()
-                                .create(
-                                        messagesHolder.get().dialogs().createRole(),
-                                        Map.of("claim_name", claim.name()), Map.of(),
-                                        "", 40
-                                )
-                                .onSubmit(view -> {
-                                    String value = view.getText("input");
-                                    if (value == null) {
-                                        return;
-                                    }
+                .addClickHandler(click -> {
+                    if (!guard.canCreateRole(player, claim, true)) {
+                        return;
+                    }
 
-                                    ClaimRoleRegistry registry = claim.roleRegistry();
-                                    registry.add(new ClaimRole(UUID.randomUUID(), value, registry.defaultRole().permissions()));
+                    new SingleInputDialog()
+                            .create(
+                                    messagesHolder.get().dialogs().createRole(),
+                                    Map.of("claim_name", claim.name()), Map.of(),
+                                    "", 40
+                            )
+                            .onSubmit(view -> {
+                                String value = view.getText("input");
+                                if (value == null) {
+                                    return;
+                                }
 
-                                    updateRoles(gui, player, claim, metadata);
-                                })
-                                .show(player))
+                                if (!guard.canCreateRole(player, claim, true)) {
+                                    return;
+                                }
+
+                                try {
+                                    ClaimRole.validateName(value);
+                                } catch (IllegalArgumentException e) {
+                                    text.send(player, messagesHolder.get().claims().invalidRoleName());
+                                    return;
+                                }
+
+                                ClaimRoleRegistry registry = claim.roleRegistry();
+                                registry.add(new ClaimRole(UUID.randomUUID(), value, registry.defaultRole().permissions()));
+
+                                storageHolder.get().claims().saveRoles(claim);
+
+                                updateRoles(gui, player, claim, metadata);
+                            })
+                            .show(player);
+                })
                 .build();
     }
 }

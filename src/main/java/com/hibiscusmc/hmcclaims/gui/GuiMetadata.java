@@ -30,16 +30,6 @@ public class GuiMetadata {
     private ClaimMember member;
 
     /**
-     * If the opener of the GUI is able to manage this role
-     */
-    private boolean canManageRole = false;
-
-    /**
-     * If the opener of the GUI is able to manage this role's permissions
-     */
-    private boolean canManageRolePermissions = false;
-
-    /**
      * Current active page index.
      */
     private int currentPage = 1;

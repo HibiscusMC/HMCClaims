@@ -19,6 +19,7 @@ import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
@@ -48,6 +49,9 @@ public class ClaimMemberListForm implements BaseForm {
     private ConfigHolder<ClaimMemberListFormConfig> configHolder;
     @Inject
     private ClaimAccess access;
+
+    @Inject
+    private MenuGuard guard;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -82,7 +86,7 @@ public class ClaimMemberListForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -220,6 +224,10 @@ public class ClaimMemberListForm implements BaseForm {
                 case "role" -> {
                     if (canRole) {
                         builder.button(label, image(button.image(), formService), () -> {
+                            if (!canAct(player, claim, member, Permission.MANAGE_MEMBER_ROLES)) {
+                                return;
+                            }
+
                             formService.push(player, reopen);
 
                             forms.get(ClaimMemberRoleForm.class).send(player, scoped);
@@ -230,6 +238,10 @@ public class ClaimMemberListForm implements BaseForm {
                 case "permissions" -> {
                     if (canPermissions) {
                         builder.button(label, image(button.image(), formService), () -> {
+                            if (!canAct(player, claim, member, Permission.MANAGE_MEMBER_PERMISSIONS)) {
+                                return;
+                            }
+
                             formService.push(player, reopen);
 
                             forms.get(ClaimMemberPermissionsForm.class).send(player, scoped);
@@ -259,8 +271,22 @@ public class ClaimMemberListForm implements BaseForm {
         formService.send(player, builder.build());
     }
 
+    private boolean canAct(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember member, @NotNull Permission permission) {
+        if (guard.canManage(player, claim, member) && guard.hasPermission(player, claim, permission)) {
+            return true;
+        }
+
+        guard.deny(player);
+
+        return false;
+    }
+
     private void kick(@NotNull Player player, @NotNull GuiMetadata metadata, @NotNull ClaimMember member) {
         Claim claim = metadata.claim();
+
+        if (!canAct(player, claim, member, Permission.MANAGE_MEMBERS)) {
+            return;
+        }
 
         claim.removeMember(member.uuid());
         storageHolder.get().claims().saveMembers(claim);
@@ -278,6 +304,10 @@ public class ClaimMemberListForm implements BaseForm {
 
     private void ban(@NotNull Player player, @NotNull GuiMetadata metadata, @NotNull ClaimMember member) {
         Claim claim = metadata.claim();
+
+        if (!canAct(player, claim, member, Permission.BAN_MEMBERS)) {
+            return;
+        }
 
         member.role(claim.roleRegistry().defaultRole());
         member.permissions(new Object2BooleanArrayMap<>());
@@ -300,7 +330,7 @@ public class ClaimMemberListForm implements BaseForm {
     private void addMember(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.actor(player, claim).map(member -> member.hasPermission(Permission.MANAGE_MEMBERS)).orElse(false)) {
+        if (!guard.hasPermission(player, claim, Permission.MANAGE_MEMBERS)) {
             text.send(player, messagesHolder.get().commands().noPermission());
             return;
         }
@@ -310,6 +340,11 @@ public class ClaimMemberListForm implements BaseForm {
         inputs.promptPlayer(
                 player, inputs.config().addMember(), Map.of("claim_name", claim.name()),
                 target -> {
+                    if (!guard.hasPermission(player, claim, Permission.MANAGE_MEMBERS)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     ClaimMember added = claim.addMember(target);
 
                     if (added == null) {

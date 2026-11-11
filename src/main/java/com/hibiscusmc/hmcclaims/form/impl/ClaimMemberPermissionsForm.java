@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -20,6 +19,7 @@ import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
@@ -44,7 +44,7 @@ public class ClaimMemberPermissionsForm implements BaseForm {
     private ConfigHolder<ClaimMemberPermissionsFormConfig> configHolder;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private ConfigHolder<Permissions> permissionsHolder;
@@ -78,7 +78,7 @@ public class ClaimMemberPermissionsForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -144,9 +144,7 @@ public class ClaimMemberPermissionsForm implements BaseForm {
         Claim claim = metadata.claim();
         ClaimMember member = metadata.member();
 
-        boolean editable = access.actor(player, claim)
-                .map(self -> self.hasPermission(Permission.MANAGE_MEMBER_PERMISSIONS) && self.canManage(member))
-                .orElse(false);
+        boolean editable = canEdit(player, claim, member);
 
         Map<String, String> data = Map.of(
                 "member_name", member.lastKnownName(),
@@ -183,7 +181,7 @@ public class ClaimMemberPermissionsForm implements BaseForm {
                 builder.label(FormText.block(row.description(), player, Map.of()));
             }
 
-            if (editable) {
+            if (editable && guard.canGrant(player, claim, permission)) {
                 builder.dropdown(key, FormText.line(row.label(), player), options, current);
                 rows.add(new Row(key, permission));
             } else {
@@ -201,7 +199,16 @@ public class ClaimMemberPermissionsForm implements BaseForm {
             }
 
             Runnable submit = () -> {
+                if (!canEdit(player, claim, member)) {
+                    guard.deny(player);
+                    return;
+                }
+
                 for (Row row : rows) {
+                    if (!guard.canGrant(player, claim, row.permission())) {
+                        continue;
+                    }
+
                     apply(overrides, row.permission(), values.index(row.key(), stateIndex(overrides, row.permission())));
                 }
 
@@ -212,10 +219,19 @@ public class ClaimMemberPermissionsForm implements BaseForm {
                 formService.back(player);
             };
 
+            if (!canEdit(player, claim, member)) {
+                guard.deny(player);
+                return;
+            }
+
             List<String> warnings = new ArrayList<>();
 
             for (Row row : rows) {
                 Permission permission = row.permission();
+                if (!guard.canGrant(player, claim, permission)) {
+                    continue;
+                }
+
                 int selected = values.index(row.key(), stateIndex(overrides, permission));
 
                 boolean before = member.hasPermission(permission);
@@ -258,6 +274,11 @@ public class ClaimMemberPermissionsForm implements BaseForm {
         builder.onClose(() -> formService.back(player));
 
         formService.send(player, builder.build());
+    }
+
+    private boolean canEdit(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimMember member) {
+        return guard.hasPermission(player, claim, Permission.MANAGE_MEMBER_PERMISSIONS)
+                && guard.canManage(player, claim, member);
     }
 
     private void apply(@NotNull Object2BooleanMap<Permission> overrides, @NotNull Permission permission, int selected) {

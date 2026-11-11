@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimDeleteFormConfig;
@@ -11,6 +10,7 @@ import com.hibiscusmc.hmcclaims.form.FormService;
 import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.TextUtil;
@@ -46,7 +46,7 @@ public class ClaimDeleteForm implements BaseForm {
     @Inject
     private TextUtil text;
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     private ClaimDeleteFormConfig config;
 
@@ -64,7 +64,7 @@ public class ClaimDeleteForm implements BaseForm {
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.isOwner(player, claim)) {
+        if (!guard.isOwner(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -88,6 +88,11 @@ public class ClaimDeleteForm implements BaseForm {
                 FormText.line(config.confirm(), player, data),
                 FormText.line(config.cancel(), player, data),
                 () -> {
+                    if (!guard.isOwner(player, claim)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     UUID owner = claim.owner();
 
                     claimManager.deleteClaim(claim);

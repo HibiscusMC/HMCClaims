@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -17,6 +16,7 @@ import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.CustomFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.PlaceholderUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -62,7 +62,7 @@ public class ClaimListForm implements BaseForm {
     @Inject
     private ClaimManager claimManager;
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private PlaceholderUtil placeholders;
@@ -218,7 +218,7 @@ public class ClaimListForm implements BaseForm {
     }
 
     private void rename(@NotNull Player player, @NotNull Claim claim) {
-        if (!access.isOwner(player, claim)) {
+        if (!guard.isOwner(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -226,6 +226,11 @@ public class ClaimListForm implements BaseForm {
         inputs.prompt(
                 player, inputs.config().renameClaim(), Map.of("claim_name", claim.name()), claim.name(),
                 newName -> {
+                    if (!guard.isOwner(player, claim)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     try {
                         claim.rename(newName);
                     } catch (IllegalArgumentException e) {

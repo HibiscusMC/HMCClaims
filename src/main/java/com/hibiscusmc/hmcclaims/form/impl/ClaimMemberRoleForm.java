@@ -2,11 +2,8 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
-import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
-import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.Messages;
 import com.hibiscusmc.hmcclaims.config.form.ClaimMemberRoleFormConfig;
 import com.hibiscusmc.hmcclaims.config.form.FormTemplate;
@@ -17,6 +14,7 @@ import com.hibiscusmc.hmcclaims.form.FormText;
 import com.hibiscusmc.hmcclaims.form.SharedContext;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.StringUtil;
@@ -29,7 +27,6 @@ import team.unnamed.inject.Singleton;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Singleton
 public class ClaimMemberRoleForm implements BaseForm {
@@ -38,7 +35,7 @@ public class ClaimMemberRoleForm implements BaseForm {
     private ConfigHolder<ClaimMemberRoleFormConfig> configHolder;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private StorageHolder storageHolder;
@@ -68,7 +65,7 @@ public class ClaimMemberRoleForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -80,15 +77,7 @@ public class ClaimMemberRoleForm implements BaseForm {
         Claim claim = metadata.claim();
         ClaimMember member = metadata.member();
 
-        ClaimRoleRegistry registry = claim.roleRegistry();
-        List<ClaimRole> allRoles = registry.allRoles();
-
-        Optional<ClaimMember> self = access.actor(player, claim);
-        boolean canManage = self
-                .map(executor -> executor.hasPermission(Permission.MANAGE_MEMBER_ROLES) && executor.canManage(member))
-                .orElse(false);
-
-        int selfPosition = allRoles.indexOf(self.map(ClaimMember::role).orElse(registry.everyoneRole()));
+        List<ClaimRole> allRoles = claim.roleRegistry().allRoles();
 
         SharedContext context = new SharedContext(
                 player, metadata, ClaimMemberRoleForm.class, formService, forms, () -> render(player, metadata)
@@ -110,8 +99,7 @@ public class ClaimMemberRoleForm implements BaseForm {
             switch (section) {
                 case "roles" -> {
                     for (ClaimRole role : allRoles) {
-                        addRole(builder, context, player, claim, member, role,
-                                canManage, selfPosition, allRoles.indexOf(role), registry);
+                        addRole(builder, context, player, claim, member, role);
                     }
                 }
 
@@ -140,14 +128,10 @@ public class ClaimMemberRoleForm implements BaseForm {
 
     private void addRole(
             @NotNull SimpleFormSpec.Builder builder, @NotNull SharedContext context, @NotNull Player player,
-            @NotNull Claim claim, @NotNull ClaimMember member, @NotNull ClaimRole role,
-            boolean canManage, int selfPosition, int rolePosition, @NotNull ClaimRoleRegistry registry
+            @NotNull Claim claim, @NotNull ClaimMember member, @NotNull ClaimRole role
     ) {
         boolean selected = member.role().equals(role);
-        boolean assignable = canManage
-                && selfPosition < rolePosition
-                && !role.equals(registry.everyoneRole())
-                && !role.equals(registry.ownerRole());
+        boolean assignable = guard.canAssignRole(player, claim, member, role);
 
         FormTemplate.Entry entry;
         if (selected) {
@@ -178,7 +162,7 @@ public class ClaimMemberRoleForm implements BaseForm {
                         return;
                     }
 
-                    if (!assignable) {
+                    if (!guard.canAssignRole(player, claim, member, role)) {
                         text.send(player, config.cantAssign());
                         context.refresh();
                         return;

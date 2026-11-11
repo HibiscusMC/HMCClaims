@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -60,7 +59,7 @@ public class ClaimDeleteGui extends ClaimListGui {
     @Inject
     private SchedulerUtil scheduler;
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     private String title;
     private int rows = 1;
@@ -101,7 +100,7 @@ public class ClaimDeleteGui extends ClaimListGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!access.isOwner(player, claim)) {
+        if (!guard.isOwner(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -155,6 +154,12 @@ public class ClaimDeleteGui extends ClaimListGui {
             gui.addIngredient('(', Item.builder()
                     .setItemProvider(TextUtil.parseItemPlaceholders(confirm.item(), player))
                     .addClickHandler(click -> {
+                        if (!guard.isOwner(player, claim)) {
+                            guard.deny(player);
+                            player.closeInventory();
+                            return;
+                        }
+
                         UUID owner = claim.owner();
 
                         claimManager.deleteClaim(claim);

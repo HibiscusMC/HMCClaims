@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -64,7 +63,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
     private SchedulerUtil scheduler;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private TextUtil text;
@@ -136,7 +135,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
         ClaimRole role = metadata.role();
         int currentPage = metadata.currentPage();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -179,7 +178,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
 
             for (int i = 0; i < currentPermissions.size(); i++) {
                 int slot = permissionSlots[i];
-                PermissionItem item = buildPermission(role, currentPermissions.get(i), metadata);
+                PermissionItem item = buildPermission(claim, role, currentPermissions.get(i), metadata);
 
                 permissionItems.put((char) currentSafeCode, item.item());
                 structure.set(slot, (char) currentSafeCode++);
@@ -220,9 +219,14 @@ public class ClaimRoleManageGui extends ClaimListGui {
             }
 
             gui.addIngredient('*', Item.builder()
-                    .setItemProvider(TextUtil.parseItemPlaceholders(metadata.canManageRole() ? deleteIcon.item() : cantDeleteIcon, player))
+                    .setItemProvider(TextUtil.parseItemPlaceholders(canDelete(player, claim, role) ? deleteIcon.item() : cantDeleteIcon, player))
                     .addClickHandler(click -> {
-                        if (!metadata.canManageRole()) {
+                        if (!canDelete(player, claim, role)) {
+                            if (!guard.isActive(claim)) {
+                                guard.deny(player);
+                                player.closeInventory();
+                            }
+
                             return;
                         }
 
@@ -295,7 +299,7 @@ public class ClaimRoleManageGui extends ClaimListGui {
         });
     }
 
-    private PermissionItem buildPermission(@NotNull ClaimRole role, @NotNull Permission permission, @NotNull GuiMetadata metadata) {
+    private PermissionItem buildPermission(@NotNull Claim claim, @NotNull ClaimRole role, @NotNull Permission permission, @NotNull GuiMetadata metadata) {
         Permissions.Entry entry = permissions.entry(permission);
 
         BiConsumer<Item, Click> action = (it, click) -> {
@@ -303,12 +307,16 @@ public class ClaimRoleManageGui extends ClaimListGui {
                 return;
             }
 
-            if (!metadata.canManageRolePermissions()) {
+            Player player = click.player();
+            if (!canToggle(player, claim, role, permission)) {
+                if (!guard.isActive(claim)) {
+                    guard.deny(player);
+                    player.closeInventory();
+                }
+
                 return;
             }
 
-            Claim claim = metadata.claim();
-            Player player = click.player();
             boolean granting = !role.hasPermission(permission);
             List<String> warning = entry.warning(granting);
 
@@ -322,6 +330,11 @@ public class ClaimRoleManageGui extends ClaimListGui {
             new ConfirmationDialog()
                     .create(messagesHolder.get().dialogs().confirm(), Map.of("permission", entry.name()), warning)
                     .onSubmit(() -> {
+                        if (!canToggle(player, claim, role, permission)) {
+                            guard.deny(player);
+                            return;
+                        }
+
                         togglePermission(claim, role, permission, granting);
 
                         open(player, metadata);
@@ -333,13 +346,13 @@ public class ClaimRoleManageGui extends ClaimListGui {
         return new PermissionItem(
                 Item.builder()
                         .setItemProvider(p -> {
-                            GuiTemplate.DynamicIcon icon = metadata.canManageRolePermissions() ? permissionList.icon() : permissionList.noAccessIcon();
+                            GuiTemplate.DynamicIcon icon = canToggle(p, claim, role, permission) ? permissionList.icon() : permissionList.noAccessIcon();
 
-                            return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
-                                    entry.icon(), icon.name(), icon.lore(),
+                            return new ItemWrapper(EntryIcon.build(
+                                    p, entry.icon(), icon.name(), icon.lore(),
                                     "permission", entry.name(), entry.description(),
                                     Map.of("permission_value", stateOf(role, permission))
-                            ), p));
+                            ));
                         })
                         .addClickHandler((it, click) -> {
                             if (permissionList.hasToggle()) {
@@ -355,17 +368,25 @@ public class ClaimRoleManageGui extends ClaimListGui {
                                     ClaimRoleManageConfig.RoleToggles toggles = permissionList.toggle();
                                     GuiTemplate.PermissionToggleIcon icon = role.hasPermission(permission) ? toggles.enabled() : toggles.disabled();
 
-                                    return new ItemWrapper(TextUtil.parseItemPlaceholders(EntryIcon.build(
-                                            icon.item(), icon.name(),
-                                            metadata.canManageRolePermissions() ? icon.lore() : icon.cantChangeLore(),
+                                    return new ItemWrapper(EntryIcon.build(
+                                            p, icon.item(), icon.name(),
+                                            canToggle(p, claim, role, permission) ? icon.lore() : icon.cantChangeLore(),
                                             "permission", entry.name(), entry.description(),
                                             Map.of("permission_value", stateOf(role, permission))
-                                    ), p));
+                                    ));
                                 })
                                 .addClickHandler(action)
                                 .build()
                         : null
         );
+    }
+
+    private boolean canToggle(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimRole role, @NotNull Permission permission) {
+        return guard.canEditRolePermissions(player, claim, role) && guard.canGrant(player, claim, permission);
+    }
+
+    private boolean canDelete(@NotNull Player player, @NotNull Claim claim, @NotNull ClaimRole role) {
+        return guard.roleCapabilities(player, claim, role).canDelete();
     }
 
     private void togglePermission(@NotNull Claim claim, @NotNull ClaimRole role, @NotNull Permission permission, boolean granting) {

@@ -38,7 +38,7 @@ public class SubClaimManageForm extends ClaimManageForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -75,6 +75,11 @@ public class SubClaimManageForm extends ClaimManageForm {
                 FormText.line(confirm.confirm(), player, data),
                 FormText.line(confirm.cancel(), player, data),
                 () -> {
+                    if (!guard.isOwner(player, claim)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     claim.inheritPermissions();
                     storageHolder.get().claims().saveClaim(claim);
 

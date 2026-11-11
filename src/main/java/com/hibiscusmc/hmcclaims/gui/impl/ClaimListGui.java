@@ -1,7 +1,6 @@
 package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -81,7 +80,7 @@ public class ClaimListGui implements BaseGui {
     private ClaimManager claimManager;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private TextUtil text;
@@ -415,7 +414,7 @@ public class ClaimListGui implements BaseGui {
                         Player player = click.player();
 
                         if (click.clickType() == ClickType.RIGHT) {
-                            if (!access.isOwner(player, claim)) {
+                            if (!guard.isOwner(player, claim)) {
                                 text.send(player, messagesHolder.get().commands().notYourClaim());
                                 return;
                             }
@@ -429,6 +428,11 @@ public class ClaimListGui implements BaseGui {
                                     .onSubmit(view -> {
                                         String newName = view.getText("input");
                                         if (newName == null) {
+                                            return;
+                                        }
+
+                                        if (!guard.isOwner(player, claim)) {
+                                            guard.deny(player);
                                             return;
                                         }
 

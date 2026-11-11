@@ -2,7 +2,6 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.config.Messages;
@@ -21,6 +20,7 @@ import com.hibiscusmc.hmcclaims.form.spec.FormComponent;
 import com.hibiscusmc.hmcclaims.form.spec.ModalFormSpec;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.RegistryUtil;
@@ -59,7 +59,7 @@ public class ClaimRoleManageForm implements BaseForm {
     private TextUtil text;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private ConfigHolder<Messages> messagesHolder;
@@ -78,7 +78,7 @@ public class ClaimRoleManageForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -116,7 +116,7 @@ public class ClaimRoleManageForm implements BaseForm {
                 )));
 
                 case "delete" -> {
-                    if (metadata.canManageRole()) {
+                    if (guard.roleCapabilities(player, metadata.claim(), role).canDelete()) {
                         builder.button(
                                 FormText.line(config.deleteButton().text(), player, data),
                                 context.image(config.deleteButton().image(), null),
@@ -136,8 +136,9 @@ public class ClaimRoleManageForm implements BaseForm {
             @NotNull Player player, @NotNull GuiMetadata metadata,
             @NotNull PermissionFormTemplate.PermissionCategory category
     ) {
+        Claim claim = metadata.claim();
         ClaimRole role = metadata.role();
-        boolean editable = metadata.canManageRolePermissions();
+        boolean editable = guard.canEditRolePermissions(player, claim, role);
 
         SharedContext context = new SharedContext(
                 player, metadata, ClaimRoleManageForm.class, formService, forms,
@@ -175,7 +176,7 @@ public class ClaimRoleManageForm implements BaseForm {
                 builder.label(FormText.block(row.description(), player, Map.of()));
             }
 
-            if (editable) {
+            if (editable && guard.canGrant(player, claim, permission)) {
                 builder.toggle(key, label, enabled);
                 rows.add(new Row(key, permission));
             } else {
@@ -192,7 +193,16 @@ public class ClaimRoleManageForm implements BaseForm {
         builder.onSubmit(values -> {
             Runnable submit = () -> {
                 if (editable) {
+                    if (!guard.canEditRolePermissions(player, claim, role)) {
+                        guard.deny(player);
+                        return;
+                    }
+
                     for (Row row : rows) {
+                        if (!guard.canGrant(player, claim, row.permission())) {
+                            continue;
+                        }
+
                         if (values.toggle(row.key(), role.hasPermission(row.permission()))) {
                             role.addPermission(row.permission());
                         } else {
@@ -200,9 +210,9 @@ public class ClaimRoleManageForm implements BaseForm {
                         }
                     }
 
-                    storageHolder.get().claims().saveRoles(metadata.claim());
+                    storageHolder.get().claims().saveRoles(claim);
 
-                    EventUtil.call(new ClaimAccessChangeEvent(metadata.claim(), ClaimAccessChangeEvent.Cause.ROLE_PERMISSIONS_CHANGED, null));
+                    EventUtil.call(new ClaimAccessChangeEvent(claim, ClaimAccessChangeEvent.Cause.ROLE_PERMISSIONS_CHANGED, null));
                 }
 
                 if (navigation != null) {
@@ -221,6 +231,10 @@ public class ClaimRoleManageForm implements BaseForm {
 
             if (editable) {
                 for (Row row : rows) {
+                    if (!guard.canGrant(player, claim, row.permission())) {
+                        continue;
+                    }
+
                     boolean before = role.hasPermission(row.permission());
                     boolean after = values.toggle(row.key(), before);
 
@@ -263,7 +277,7 @@ public class ClaimRoleManageForm implements BaseForm {
     private void delete(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
 
-        if (!metadata.canManageRole()) {
+        if (!guard.roleCapabilities(player, claim, metadata.role()).canDelete()) {
             text.send(player, config.cantDelete());
             return;
         }

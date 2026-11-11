@@ -61,6 +61,9 @@ public class ClaimMemberListGui extends ClaimListGui {
     private ConfigHolder<ClaimMemberListConfig> configHolder;
     @Inject
     private ClaimAccess access;
+
+    @Inject
+    private MenuGuard guard;
     @Inject
     private ConfigHolder<Messages> messagesHolder;
 
@@ -146,7 +149,7 @@ public class ClaimMemberListGui extends ClaimListGui {
     public void open(@NotNull Player player, @NotNull GuiMetadata guiMetadata) {
         Claim claim = guiMetadata.claim();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -330,10 +333,16 @@ public class ClaimMemberListGui extends ClaimListGui {
 
             parsedMembers.put(member, Item.builder()
                     .setItemProvider(head)
-                    .addClickHandler(click ->
-                            guis.get(ClaimMemberRoleGui.class)
-                                    .open(player, metadata.member(member))
-                    )
+                    .addClickHandler(click -> {
+                        if (!guard.isActive(claim) || claim.getMember(member.uuid()).orElse(null) != member) {
+                            guard.deny(player);
+                            player.closeInventory();
+                            return;
+                        }
+
+                        guis.get(ClaimMemberRoleGui.class)
+                                .open(player, metadata.member(member));
+                    })
                     .build());
         }
 
@@ -469,7 +478,7 @@ public class ClaimMemberListGui extends ClaimListGui {
         return Item.builder()
                 .setItemProvider(TextUtil.parseItemPlaceholders(addMemberIcon.item(), player))
                 .addClickHandler(click -> {
-                    if (!access.actor(player, claim).map(member -> member.hasPermission(Permission.MANAGE_MEMBERS)).orElse(false)) {
+                    if (!guard.hasPermission(player, claim, Permission.MANAGE_MEMBERS)) {
                         text.send(player, messagesHolder.get().commands().noPermission());
                         return;
                     }
@@ -495,6 +504,11 @@ public class ClaimMemberListGui extends ClaimListGui {
                                     open(player, metadata);
                                 })
                                 .onSubmit((member) -> {
+                                    if (!guard.hasPermission(player, claim, Permission.MANAGE_MEMBERS)) {
+                                        text.send(player, messagesHolder.get().commands().notYourClaim());
+                                        return;
+                                    }
+
                                     ClaimMember added = claim.addMember(member);
 
                                     if (added != null) {

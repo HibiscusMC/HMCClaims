@@ -2,8 +2,6 @@ package com.hibiscusmc.hmcclaims.form.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
-import com.hibiscusmc.hmcclaims.claim.ClaimMember;
 import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
@@ -18,6 +16,7 @@ import com.hibiscusmc.hmcclaims.form.SharedContext;
 import com.hibiscusmc.hmcclaims.form.input.FormInputs;
 import com.hibiscusmc.hmcclaims.form.spec.SimpleFormSpec;
 import com.hibiscusmc.hmcclaims.gui.GuiMetadata;
+import com.hibiscusmc.hmcclaims.gui.impl.MenuGuard;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
 import com.hibiscusmc.hmcclaims.util.EventUtil;
 import com.hibiscusmc.hmcclaims.util.SchedulerUtil;
@@ -32,6 +31,7 @@ import team.unnamed.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 @Singleton
 public class ClaimRolesForm implements BaseForm {
@@ -40,7 +40,7 @@ public class ClaimRolesForm implements BaseForm {
     private ConfigHolder<ClaimRolesFormConfig> configHolder;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private StorageHolder storageHolder;
@@ -73,7 +73,7 @@ public class ClaimRolesForm implements BaseForm {
 
     @Override
     public void send(@NotNull Player player, @NotNull GuiMetadata metadata) {
-        if (!access.canOpen(player, metadata.claim())) {
+        if (!guard.canOpen(player, metadata.claim())) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -129,26 +129,7 @@ public class ClaimRolesForm implements BaseForm {
     private void openActions(@NotNull Player player, @NotNull GuiMetadata metadata, @NotNull ClaimRole role) {
         Claim claim = metadata.claim();
         ClaimRoleRegistry registry = claim.roleRegistry();
-        List<ClaimRole> allRoles = registry.allRoles();
-
-        int rolePosition = allRoles.indexOf(role);
-        int total = allRoles.size();
-
-        ClaimMember self = access.actor(player, claim).orElse(null);
-        ClaimRole selfRole = self != null ? self.role() : registry.everyoneRole();
-        int selfPosition = allRoles.indexOf(selfRole);
-
-        boolean isOwnerRole = role.equals(registry.ownerRole());
-        boolean isDefaultRole = isOwnerRole || role.equals(registry.defaultRole()) || role.equals(registry.everyoneRole());
-
-        boolean canManage = self != null && self.hasPermission(Permission.MANAGE_ROLES)
-                && selfPosition < rolePosition && !isOwnerRole;
-        boolean canManagePermissions = self != null && self.hasPermission(Permission.MANAGE_ROLE_PERMISSIONS)
-                && !isOwnerRole;
-        boolean canRename = (selfRole.equals(registry.ownerRole()) || canManage) && !role.equals(registry.everyoneRole());
-        boolean canMoveUp = canManage && rolePosition > 1 && selfPosition < rolePosition - 1 && rolePosition < total - 2;
-        boolean canMoveDown = canManage && rolePosition < total - 3;
-        boolean canDelete = canManage && !isDefaultRole;
+        MenuGuard.RoleCapabilities caps = guard.roleCapabilities(player, claim, role);
 
         FormTemplate.SubForm actions = config.roleActions();
         Map<String, String> data = rolePlaceholders(claim, role);
@@ -167,28 +148,35 @@ public class ClaimRolesForm implements BaseForm {
 
             switch (entry.getKey()) {
                 case "permissions" -> {
-                    if (canManage || canManagePermissions) {
+                    if (caps.canManage() || caps.canManagePermissions()) {
                         builder.button(label, image(button.image(), formService), () -> {
+                            if (!allowed(player, claim, role, c -> c.canManage() || c.canManagePermissions())) {
+                                return;
+                            }
+
                             formService.push(player, reopen);
 
-                            forms.get(ClaimRoleManageForm.class).send(player, metadata
-                                    .role(role)
-                                    .canManageRole(canDelete)
-                                    .canManageRolePermissions(canManagePermissions));
+                            forms.get(ClaimRoleManageForm.class).send(player, metadata.role(role));
                         });
                     }
                 }
 
                 case "rename" -> {
-                    if (canRename) {
+                    if (caps.canRename()) {
                         builder.button(label, image(button.image(), formService), () -> rename(player, metadata, role));
                     }
                 }
 
                 case "move-up" -> {
-                    if (canMoveUp) {
+                    if (caps.canSwapPrevious()) {
                         builder.button(label, image(button.image(), formService), () -> {
-                            registry.swap(allRoles.get(rolePosition - 1), role);
+                            if (!allowed(player, claim, role, MenuGuard.RoleCapabilities::canSwapPrevious)) {
+                                return;
+                            }
+
+                            List<ClaimRole> current = registry.allRoles();
+
+                            registry.swap(current.get(current.indexOf(role) - 1), role);
                             storageHolder.get().claims().saveRoles(claim);
 
                             formService.back(player);
@@ -197,9 +185,15 @@ public class ClaimRolesForm implements BaseForm {
                 }
 
                 case "move-down" -> {
-                    if (canMoveDown) {
+                    if (caps.canSwapNext()) {
                         builder.button(label, image(button.image(), formService), () -> {
-                            registry.swap(role, allRoles.get(rolePosition + 1));
+                            if (!allowed(player, claim, role, MenuGuard.RoleCapabilities::canSwapNext)) {
+                                return;
+                            }
+
+                            List<ClaimRole> current = registry.allRoles();
+
+                            registry.swap(role, current.get(current.indexOf(role) + 1));
                             storageHolder.get().claims().saveRoles(claim);
 
                             formService.back(player);
@@ -208,8 +202,12 @@ public class ClaimRolesForm implements BaseForm {
                 }
 
                 case "delete" -> {
-                    if (canDelete) {
+                    if (caps.canDelete()) {
                         builder.button(label, image(button.image(), formService), () -> {
+                            if (!allowed(player, claim, role, MenuGuard.RoleCapabilities::canDelete)) {
+                                return;
+                            }
+
                             claim.removeRole(role);
                             storageHolder.get().claims().saveClaim(claim);
 
@@ -230,12 +228,34 @@ public class ClaimRolesForm implements BaseForm {
         formService.send(player, builder.build());
     }
 
+    private boolean allowed(
+            @NotNull Player player, @NotNull Claim claim, @NotNull ClaimRole role,
+            @NotNull Predicate<MenuGuard.RoleCapabilities> check
+    ) {
+        if (check.test(guard.roleCapabilities(player, claim, role))) {
+            return true;
+        }
+
+        guard.deny(player);
+
+        return false;
+    }
+
     private void rename(@NotNull Player player, @NotNull GuiMetadata metadata, @NotNull ClaimRole role) {
+        Claim claim = metadata.claim();
         Runnable reopen = () -> openActions(player, metadata, role);
+
+        if (!allowed(player, claim, role, MenuGuard.RoleCapabilities::canRename)) {
+            return;
+        }
 
         inputs.prompt(
                 player, inputs.config().renameRole(), Map.of("role_name", role.name()), role.name(),
                 newName -> {
+                    if (!allowed(player, claim, role, MenuGuard.RoleCapabilities::canRename)) {
+                        return;
+                    }
+
                     try {
                         role.rename(newName);
                     } catch (IllegalArgumentException e) {
@@ -244,7 +264,7 @@ public class ClaimRolesForm implements BaseForm {
                         return;
                     }
 
-                    storageHolder.get().claims().saveRoles(metadata.claim());
+                    storageHolder.get().claims().saveRoles(claim);
 
                     reopen.run();
                 },
@@ -252,13 +272,25 @@ public class ClaimRolesForm implements BaseForm {
         );
     }
 
+    private boolean canCreate(@NotNull Player player, @NotNull Claim claim) {
+        if (!guard.hasPermission(player, claim, Permission.MANAGE_ROLES)) {
+            text.send(player, config.cantCreate());
+            return false;
+        }
+
+        if (guard.roleLimitReached(claim)) {
+            guard.denyRoleLimit(player);
+            return false;
+        }
+
+        return true;
+    }
+
     private void createRole(@NotNull Player player, @NotNull GuiMetadata metadata) {
         Claim claim = metadata.claim();
         Runnable reopen = () -> render(player, metadata);
 
-        ClaimMember self = access.actor(player, claim).orElse(null);
-        if (self == null || !self.hasPermission(Permission.MANAGE_ROLES)) {
-            text.send(player, config.cantCreate());
+        if (!canCreate(player, claim)) {
             reopen.run();
             return;
         }
@@ -266,6 +298,19 @@ public class ClaimRolesForm implements BaseForm {
         inputs.prompt(
                 player, inputs.config().createRole(), Map.of("claim_name", claim.name()), "",
                 name -> {
+                    if (!canCreate(player, claim)) {
+                        reopen.run();
+                        return;
+                    }
+
+                    try {
+                        ClaimRole.validateName(name);
+                    } catch (IllegalArgumentException e) {
+                        text.send(player, messagesHolder.get().claims().invalidRoleName());
+                        reopen.run();
+                        return;
+                    }
+
                     ClaimRoleRegistry registry = claim.roleRegistry();
                     registry.add(new ClaimRole(UUID.randomUUID(), name, registry.defaultRole().permissions()));
 

@@ -2,9 +2,7 @@ package com.hibiscusmc.hmcclaims.gui.impl;
 
 import com.hibiscusmc.hmcclaims.api.event.ClaimAccessChangeEvent;
 import com.hibiscusmc.hmcclaims.claim.Claim;
-import com.hibiscusmc.hmcclaims.claim.ClaimAccess;
 import com.hibiscusmc.hmcclaims.claim.ClaimMember;
-import com.hibiscusmc.hmcclaims.claim.permission.Permission;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRole;
 import com.hibiscusmc.hmcclaims.claim.role.ClaimRoleRegistry;
 import com.hibiscusmc.hmcclaims.config.ConfigItem;
@@ -46,7 +44,6 @@ import xyz.xenondevs.invui.window.Window;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
@@ -56,7 +53,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
     private ConfigHolder<ClaimMemberRoleConfig> configHolder;
 
     @Inject
-    private ClaimAccess access;
+    private MenuGuard guard;
 
     @Inject
     private StorageHolder storageHolder;
@@ -147,7 +144,7 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
         Claim claim = metadata.claim();
         ClaimMember member = metadata.member();
 
-        if (!access.canOpen(player, claim)) {
+        if (!guard.canOpen(player, claim)) {
             text.send(player, messagesHolder.get().commands().notYourClaim());
             return;
         }
@@ -282,29 +279,12 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
 
     private List<Item> buildRoleItems(Player player, Claim claim, ClaimMember targetMember, GuiMetadata metadata, AtomicReference<PagedGui<Item>> guiReference) {
         ClaimRoleRegistry registry = claim.roleRegistry();
-        List<ClaimRole> allRoles = registry.allRoles();
         List<Item> roleItems = new ArrayList<>();
 
-        Optional<ClaimMember> executor = access.actor(player, claim);
-        boolean canManage = executor.map(m ->
-                        m.hasPermission(Permission.MANAGE_MEMBER_ROLES) &&
-                                m.canManage(targetMember)
-                )
-                .orElse(false);
-
-        ClaimRole executorRole = executor
-                .map(ClaimMember::role)
-                .orElse(claim.roleRegistry().everyoneRole());
-        int rolePosition = allRoles.indexOf(executorRole);
-
-        for (ClaimRole role : allRoles) {
-            boolean validPosition = rolePosition < allRoles.indexOf(role);
-            boolean validRole = !role.equals(claim.roleRegistry().everyoneRole()) &&
-                    !role.equals(claim.roleRegistry().ownerRole());
-
+        for (ClaimRole role : registry.allRoles()) {
             Item item = Item.builder()
                     .setItemProvider(p -> {
-                        GuiTemplate.DynamicIconWithStack icon = targetMember.role().equals(role) ? roleIconSelected : canManage && validPosition && validRole ? roleIcon : roleIconUnable;
+                        GuiTemplate.DynamicIconWithStack icon = targetMember.role().equals(role) ? roleIconSelected : guard.canAssignRole(player, claim, targetMember, role) ? roleIcon : roleIconUnable;
                         ItemStack stack = icon.item().stack();
 
                         stack.editMeta(meta -> {
@@ -324,7 +304,16 @@ public class ClaimMemberRoleGui extends ClaimMemberManageGui {
                         return new ItemWrapper(stack);
                     })
                     .addClickHandler((it, click) -> {
-                        if (click.clickType() != ClickType.LEFT || !canManage || !validPosition || !validRole) {
+                        if (click.clickType() != ClickType.LEFT) {
+                            return;
+                        }
+
+                        if (!guard.canAssignRole(player, claim, targetMember, role)) {
+                            if (!guard.isActive(claim)) {
+                                guard.deny(player);
+                                player.closeInventory();
+                            }
+
                             return;
                         }
 
