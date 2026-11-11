@@ -190,7 +190,7 @@ public abstract class HikariStorage implements Storage {
             for (String rawStatement : schema.split(";")) {
                 String statement = rawStatement.trim()
                         .replaceAll("\\s+", " ")
-                        .replaceAll("\\{prefix}", storage.prefix());
+                        .replace("{prefix}", storage.prefix());
 
                 if (statement.isEmpty()) {
                     continue;
