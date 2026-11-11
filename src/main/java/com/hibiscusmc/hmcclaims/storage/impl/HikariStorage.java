@@ -12,7 +12,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -179,14 +181,19 @@ public abstract class HikariStorage implements Storage {
      * @param schemaName The schema resource name (without .sql extension).
      */
     protected void executeSchemaScript(@NotNull Settings.Storage storage, @NotNull String schemaName) {
-        try (Connection connection = getConnection()) {
-            InputStream rawSchema = getSchemaResource(schemaName);
+        String schema;
+
+        try (InputStream rawSchema = getSchemaResource(schemaName)) {
             if (rawSchema == null) {
                 throw new IllegalStateException("Schema not found for database " + schemaName);
             }
 
-            String schema = new String(rawSchema.readAllBytes(), StandardCharsets.UTF_8);
+            schema = new String(rawSchema.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new UncheckedIOException(exception);
+        }
 
+        try (Connection connection = getConnection()) {
             for (String rawStatement : schema.split(";")) {
                 String statement = rawStatement.trim()
                         .replaceAll("\\s+", " ")
@@ -200,9 +207,7 @@ public abstract class HikariStorage implements Storage {
                     preparedStatement.executeUpdate();
                 }
             }
-
-            rawSchema.close();
-        } catch (Exception exception) {
+        } catch (SQLException exception) {
             throw new RuntimeException(exception);
         }
     }
