@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -51,7 +52,7 @@ public class ClaimRole {
         this.id = id;
         this.name = Objects.requireNonNull(TextUtil.strip(name), "name cannot be null");
 
-        this.permissions = permissions;
+        this.permissions = new HashSet<>(permissions);
     }
 
     /**
