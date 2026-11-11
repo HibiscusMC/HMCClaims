@@ -62,7 +62,8 @@ public class BlockMarker {
 
             expiryMap.entrySet().removeIf(entry -> {
                 MarkKey key = entry.getKey();
-                if (key.block().blockDisplay() == null) {
+                if (!key.block().isAlive()) {
+                    removeMarkedBlock(key.uuid(), key.block());
                     return true;
                 }
 
@@ -76,8 +77,15 @@ public class BlockMarker {
 
             blockCache.entrySet().removeIf(entry -> {
                 MarkedBlock block = entry.getValue();
-                if (block.blockDisplay() == null) {
+                if (!block.isAlive()) {
+                    block.destroy();
                     return true;
+                }
+
+                for (UUID uuid : block.players()) {
+                    if (Bukkit.getPlayer(uuid) == null) {
+                        block.forget(uuid);
+                    }
                 }
 
                 long ticksLived = block.blockDisplay().getTicksLived();
@@ -109,10 +117,25 @@ public class BlockMarker {
             UUID uuid = player.getUniqueId();
             Set<MarkedBlock> activeMarks = playerMarks.computeIfAbsent(uuid, k -> new CopyOnWriteArraySet<>());
 
+            World world = player.getWorld();
+
             for (BlockSelection selection : selections) {
-                String cacheKey = generateKey(player.getWorld(), selection, type);
-                MarkedBlock markedBlock = blockCache.computeIfAbsent(cacheKey,
-                        key -> MarkedBlock.from(player.getWorld(), selection, type, plugin));
+                if (!world.isChunkLoaded(selection.x() >> 4, selection.z() >> 4)) {
+                    continue;
+                }
+
+                String cacheKey = generateKey(world, selection, type);
+                MarkedBlock markedBlock = blockCache.compute(cacheKey, (key, existing) -> {
+                    if (existing != null && existing.isAlive()) {
+                        return existing;
+                    }
+
+                    if (existing != null) {
+                        existing.destroy();
+                    }
+
+                    return MarkedBlock.from(world, selection, type, plugin);
+                });
 
                 markedBlock.mark(player);
                 activeMarks.add(markedBlock);
@@ -134,6 +157,8 @@ public class BlockMarker {
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             markedBlock.hide(player);
+        } else {
+            markedBlock.forget(uuid);
         }
 
         Set<MarkedBlock> set = playerMarks.get(uuid);
@@ -158,6 +183,8 @@ public class BlockMarker {
                 marks.forEach(mark -> {
                     if (player != null) {
                         mark.hide(player);
+                    } else {
+                        mark.forget(uuid);
                     }
 
                     expiryMap.remove(new MarkKey(uuid, mark));

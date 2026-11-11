@@ -286,7 +286,10 @@ public class PlayerSelectionListener implements Listener {
      */
     @EventHandler
     public void onPlayerDisconnect(PlayerQuitEvent event) {
-        selectionManager.destroySelection(event.getPlayer());
+        Player player = event.getPlayer();
+
+        selectionManager.destroySelection(player);
+        marker.clearAllMarks(player.getUniqueId());
     }
 
     /**

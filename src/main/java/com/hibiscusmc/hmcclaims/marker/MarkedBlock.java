@@ -90,6 +90,10 @@ public class MarkedBlock {
      * @param player The player who should see this marker.
      */
     public void mark(Player player) {
+        if (blockDisplay == null) {
+            return;
+        }
+
         player.showEntity(plugin, blockDisplay);
         players.add(player.getUniqueId());
     }
@@ -100,15 +104,37 @@ public class MarkedBlock {
      * @param player The player who should no longer see this marker.
      */
     public void hide(Player player) {
-        player.hideEntity(plugin, blockDisplay);
+        if (blockDisplay != null) {
+            player.hideEntity(plugin, blockDisplay);
+        }
+
         players.remove(player.getUniqueId());
+    }
+
+    /**
+     * Stops tracking a player without touching the entity, for players that are no longer online.
+     *
+     * @param uuid The UUID of the player to forget.
+     */
+    public void forget(UUID uuid) {
+        players.remove(uuid);
+    }
+
+    /**
+     * @return {@code true} if the display entity still exists in the world.
+     */
+    public boolean isAlive() {
+        return blockDisplay != null && blockDisplay.isValid();
     }
 
     /**
      * Permanently removes the underlying entity from the world.
      */
     public void destroy() {
-        this.blockDisplay.remove();
+        if (this.blockDisplay != null) {
+            this.blockDisplay.remove();
+        }
+
         this.blockDisplay = null;
         this.players.clear();
     }
