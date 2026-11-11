@@ -6,6 +6,7 @@ import com.hibiscusmc.hmcclaims.claim.RawClaim;
 import com.hibiscusmc.hmcclaims.claim.UnloadedClaims;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
+import com.hibiscusmc.hmcclaims.user.UserManager;
 import com.hibiscusmc.hmcclaims.util.ChunkUtil;
 import com.hibiscusmc.hmcclaims.util.ExceptionUtil;
 import com.hibiscusmc.hmcclaims.util.Logger;
@@ -16,6 +17,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -63,13 +65,16 @@ public class ClaimLifecycleListener implements Listener {
 
     private final UnloadedClaims unloadedClaims;
 
+    private final UserManager userManager;
+
     private volatile boolean started;
 
     @Inject
-    public ClaimLifecycleListener(ClaimManager claimManager, StorageHolder storageHolder, UnloadedClaims unloadedClaims, SchedulerUtil scheduler) {
+    public ClaimLifecycleListener(ClaimManager claimManager, StorageHolder storageHolder, UnloadedClaims unloadedClaims, UserManager userManager, SchedulerUtil scheduler) {
         this.claimManager = claimManager;
         this.storageHolder = storageHolder;
         this.unloadedClaims = unloadedClaims;
+        this.userManager = userManager;
 
         scheduler.scheduleTimer(new Runnable() {
             private final static int BATCH_SIZE = 100;
@@ -192,6 +197,7 @@ public class ClaimLifecycleListener implements Listener {
 
         if (indexedWorlds.contains(worldName)) {
             loadLoadedChunks(world);
+            loadOnlinePlayerClaims(worldName);
             return;
         }
 
@@ -203,6 +209,30 @@ public class ClaimLifecycleListener implements Listener {
 
         indexWorld(worldName, holder);
         loadLoadedChunks(world);
+        loadOnlinePlayerClaims(worldName);
+
+        for (UUID owner : holder.players().keySet()) {
+            userManager.getUser(owner).ifPresent(userManager::calculateUsedBlocks);
+        }
+    }
+
+    private void loadOnlinePlayerClaims(@NotNull String worldName) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Set<RawClaim> rawClaims = unloadedClaims.players().get(player.getUniqueId());
+            if (rawClaims == null) {
+                continue;
+            }
+
+            List<RawClaim> inWorld = new ArrayList<>();
+
+            for (RawClaim raw : rawClaims) {
+                if (raw.worldName().equals(worldName)) {
+                    inWorld.add(raw);
+                }
+            }
+
+            loadClaims(inWorld);
+        }
     }
 
     @EventHandler

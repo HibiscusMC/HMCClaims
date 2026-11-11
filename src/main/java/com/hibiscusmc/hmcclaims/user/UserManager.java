@@ -1,6 +1,9 @@
 package com.hibiscusmc.hmcclaims.user;
 
+import com.hibiscusmc.hmcclaims.claim.Claim;
 import com.hibiscusmc.hmcclaims.claim.ClaimManager;
+import com.hibiscusmc.hmcclaims.claim.RawClaim;
+import com.hibiscusmc.hmcclaims.claim.UnloadedClaims;
 import com.hibiscusmc.hmcclaims.config.Settings;
 import com.hibiscusmc.hmcclaims.storage.Storage;
 import com.hibiscusmc.hmcclaims.storage.StorageHolder;
@@ -20,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,13 +49,16 @@ public class UserManager {
 
     private final ClaimManager claimManager;
 
+    private final UnloadedClaims unloadedClaims;
+
     private final ConfigHolder<Settings> settings;
 
     private final StorageHolder storageHolder;
 
     @Inject
-    public UserManager(ClaimManager claimManager, ConfigHolder<Settings> settings, StorageHolder storageHolder, SchedulerUtil scheduler) {
+    public UserManager(ClaimManager claimManager, UnloadedClaims unloadedClaims, ConfigHolder<Settings> settings, StorageHolder storageHolder, SchedulerUtil scheduler) {
         this.claimManager = claimManager;
+        this.unloadedClaims = unloadedClaims;
         this.settings = settings;
         this.storageHolder = storageHolder;
 
@@ -101,16 +108,29 @@ public class UserManager {
     /**
      * Recalculates and updates the cached 'usedBlocks' value within the {@link User} object.
      * <p>
-     * This scans all top-level claims (excluding sub-claims) owned by the user
-     * and sums their surface area.
+     * This scans all loaded and unloaded top-level claims (excluding sub-claims)
+     * owned by the user and sums their surface area.
      *
      * @param user The user object to update.
      */
     public void calculateUsedBlocks(@NotNull User user) {
-        user.usedBlocks(claimManager.getPlayerClaims(user.uuid()).stream()
-                .filter(claim -> claim.main() == null)
-                .mapToLong(claim -> claim.region().getSurfaceArea())
-                .sum());
+        long used = 0;
+
+        for (Claim claim : claimManager.getPlayerClaims(user.uuid())) {
+            if (claim.main() == null) {
+                used += claim.region().getSurfaceArea();
+            }
+        }
+
+        for (RawClaim raw : unloadedClaims.players().getOrDefault(user.uuid(), Set.of())) {
+            if (raw.parentId() != null || claimManager.getClaim(raw.claimId()).isPresent()) {
+                continue;
+            }
+
+            used += (long) (raw.maxX() - raw.minX() + 1) * (raw.maxZ() - raw.minZ() + 1);
+        }
+
+        user.usedBlocks(used);
     }
 
     /**
